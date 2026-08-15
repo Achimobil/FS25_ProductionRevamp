@@ -1,0 +1,9 @@
+*.cmd
+*.txt
+*.md
+.git*
+*.png
+*.zip
+*.code-workspace
+.vscode*
+.claude*

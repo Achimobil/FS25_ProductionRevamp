@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<modDesc descVersion="106">
+  <author>Achimobil</author>
+  <contributors>Braeven</contributors>
+  <version>0.0.0.1</version>
+  <title>
+    <en>Production Revamp</en>
+    <de>Production Revamp</de>
+  </title>
+
+  <description>
+    <en>
+      <![CDATA[Production Revamp for Farming Simulator 25.
+
+Originally created by Braeven for Farming Simulator 22, continued for FS25 with his explicit
+permission by Achimobil.
+
+This is currently a private work-in-progress build and not yet ready for use.
+
+Changelog:
+0.0.0.1
+- Project taken over from Braeven, base structure for FS25 set up
+]]>
+    </en>
+    <de>
+      <![CDATA[Production Revamp für den Landwirtschafts-Simulator 25.
+
+Ursprünglich von Braeven für den Landwirtschafts-Simulator 22 entwickelt, mit seiner ausdrücklichen
+Erlaubnis von Achimobil für den LS25 weitergeführt.
+
+Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
+
+Changelog:
+0.0.0.1
+- Projekt von Braeven übernommen, Grundstruktur für den LS25 angelegt
+]]>
+    </de>
+  </description>
+
+  <iconFilename>icon_ProductionRevamp.dds</iconFilename>
+
+  <multiplayer supported="true" />
+
+  <fillTypes filename="revamp_fillTypes.xml"/>
+
+  <extraSourceFiles>
+    <sourceFile filename="revampInit.lua" />
+  </extraSourceFiles>
+
+  <placeableSpecializations>
+    <specialization name="siloObjectFillLevel" className="SiloObjectFillLevelSpecialization" filename="scripts/specializations/siloObjectFillLevelSpecialization.lua"/>
+    <specialization name="siloDisplay" className="SiloDisplaySpecialization" filename="scripts/specializations/siloDisplaySpecialization.lua"/>
+    <specialization name="productionObjectFillLevel" className="ProductionObjectFillLevelSpecialization" filename="scripts/specializations/productionObjectFillLevelSpecialization.lua"/>
+    <specialization name="productionDisplay" className="ProductionDisplaySpecialization" filename="scripts/specializations/productionDisplaySpecialization.lua"/>
+    <specialization name="siloPalletSpawner" className="SiloPalletSpawnerSpecialization" filename="scripts/specializations/siloPalletSpawnerSpecialization.lua"/>
+  </placeableSpecializations>
+
+  <placeableTypes>
+    <type name="RevampSilo" parent="silo" filename="$dataS/scripts/placeables/Placeable.lua">
+      <specialization name="siloObjectFillLevel"/>
+      <specialization name="siloDisplay"/>
+      <specialization name="siloPalletSpawner"/>
+    </type>
+    <type name="RevampProductionPoint" parent="productionPoint" filename="$dataS/scripts/placeables/Placeable.lua">
+      <specialization name="productionObjectFillLevel"/>
+      <specialization name="productionDisplay"/>
+    </type>
+    <type name="RevampGreenhouse" parent="greenhouse" filename="$dataS/scripts/placeables/Placeable.lua">
+      <specialization name="productionObjectFillLevel"/>
+      <specialization name="productionDisplay"/>
+    </type>
+  </placeableTypes>
+
+  <l10n filenamePrefix="l10n/l10n" />
+</modDesc>
