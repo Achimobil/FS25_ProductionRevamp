@@ -41,6 +41,11 @@ Changelog:
 
   <multiplayer supported="true" />
 
+  <!--
+  Auskommentiert, bis die jeweilige Datei tatsächlich existiert (siehe GitHub-Tickets).
+  Die geteilte ModTest-Umgebung wird für alle Projekte genutzt und muss immer log-fehlerfrei starten.
+  Beim Fertigstellen des jeweiligen Tickets hier wieder einkommentieren.
+
   <fillTypes filename="revamp_fillTypes.xml"/>
 
   <extraSourceFiles>
@@ -72,4 +77,5 @@ Changelog:
   </placeableTypes>
 
   <l10n filenamePrefix="l10n/l10n" />
+  -->
 </modDesc>
