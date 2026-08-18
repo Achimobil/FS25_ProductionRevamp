@@ -1,29 +1,15 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<modDesc descVersion="106">
-  <author>Achimobil</author>
-  <contributors>Braeven</contributors>
-  <version>0.0.0.1</version>
-  <title>
-    <en>Production Revamp</en>
-    <de>Production Revamp</de>
-  </title>
+<modDesc descVersion="111">
+    <author>Achimobil</author>
+    <contributors>Braeven</contributors>
+    <version>0.0.0.2</version>
+    <title>
+        <en>Production Revamp</en>
+        <de>Production Revamp</de>
+    </title>
 
-  <description>
-    <en>
-      <![CDATA[Production Revamp for Farming Simulator 25.
-
-Originally created by Braeven for Farming Simulator 22, continued for FS25 with his explicit
-permission by Achimobil.
-
-This is currently a private work-in-progress build and not yet ready for use.
-
-Changelog:
-0.0.0.1
-- Project taken over from Braeven, base structure for FS25 set up
-]]>
-    </en>
-    <de>
-      <![CDATA[Production Revamp für den Landwirtschafts-Simulator 25.
+    <description>
+        <de><![CDATA[Production Revamp für den Landwirtschafts-Simulator 25.
 
 Ursprünglich von Braeven für den Landwirtschafts-Simulator 22 entwickelt, mit seiner ausdrücklichen
 Erlaubnis von Achimobil für den LS25 weitergeführt.
@@ -31,26 +17,33 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
-0.0.0.1
-- Projekt von Braeven übernommen, Grundstruktur für den LS25 angelegt
-]]>
-    </de>
-  </description>
+0.0.0.2 - Produktionsmenü zeigt jetzt an, ob eine Produktion sich die Kapazität mit anderen teilt, plus laufende Gebäudekosten
+0.0.0.1 - Projekt von Braeven übernommen, Grundstruktur für den LS25 angelegt
+]]></de>
+        <en><![CDATA[Production Revamp for Farming Simulator 25.
 
-  <iconFilename>icon_ProductionRevamp.dds</iconFilename>
+Originally created by Braeven for Farming Simulator 22, continued for FS25 with his explicit
+permission by Achimobil.
 
-  <multiplayer supported="true" />
+This is currently a private work-in-progress build and not yet ready for use.]]></en>
+    </description>
 
-  <!--
+    <iconFilename>icon_ProductionRevamp.dds</iconFilename>
+
+    <multiplayer supported="true"/>
+
+    <extraSourceFiles>
+        <sourceFile filename="revampInit.lua"/>
+    </extraSourceFiles>
+
+    <l10n filenamePrefix="l10n/l10n"/>
+
+    <!--
   Auskommentiert, bis die jeweilige Datei tatsächlich existiert (siehe GitHub-Tickets).
   Die geteilte ModTest-Umgebung wird für alle Projekte genutzt und muss immer log-fehlerfrei starten.
   Beim Fertigstellen des jeweiligen Tickets hier wieder einkommentieren.
 
   <fillTypes filename="revamp_fillTypes.xml"/>
-
-  <extraSourceFiles>
-    <sourceFile filename="revampInit.lua" />
-  </extraSourceFiles>
 
   <placeableSpecializations>
     <specialization name="siloObjectFillLevel" className="SiloObjectFillLevelSpecialization" filename="scripts/specializations/siloObjectFillLevelSpecialization.lua"/>
@@ -75,7 +68,5 @@ Changelog:
       <specialization name="productionDisplay"/>
     </type>
   </placeableTypes>
-
-  <l10n filenamePrefix="l10n/l10n" />
   -->
 </modDesc>

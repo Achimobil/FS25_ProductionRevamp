@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUIProfiles>
+  <Profile name="Revamp_pointsListSharedIcon" extends="baseReference" with="anchorMiddleRight">
+    <size value="80px 80px" />
+    <position value="-35px 35px" />
+    <imageSliceId value="noSlice" />
+    <imageColor value="$preset_colorWhite" />
+    <imageSelectedColor value="$preset_colorBlack" />
+  </Profile>
+  <Profile name="Revamp_pointsListBuildingCosts" extends="fs25_subCategoryListItemName">
+    <width value="210px" />
+    <position value="100px -52px" />
+    <textBold value="false" />
+  </Profile>
+</GUIProfiles>
