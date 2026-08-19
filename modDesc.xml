@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.2</version>
+    <version>0.0.0.3</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.3 - Rezept-Grundgerüst (Mix-Gruppen, Booster, primärer Output) und eine Test-Produktion zum Ausprobieren hinzugefügt
 0.0.0.2 - Produktionsmenü zeigt jetzt an, ob eine Produktion sich die Kapazität mit anderen teilt, plus laufende Gebäudekosten
 0.0.0.1 - Projekt von Braeven übernommen, Grundstruktur für den LS25 angelegt
 ]]></de>
@@ -28,7 +29,7 @@ permission by Achimobil.
 This is currently a private work-in-progress build and not yet ready for use.]]></en>
     </description>
 
-    <iconFilename>icon_ProductionRevamp.dds</iconFilename>
+    <iconFilename>icon_ProductionRevamp.png</iconFilename>
 
     <multiplayer supported="true"/>
 
@@ -37,6 +38,10 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
     </extraSourceFiles>
 
     <l10n filenamePrefix="l10n/l10n"/>
+
+    <storeItems>
+        <storeItem xmlFilename="placeables/revampTestMill/revampTestMill.xml"/>
+    </storeItems>
 
     <!--
   Auskommentiert, bis die jeweilige Datei tatsächlich existiert (siehe GitHub-Tickets).

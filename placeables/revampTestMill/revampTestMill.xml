@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<placeable type="productionPoint" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://validation.gdn.giants-software.com/xml/fs25/placeable.xsd">
+    <storeData>
+        <name>$l10n_revamp_station_testMill</name>
+        <functions>
+            <function>$l10n_function_productionPoint</function>
+        </functions>
+        <image>$data/placeables/brandless/productionPointsGeneric/grainMill/store_grainMill.png</image>
+        <price>288000</price>
+        <canBeSold>true</canBeSold>
+        <showInStore>true</showInStore>
+        <lifetime>1000</lifetime>
+        <rotation>0</rotation>
+        <brand>NONE</brand>
+        <species>PLACEABLE</species>
+        <category>productionPoints</category>
+        <brush>
+            <type>placeable</type>
+            <category>production</category>
+            <tab>factories</tab>
+        </brush>
+    </storeData>
+
+    <base>
+        <filename>$data/placeables/brandless/productionPointsGeneric/grainMill/grainMill.i3d</filename>
+    </base>
+
+    <placement useRandomYRotation="false" useManualYRotation="true">
+        <testAreas>
+            <testArea startNode="testAreaStart01" endNode="testAreaEnd01"/>
+        </testAreas>
+        <sounds>
+            <place template="medImp"/>
+        </sounds>
+    </placement>
+
+    <clearAreas>
+        <clearArea startNode="clearAreaStart01" widthNode="clearAreaWidth01" heightNode="clearAreaHeight01"/>
+    </clearAreas>
+
+    <leveling requireLeveling="true" maxSmoothDistance="10" maxSlope="75" maxEdgeAngle="30">
+        <levelAreas>
+            <levelArea startNode="levelAreaStart01" widthNode="levelAreaWidth01" heightNode="levelAreaHeight01" groundType="asphalt"/>
+        </levelAreas>
+        <paintAreas>
+            <paintArea startNode="paintAreaStart01" widthNode="paintAreaWidth01" heightNode="paintAreaHeight01" groundType="asphalt"/>
+        </paintAreas>
+    </leveling>
+
+    <indoorAreas>
+        <indoorArea startNode="indoorAreaStart01" widthNode="indoorAreaWidth01" heightNode="indoorAreaHeight01"/>
+        <indoorArea startNode="indoorAreaStart02" widthNode="indoorAreaWidth02" heightNode="indoorAreaHeight02"/>
+    </indoorAreas>
+
+    <tipOcclusionUpdateAreas>
+        <tipOcclusionUpdateArea startNode="tipOcclusionUpdateAreaStart01" endNode="tipOcclusionUpdateAreaEnd01"/>
+    </tipOcclusionUpdateAreas>
+
+    <ai>
+        <updateAreas>
+            <updateArea startNode="tipOcclusionUpdateAreaStart01" endNode="tipOcclusionUpdateAreaEnd01"/>
+        </updateAreas>
+    </ai>
+
+    <infoTrigger triggerNode="infoTrigger"/>
+
+    <hotspots>
+        <hotspot type="PRODUCTION_POINT" linkNode="unloadTriggerMarker" teleportNode="playerTriggerMarker"/>
+    </hotspots>
+
+    <dynamicallyLoadedParts>
+        <dynamicallyLoadedPart filename="$data/placeables/shared/sellingStationGeneric/sellingStationGenericNoCover.i3d"  linkNode="unloadTriggerLinkNode"/>
+        <dynamicallyLoadedPart filename="$data/placeables/brandless/productionPointsGeneric/grainMill/grainMillProps.i3d" linkNode="props" node="0"/>
+    </dynamicallyLoadedParts>
+
+    <triggerMarkers>
+        <triggerMarker node="warningStripes01"/>
+        <triggerMarker node="unloadTriggerMarker" filename="$data/shared/assets/marker/markerIconUnload.i3d" adjustToGround="true"/>
+        <triggerMarker node="playerTriggerMarker" filename="$data/shared/assets/marker/markerIconWrench.i3d"/>
+    </triggerMarkers>
+
+    <productionPoint>
+        <!-- Ticket #6/#7: Test-Produktion, wird von den weiteren Recipe-Core-Tickets (#8-#10) weiter ausgebaut -->
+        <productions sharedThroughputCapacity="false">
+            <production id="wheatFlour" name="%s %s" params="$l10n_fillType_wheat|$l10n_fillType_flour" cyclesPerHour="105" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="WHEAT" amount="5"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FLOUR" amount="4"/>
+                </outputs>
+            </production>
+            <production id="barleyFlour" name="%s %s" params="$l10n_fillType_barley|$l10n_fillType_flour" cyclesPerHour="20" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="BARLEY" amount="30"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FLOUR" amount="22"/>
+                </outputs>
+            </production>
+        </productions>
+
+        <storage isExtension="false" fillLevelSyncThreshold="50">
+            <capacity fillType="WHEAT"  capacity="126000"/>
+            <capacity fillType="BARLEY" capacity="144000"/>
+            <capacity fillType="FLOUR"  capacity="60000"/>
+        </storage>
+
+        <sellingStation supportsExtension="false">
+            <unloadTrigger exactFillRootNode="exactFillNode" aiNode="unloadTriggerAINode" fillTypes="WHEAT BARLEY"/>
+        </sellingStation>
+
+        <palletSpawner>
+            <spawnPlaces>
+                <spawnPlace startNode="palletAreaStart01" endNode="palletAreaEnd01"/>
+                <spawnPlace startNode="palletAreaStart02" endNode="palletAreaEnd02"/>
+                <spawnPlace startNode="palletAreaStart03" endNode="palletAreaEnd03"/>
+            </spawnPlaces>
+        </palletSpawner>
+
+        <playerTrigger node="playerTrigger"/>
+        <sounds>
+            <idle template="grainMillIdle" linkNode="0>" pitchScale="1.0" volumeScale="0.3"/>
+            <active template="grainMillWork" linkNode="0>" pitchScale="1.0" volumeScale="0.3"/>
+        </sounds>
+    </productionPoint>
+
+    <i3dMappings>
+        <i3dMapping id="clearAreaStart01" node="0>0|0" />
+        <i3dMapping id="clearAreaWidth01" node="0>0|0|0" />
+        <i3dMapping id="clearAreaHeight01" node="0>0|0|1" />
+        <i3dMapping id="levelAreaStart01" node="0>1|0" />
+        <i3dMapping id="levelAreaWidth01" node="0>1|0|0" />
+        <i3dMapping id="levelAreaHeight01" node="0>1|0|1" />
+        <i3dMapping id="paintAreaStart01" node="0>2|0" />
+        <i3dMapping id="paintAreaWidth01" node="0>2|0|0" />
+        <i3dMapping id="paintAreaHeight01" node="0>2|0|1" />
+        <i3dMapping id="indoorAreaStart01" node="0>3|0" />
+        <i3dMapping id="indoorAreaWidth01" node="0>3|0|0" />
+        <i3dMapping id="indoorAreaHeight01" node="0>3|0|1" />
+        <i3dMapping id="indoorAreaStart02" node="0>3|1" />
+        <i3dMapping id="indoorAreaWidth02" node="0>3|1|0" />
+        <i3dMapping id="indoorAreaHeight02" node="0>3|1|1" />
+        <i3dMapping id="testAreaStart01" node="0>4|0" />
+        <i3dMapping id="testAreaEnd01" node="0>4|0|0" />
+        <i3dMapping id="tipOcclusionUpdateAreaStart01" node="0>5|0" />
+        <i3dMapping id="tipOcclusionUpdateAreaEnd01" node="0>5|0|0" />
+        <i3dMapping id="infoTrigger" node="0>7" />
+        <i3dMapping id="sellingStation" node="0>8" />
+        <i3dMapping id="exactFillNode" node="0>8|0" />
+        <i3dMapping id="unloadTriggerMarker" node="0>8|1" />
+        <i3dMapping id="unloadTriggerAINode" node="0>8|2" />
+        <i3dMapping id="unloadTriggerLinkNode" node="0>8|3" />
+        <i3dMapping id="playerTrigger" node="0>9|0" />
+        <i3dMapping id="playerTriggerMarker" node="0>9|1" />
+        <i3dMapping id="warningStripes01" node="0>10|0" />
+        <i3dMapping id="palletSpawner" node="0>11" />
+        <i3dMapping id="palletAreaStart01" node="0>11|0" />
+        <i3dMapping id="palletAreaEnd01" node="0>11|0|0" />
+        <i3dMapping id="palletAreaStart02" node="0>11|1" />
+        <i3dMapping id="palletAreaEnd02" node="0>11|1|0" />
+        <i3dMapping id="palletAreaStart03" node="0>11|2" />
+        <i3dMapping id="palletAreaEnd03" node="0>11|2|0" />
+        <i3dMapping id="props" node="0>12|1" />
+    </i3dMappings>
+</placeable>
