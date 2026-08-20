@@ -3,5 +3,10 @@
   <texts>
     <text name="revamp_ui_production_buildingCostsPerMonth" text="Building costs"/>
     <text name="revamp_station_testMill"                    text="Revamp Test Mill"/>
+    <text name="revamp_ui_production_mixModeAsc"            text="ascending"/>
+    <text name="revamp_ui_production_mixModeDesc"           text="descending"/>
+    <text name="revamp_ui_production_mixModeMost"           text="larger stock"/>
+    <text name="revamp_ui_production_mixModeLeast"          text="smaller stock"/>
+    <text name="revamp_ui_production_mixGroup"              text="Mix group %d"/>
   </texts>
 </l10n>

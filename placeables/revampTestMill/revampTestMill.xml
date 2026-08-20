@@ -80,7 +80,7 @@
     </triggerMarkers>
 
     <productionPoint>
-        <!-- Ticket #6/#7: Test-Produktion, wird von den weiteren Recipe-Core-Tickets (#8-#10) weiter ausgebaut -->
+        <!-- Ticket #6/#7/#8: Test-Produktion, wird von den weiteren Recipe-Core-Tickets (#9/#10) weiter ausgebaut -->
         <productions sharedThroughputCapacity="false">
             <production id="wheatFlour" name="%s %s" params="$l10n_fillType_wheat|$l10n_fillType_flour" cyclesPerHour="105" costsPerActiveHour="1">
                 <inputs>
@@ -98,16 +98,32 @@
                     <output fillType="FLOUR" amount="22"/>
                 </outputs>
             </production>
+            <!-- Ticket #8: Testfall für Mix-Gruppen. Mix-Gruppe 1 (WHEAT/BARLEY) hat Bestand, Mix-Gruppe 2
+                 (OAT/SORGHUM) bekommt bewusst keinen Bestand im Testspielstand, um die rote Farbe bei
+                 komplett unerfüllbarer Gruppe zu testen -->
+            <production id="mixedFlour" name="%s" params="$l10n_fillType_flour" mixMode="MOST" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="WHEAT"    amount="6" mix="1"/>
+                    <input fillType="BARLEY"   amount="6" mix="1"/>
+                    <input fillType="OAT"      amount="6" mix="2"/>
+                    <input fillType="SORGHUM"  amount="6" mix="2"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FLOUR" amount="5"/>
+                </outputs>
+            </production>
         </productions>
 
         <storage isExtension="false" fillLevelSyncThreshold="50">
-            <capacity fillType="WHEAT"  capacity="126000"/>
-            <capacity fillType="BARLEY" capacity="144000"/>
-            <capacity fillType="FLOUR"  capacity="60000"/>
+            <capacity fillType="WHEAT"    capacity="126000"/>
+            <capacity fillType="BARLEY"   capacity="144000"/>
+            <capacity fillType="OAT"      capacity="60000"/>
+            <capacity fillType="SORGHUM"  capacity="60000"/>
+            <capacity fillType="FLOUR"    capacity="60000"/>
         </storage>
 
         <sellingStation supportsExtension="false">
-            <unloadTrigger exactFillRootNode="exactFillNode" aiNode="unloadTriggerAINode" fillTypes="WHEAT BARLEY"/>
+            <unloadTrigger exactFillRootNode="exactFillNode" aiNode="unloadTriggerAINode" fillTypes="WHEAT BARLEY OAT SORGHUM"/>
         </sellingStation>
 
         <palletSpawner>
