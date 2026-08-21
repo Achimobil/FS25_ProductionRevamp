@@ -107,6 +107,7 @@
                     <input fillType="BARLEY"   amount="6" mix="1"/>
                     <input fillType="OAT"      amount="6" mix="2"/>
                     <input fillType="SORGHUM"  amount="6" mix="2"/>
+                    <input fillType="WATER"    amount="2"/>
                 </inputs>
                 <outputs>
                     <output fillType="FLOUR" amount="5"/>
@@ -119,6 +120,7 @@
             <capacity fillType="BARLEY"   capacity="144000"/>
             <capacity fillType="OAT"      capacity="60000"/>
             <capacity fillType="SORGHUM"  capacity="60000"/>
+            <capacity fillType="WATER"    capacity="60000"/>
             <capacity fillType="FLOUR"    capacity="60000"/>
         </storage>
 

@@ -89,9 +89,36 @@ function Revamp.clearRecipeInputElements(inputLayout)
 	end
 end
 
-function Revamp.addRecipeItemRow(parent, input, isSatisfied)
+-- Zwei Farben wie in der PRICES-Liste (fs25_pricesProductListItem: Grundfarbe fs25_colorGrey,
+-- Wechselfarbe fs25_colorGreyDark_50) - genau der Mechanismus, den Vanilla selbst für
+-- abwechselnde Listenzeilen benutzt.
+Revamp.RECIPE_GROUP_COLORS = {
+	{0.04231, 0.04231, 0.04231, 1}, -- fs25_colorGrey
+	{0.02956, 0.02956, 0.02956, 0.5}, -- fs25_colorGreyDark_50
+}
+
+function Revamp.addRecipeRowBackground(row, color)
+	-- BitmapElement.new() + applyProfile() rendert bei einem zur Laufzeit erzeugten Element
+	-- nicht richtig (bestätigt per Test, wiederholt). Stattdessen ein bereits vorhandenes,
+	-- nachweislich funktionierendes Bitmap-Element klonen (row hat durch recipeItemTemplate
+	-- immer ein "icon") und zum Hintergrund umbauen, statt eins neu zu erzeugen.
+	local background = row:getDescendantByName("icon"):clone(row)
+	background.revampLine = true
+	background.name = nil -- sonst kollidiert es mit getDescendantByName("icon") an anderer Stelle
+	table.remove(row.elements) -- clone() hängt hinten an, für den Hintergrund muss es aber vorne (hinter Icon/Menge/Name) stehen
+	table.insert(row.elements, 1, background)
+	background:applyProfile("Revamp_recipeGroupBox")
+	background:setImageColor(GuiOverlay.STATE_NORMAL, color[1], color[2], color[3], color[4])
+	background:updateAnchorDeltas()
+	background:updateAbsolutePosition()
+end
+
+function Revamp.addRecipeItemRow(parent, input, isSatisfied, groupColor)
 	local row = Revamp.recipeItemTemplate:clone(parent)
 	row.revampLine = true
+	if groupColor ~= nil then
+		Revamp.addRecipeRowBackground(row, groupColor)
+	end
 	local fillType = g_fillTypeManager:getFillTypeByIndex(input.type)
 	row:getDescendantByName("icon"):setImageFilename(fillType.hudOverlayFilename)
 	local amount = row:getDescendantByName("amount")
@@ -105,9 +132,12 @@ function Revamp.addRecipeItemRow(parent, input, isSatisfied)
 	return row
 end
 
-function Revamp.addRecipeGroupHeaderRow(parent, mixGroupIndex, isSatisfied)
+function Revamp.addRecipeGroupHeaderRow(parent, mixGroupIndex, isSatisfied, groupColor)
 	local row = Revamp.recipeItemTemplate:clone(parent)
 	row.revampLine = true
+	if groupColor ~= nil then
+		Revamp.addRecipeRowBackground(row, groupColor)
+	end
 	row:getDescendantByName("icon"):delete()
 	row:getDescendantByName("amount"):delete()
 	local name = row:getDescendantByName("name")
@@ -131,20 +161,28 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 		return -- keine Mix-Gruppe in diesem Rezept, Vanilla-Darstellung von superFunc bleibt unangetastet
 	end
 
-	-- Kein eigener Wrapper/Hintergrund-Block in diesem Durchgang (siehe Kommentar am Dateikopf) -
-	-- jede Zeile (Überschrift oder Zutat) wird direkt in inputLayout geklont, exakt dieselbe
+	-- Hier nicht versuchen, den Neuaufbau bei "unveränderten" Daten zu überspringen: superFunc()
+	-- baut inputLayout bei JEDEM Aufruf sowieso immer flach neu auf (unsere Gruppen-Struktur wird
+	-- dabei gelöscht), bevor dieser Code hier überhaupt läuft - ein Überspringen lässt genau
+	-- diesen flachen Vanilla-Zwischenstand stehen.
+
+	-- Jede Zeile (Überschrift oder Zutat) wird direkt in inputLayout geklont, exakt dieselbe
 	-- Technik, mit der Vanilla selbst die Output-Seite (arrowLayout/outputLayout) füllt. Das lässt
 	-- inputLayouts eigenen vertikalen Auto-Flow die Positionierung übernehmen, statt sie selbst
-	-- nachzurechnen.
+	-- nachzurechnen. Ein farbiger Hintergrund pro Block kommt dabei nicht über einen eigenen
+	-- Wrapper-Container (siehe gescheiterter erster Versuch, Memory-Notiz dazu), sondern als
+	-- zusätzliches Bitmap-Kind-Element pro einzelner Zeile - sieht bei lückenlos aneinander
+	-- stoßenden Zeilen wie ein durchgehender Block aus.
 	local inputLayout = cell:getAttribute("inputLayout")
 	Revamp.clearRecipeInputElements(inputLayout)
 
-	for _, mixGroupIndex in ipairs(order) do
+	for groupPosition, mixGroupIndex in ipairs(order) do
 		local isSatisfied = production.mixGroupSatisfied ~= nil and production.mixGroupSatisfied[mixGroupIndex]
-		Revamp.addRecipeGroupHeaderRow(inputLayout, mixGroupIndex, isSatisfied)
+		local groupColor = Revamp.RECIPE_GROUP_COLORS[(groupPosition - 1) % #Revamp.RECIPE_GROUP_COLORS + 1]
+		Revamp.addRecipeGroupHeaderRow(inputLayout, mixGroupIndex, isSatisfied, groupColor)
 
 		for _, input in ipairs(groups[mixGroupIndex]) do
-			Revamp.addRecipeItemRow(inputLayout, input, isSatisfied)
+			Revamp.addRecipeItemRow(inputLayout, input, isSatisfied, groupColor)
 		end
 	end
 
@@ -158,22 +196,17 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 
 	inputLayout:invalidateLayout()
 
-	-- SmoothListElement:buildSectionInfo() (Vanilla) klemmt den aktuellen Scroll-Offset auf die neu
-	-- berechnete Gesamthöhe der Liste - bei jeder Neuberechnung (z.B. beim periodischen 5s-Refresh
-	-- des Menüs) sprang der Scrollbalken dadurch zurück. Nur neu berechnen, wenn sich die Höhe
-	-- tatsächlich geändert hat, und den Scroll-Wert danach explizit wiederherstellen.
-	if inputLayout.size[2] ~= cell.size[2] then
-		local viewOffset = self.detailsList.viewOffset
-		local targetViewOffset = self.detailsList.targetViewOffset
-		Revamp.DebugText("updateRecipeCellMixGroups(): %s Zellgroesse %s -> %s, viewOffset vorher %s", production.id, tostring(cell.size[2]), tostring(inputLayout.size[2]), tostring(viewOffset))
-		cell:setSize(cell.size[1], inputLayout.size[2])
-		self.detailsList.cellDatabase.recipeCell.size[2] = cell.size[2]
-		cell:updateAnchorDeltas(true)
-		self.detailsList:buildSectionInfo()
-		Revamp.DebugText("updateRecipeCellMixGroups(): %s viewOffset nach buildSectionInfo %s, stelle %s wieder her", production.id, tostring(self.detailsList.viewOffset), tostring(viewOffset))
-		self.detailsList.viewOffset = viewOffset
-		self.detailsList.targetViewOffset = targetViewOffset
-	end
+	-- Größe/buildSectionInfo() hier NICHT mehr selbst sichern/wiederherstellen - superFunc() hat
+	-- VOR diesem Code schon seine eigene (zu kleine, weil ohne Gruppen-Überschriften berechnete)
+	-- Größe gesetzt und dabei bereits Vanillas eigenes buildSectionInfo() mit dieser zu kleinen
+	-- Höhe aufgerufen. Das klemmt den echten Scroll-Wert schon, bevor dieser Code hier überhaupt
+	-- anfängt - ein "vorher" ab hier zu sichern rettet also nur den bereits falschen Wert. Die
+	-- eigentliche Sicherung/Wiederherstellung passiert jetzt eine Ebene höher, um superFunc()
+	-- herum, siehe Revamp.populateRecipeCellForItemInSection.
+	cell:setSize(cell.size[1], inputLayout.size[2])
+	self.detailsList.cellDatabase.recipeCell.size[2] = cell.size[2]
+	cell:updateAnchorDeltas(true)
+	self.detailsList:buildSectionInfo()
 end
 
 function Revamp.getIsSharedThroughputCapacityUniform(productionPoint)
@@ -214,17 +247,33 @@ function Revamp.updateProductsListRow(self, cell, production, productionPoint)
 end
 
 function Revamp.populateRecipeCellForItemInSection(self, superFunc, list, section, index, cell)
+	-- Der echte, vom Spieler gesetzte Scroll-Wert muss VOR superFunc() gesichert werden: superFunc
+	-- berechnet für die Rezeptzelle selbst schon eine (zu kleine, weil ohne unsere Gruppen-
+	-- Überschriften ermittelte) Höhe und ruft dabei bereits Vanillas eigenes buildSectionInfo()
+	-- auf, das den aktuellen Scroll-Wert auf diese zu kleine Höhe klemmt - noch bevor unser Code
+	-- überhaupt zum Zug kommt. Erst danach (in Revamp.updateRecipeCellMixGroups) wird die Zelle auf
+	-- die korrekte, größere Höhe gebracht. Ohne diese äußere Sicherung/Wiederherstellung bleibt der
+	-- Scroll-Wert dauerhaft auf dem von Vanilla vorzeitig geklemmten (meist 0) Stand stehen.
+	local isRecipeCell = list == self.detailsList and cell.name == "recipeCell"
+	local viewOffset, targetViewOffset
+	if isRecipeCell then
+		viewOffset = self.detailsList.viewOffset
+		targetViewOffset = self.detailsList.targetViewOffset
+	end
+
 	superFunc(self, list, section, index, cell)
 
 	if list == self.productsList then
 		local _, productionPoint = self:getSelectedProduction()
 		local production = productionPoint.sortedProductions[index]
 		Revamp.updateProductsListRow(self, cell, production, productionPoint)
-	elseif list == self.detailsList and cell.name == "recipeCell" then
+	elseif isRecipeCell then
 		if Revamp.recipeItemTemplate == nil then
 			Revamp.recipeItemTemplate = self.recipeItemTemplate
 		end
 		Revamp.updateRecipeCellMixGroups(self, cell)
+		self.detailsList.viewOffset = viewOffset
+		self.detailsList.targetViewOffset = targetViewOffset
 	end
 end
 

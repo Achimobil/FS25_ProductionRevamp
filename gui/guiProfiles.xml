@@ -12,13 +12,8 @@
     <position value="100px -52px" />
     <textBold value="false" />
   </Profile>
-  <Profile name="Revamp_recipeGroupBoxA" extends="fs25_productionDetailsRecipeLayout">
-    <imageSliceId value="noSlice" />
-    <imageColor value="$preset_fs25_colorGrey" />
-  </Profile>
-  <Profile name="Revamp_recipeGroupBoxB" extends="fs25_productionDetailsRecipeLayout">
-    <imageSliceId value="noSlice" />
-    <imageColor value="$preset_colorWhite_25" />
+  <Profile name="Revamp_recipeGroupBox" extends="fs25_productionDetailsRecipeItem">
+    <imageSliceId value="gui.colorPreset" />
   </Profile>
   <Profile name="Revamp_recipeGroupHeaderName" extends="fs25_productionDetailsRecipeItemName">
     <width value="250px" />
