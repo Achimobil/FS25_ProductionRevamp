@@ -80,7 +80,7 @@
     </triggerMarkers>
 
     <productionPoint>
-        <!-- Ticket #6/#7/#8: Test-Produktion, wird von den weiteren Recipe-Core-Tickets (#9/#10) weiter ausgebaut -->
+        <!-- Test-Produktionen für das Recipe-Core-Modul, wird bei Bedarf weiter ausgebaut -->
         <productions sharedThroughputCapacity="false">
             <production id="wheatFlour" name="%s %s" params="$l10n_fillType_wheat|$l10n_fillType_flour" cyclesPerHour="105" costsPerActiveHour="1">
                 <inputs>
@@ -98,7 +98,7 @@
                     <output fillType="FLOUR" amount="22"/>
                 </outputs>
             </production>
-            <!-- Ticket #8: Testfall für Mix-Gruppen. Mix-Gruppe 1 (WHEAT/BARLEY) hat Bestand, Mix-Gruppe 2
+            <!-- Testfall für Mix-Gruppen. Mix-Gruppe 1 (WHEAT/BARLEY) hat Bestand, Mix-Gruppe 2
                  (OAT/SORGHUM) bekommt bewusst keinen Bestand im Testspielstand, um die rote Farbe bei
                  komplett unerfüllbarer Gruppe zu testen -->
             <production id="mixedFlour" name="%s" params="$l10n_fillType_flour" mixMode="MOST" cyclesPerHour="60" costsPerActiveHour="1">
@@ -111,6 +111,23 @@
                 </inputs>
                 <outputs>
                     <output fillType="FLOUR" amount="5"/>
+                </outputs>
+            </production>
+            <!-- Testfall für Booster/Master-Booster. WATER ist ein optionaler Booster
+                 (+50% Mehlausbeute, solange Bestand da ist). OAT und SORGHUM sind konkurrierende
+                 Master-Booster (boostMode="MOST" wählt bei beiden vorhandenem Bestand den größeren
+                 Faktor, SORGHUM, direkt als globalen Multiplikator auf die gesamte Produktion) -
+                 für den Test bewusst Bestand bei WATER, OAT und/oder SORGHUM setzen/entziehen, um
+                 den Unterschied im Rezept-Dialog und am Ausstoß zu sehen -->
+            <production id="boostedFlour" name="$l10n_revamp_recipe_boostedFlour" boostMode="MOST" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="WHEAT"    amount="6"/>
+                    <input fillType="WATER"    amount="1" mix="boost"  boostFactor="1.5"/>
+                    <input fillType="OAT"      amount="1" mix="master" boostFactor="2"/>
+                    <input fillType="SORGHUM"  amount="1" mix="master" boostFactor="3"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FLOUR" amount="5" boost="true"/>
                 </outputs>
             </production>
         </productions>

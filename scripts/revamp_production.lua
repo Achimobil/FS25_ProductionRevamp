@@ -1,15 +1,11 @@
--- Ticket #7: Rezept-Datenmodell & Grundstruktur.
---
 -- Erweitert die Vanilla-Produktions-Ladefunktion um die Revamp-eigenen Rezept-Felder
--- (Mix-Gruppen, Booster, erzwungener Primär-Output, Sichtbarkeit). Die Vanilla-Funktion
--- wird dafür aufgerufen statt komplett neu geschrieben, damit alles, was Vanilla schon
--- selbst leistet (Storage/Verkaufsstelle/Palettenspawner/Validierung), unverändert bleibt.
+-- (Mix-Gruppen, Booster, erzwungener Primär-Output, Sichtbarkeit). Die Vanilla-Funktion wird dafür
+-- aufgerufen statt komplett neu geschrieben, damit alles, was Vanilla schon selbst leistet
+-- (Storage/Verkaufsstelle/Palettenspawner/Validierung), unverändert bleibt.
 --
--- Ausdrücklich nicht Teil dieses Tickets: FillTypeCategory-Zweig (#11), FeedMixer- und
--- Tier-Trigger-Code (#12/#45), Storage-Kauf/Verkauf/Wetter-Felder (Storage Extension/
--- Buy-Sell/Distribution). Die hier geladenen Boost-/Wetter-Felder werden zur Laufzeit
--- erst von #9/#10 ausgewertet. Mix-Gruppen selbst sind seit #8 implementiert (siehe
--- Revamp.updateProduction weiter unten).
+-- FillTypeCategory-basierte Inputs/Outputs, FeedMixer-/Tier-Trigger-Anbindung sowie Storage-Kauf/
+-- Verkauf/Wetter-Felder werden hier nicht geladen. Wetter-Felder werden aktuell an keiner Stelle
+-- ausgewertet; Mix-Gruppen und Booster/Master-Booster wertet Revamp.updateProduction weiter unten aus.
 
 Revamp.MIX_BOOST = 98
 Revamp.MIX_MASTER = 99
@@ -31,8 +27,10 @@ function Revamp.registerProductionXMLPaths(schema, basePath)
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?)#sharedThroughputCapacity", "Nimmt die Produktionslinie an sharedThroughputCapacity teil", true)
 	schema:register(XMLValueType.STRING, basePath .. ".productions#mixMode", "Standard-Auswahlmodus für Mix-Gruppen (ASC/DESC/MOST/LEAST)", "ASC")
 	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?)#mixMode", "Auswahlmodus für Mix-Gruppen dieser Produktionslinie (ASC/DESC/MOST/LEAST)", "ASC")
+	schema:register(XMLValueType.STRING, basePath .. ".productions#boostMode", "Standard-Auswahlmodus bei mehreren gleichzeitig verfügbaren Master-Booster-Inputs (ASC/DESC/MOST/LEAST)", "ASC")
+	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?)#boostMode", "Auswahlmodus für den Master-Booster dieser Produktionslinie (ASC/DESC/MOST/LEAST)", "ASC")
 	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?).inputs.input(?)#mix", "Mix-Gruppe des Inputs (Zahl, 'boost' oder 'master')", "0")
-	schema:register(XMLValueType.FLOAT, basePath .. ".productions.production(?).inputs.input(?)#boostFactor", "Wertigkeits-Faktor für Booster/Master-Booster", 0)
+	schema:register(XMLValueType.FLOAT, basePath .. ".productions.production(?).inputs.input(?)#boostFactor", "Multiplikator für Booster/Master-Booster (> 0, 1 ist unzulässig weil wirkungslos) - Pflichtfeld bei mix='boost'/'master'")
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).inputs.input(?)#rngAffected", "Input ist von einem Zufallsfaktor betroffen", false)
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).inputs.input(?)#hideFromMenu", "Input ist standardmäßig im Menü versteckt", false)
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).outputs.output(?)#primaryProductFillType", "Erzwingt diesen Output als primären FillType", false)
@@ -51,6 +49,7 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 	local pointHideFromMenu = xmlFile:getBool(key .. ".productions#hideFromMenu", false)
 	local pointAutoStart = xmlFile:getBool(key .. ".productions#autoStart", false)
 	local pointMixMode = xmlFile:getValue(key .. ".productions#mixMode", "ASC"):upper()
+	local pointBoostMode = xmlFile:getValue(key .. ".productions#boostMode", "ASC"):upper()
 
 	xmlFile:iterate(key .. ".productions.production", function(_, productionKey)
 		local id = xmlFile:getValue(productionKey .. "#id")
@@ -61,6 +60,7 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 
 		production.sharedThroughputCapacity = xmlFile:getValue(productionKey .. "#sharedThroughputCapacity", self.sharedThroughputCapacity)
 		production.mixMode = xmlFile:getValue(productionKey .. "#mixMode", pointMixMode):upper()
+		production.boostMode = xmlFile:getValue(productionKey .. "#boostMode", pointBoostMode):upper()
 		production.hideFromMenu = xmlFile:getBool(productionKey .. "#hideFromMenu", pointHideFromMenu)
 		production.autoStart = xmlFile:getBool(productionKey .. "#autoStart", pointAutoStart)
 		production.master = false
@@ -89,7 +89,19 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 			else
 				input.mix = tonumber(mixValue) or 0
 			end
-			input.boostFactor = xmlFile:getValue(inputKey .. "#boostFactor", 0)
+			if input.mix == Revamp.MIX_BOOST or input.mix == Revamp.MIX_MASTER then
+				-- boostFactor ist ein reiner Multiplikator (1 = neutral), deshalb ist der Wert 1 hier
+				-- absichtlich kein gültiger Wert - er hätte ohnehin keine Wirkung, ein vergessenes
+				-- Attribut soll also nicht stillschweigend als "kein Boost" durchgehen.
+				local boostFactor = xmlFile:getValue(inputKey .. "#boostFactor")
+				if boostFactor == nil or boostFactor <= 0 or boostFactor == 1 then
+					Logging.xmlError(xmlFile, "Production Revamp: boostFactor for '%s' must be a positive number other than 1 (1 would have no effect) - got '%s'", inputKey, tostring(boostFactor))
+					boostFactor = 1
+				end
+				input.boostFactor = boostFactor
+			else
+				input.boostFactor = 0
+			end
 			input.rngAffected = xmlFile:getBool(inputKey .. "#rngAffected", false)
 			input.hideFromMenu = xmlFile:getBool(inputKey .. "#hideFromMenu", false)
 			input.color = 0
@@ -114,11 +126,11 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 			end
 		end)
 
-		-- Inputs/Outputs über fillTypeCategory statt fillType (Vanilla-Feature, noch nicht Teil
-		-- unseres Rezept-Systems, siehe #11) werden von den obigen Iterationen nie erreicht, weil
-		-- sie kein #fillType-Attribut haben. Ohne diese Absicherung bliebe input.mix (bzw.
-		-- output.boost) bei solchen Einträgen nil statt 0/true, was in Revamp.updateProduction und
-		-- der Rezept-Anzeige zu "table index is nil" führt, sobald nil mit 0/98/99 verglichen wird.
+		-- Inputs/Outputs über fillTypeCategory statt fillType (ein Vanilla-Feature) werden von den
+		-- obigen Iterationen nie erreicht, weil sie kein #fillType-Attribut haben. Ohne diese
+		-- Absicherung bliebe input.mix (bzw. output.boost) bei solchen Einträgen nil statt 0/true, was
+		-- in Revamp.updateProduction und der Rezept-Anzeige zu "table index is nil" führt, sobald nil
+		-- mit 0/98/99 verglichen wird.
 		for _, input in ipairs(production.inputs) do
 			if input.mix == nil then
 				input.mix = 0
@@ -142,24 +154,40 @@ end
 
 ProductionPoint.load = Utils.overwrittenFunction(ProductionPoint.load, Revamp.loadProductionPoint)
 
--- Ticket #8: Mix-Gruppen & Wertigkeiten.
+-- Vanilla bietet innerhalb von ProductionPoint:updateProduction() keinen Erweiterungspunkt, über
+-- den sich beeinflussen ließe, welcher Input als "vorhanden" zählt bzw. abgebucht wird. Deshalb wird
+-- die komplette Funktion überschrieben (kein Aufruf von superFunc): Inputs mit input.mix in 1..97
+-- sind alternative Zutaten, von denen pro Zyklus nur eine (nach production.mixMode: ASC/DESC/
+-- MOST/LEAST) benötigt und abgebucht wird, statt wie bei Vanilla alle gleichzeitig.
 --
--- Vanilla bietet innerhalb von ProductionPoint:updateProduction() keinen Erweiterungspunkt,
--- über den sich beeinflussen ließe, welcher Input als "vorhanden" zählt bzw. abgebucht wird.
--- Deshalb wird die komplette Funktion überschrieben (kein Aufruf von superFunc), analog zum
--- Original in RevampWork/Production_Revamp: Inputs mit input.mix in 1..97 sind alternative
--- Zutaten, von denen pro Zyklus nur eine (nach production.mixMode: ASC/DESC/MOST/LEAST)
--- benötigt und abgebucht wird, statt wie bei Vanilla alle gleichzeitig.
+-- production.sharedThroughputCapacity nimmt eine einzelne Rezeptlinie von der punktweiten
+-- Kapazitätsteilung aus; input/output.rngAffected lässt Verbrauch/Ertrag zufällig schwanken statt
+-- exaktem Fixbetrag. production.mixMode ist ein statischer XML-Wert, kein Laufzeit-Umschalter.
 --
--- Bei dieser Gelegenheit werden zwei weitere, seit #7 geladene aber bislang wirkungslose
--- Felder mit ausgewertet: production.sharedThroughputCapacity (nimmt eine einzelne
--- Rezeptlinie von der Punkt-weiten Kapazitätsteilung aus) und input/output.rngAffected
--- (Verbrauch/Ertrag schwankt zufällig statt exaktem Fixbetrag).
+-- Booster/Master-Booster (input.mix == Revamp.MIX_BOOST/MIX_MASTER) sind rein optional: fehlender
+-- Bestand blockiert die Produktion nie (anders als mix=0 oder eine leere Mix-Gruppe), er lässt nur
+-- den jeweiligen Bonus ausfallen.
 --
--- Ausdrücklich nicht Teil dieses Tickets: input.mix == Revamp.MIX_BOOST/MIX_MASTER (#9),
--- Wetter-/Zeitmodi (#10), FillTypeCategory-Rezepte (#11), FeedMixer (#12). production.mixMode
--- ist hier ein statischer XML-Wert; das spielerseitige Umschalten zur Laufzeit inkl.
--- Speichern/MP-Sync gehört zu #14/#38/#39.
+-- boostFactor ist ein reiner Multiplikator (> 0, Neutralwert 1 ist absichtlich unzulässig, siehe
+-- Validierung in Revamp.loadProductionPoint oben) - damit hat "Faktor" dieselbe Bedeutung wie in
+-- Vanilla (z.B. foodFactor/productionFactor in der Tierhaltung: 1 = neutral, multiplikativ).
+--
+-- Booster (mix=98): jeder gerade ausreichend bevorratete Booster-Input trägt seinen eigenen
+-- boostFactor bei, mehrere gleichzeitig aktive multiplizieren sich (booster = Produkt aller aktiven
+-- boostFactor-Werte). Ein Einzel-Sieger-Modus (nur der laut boostMode "beste" Booster zählt) ist
+-- nicht umgesetzt - er würde einen generischen production.modes-Mechanismus voraussetzen, den es
+-- hier noch nicht gibt.
+--
+-- Master-Booster (mix=99): wirkt als globaler Durchsatz-Multiplikator auf die gesamte Produktion
+-- (alle anderen Inputs/Outputs), außer auf seinen eigenen Verbrauch (sonst rückgekoppelt). Bei
+-- boostMode MOST/LEAST gewinnt genau ein Master-Input (dessen boostFactor direkt als Multiplikator
+-- übernommen wird), sonst (ASC/DESC) multiplizieren sich wie beim Booster alle aktiven zusammen. Die
+-- Sieger-Auswahl nutzt eine nil-Sentinel-Technik (erster passender Kandidat gewinnt immer, danach
+-- nur noch bei echter Verbesserung) statt eines fest verdrahteten Startwerts - ein Vergleich gegen
+-- einen festen Startwert würde z.B. einen boostFactor von 0,7 bei MOST nie gewinnen lassen.
+--
+-- output.boost == "reverse" nutzt den Kehrwert des Boosters (1/booster) - da booster durch die
+-- Validierung immer > 0 ist, ist der Kehrwert immer wohldefiniert und braucht kein Clamping.
 function Revamp.updateProduction(self, superFunc) ---@diagnostic disable-line: unused-local
 	if self.lastUpdatedTime == nil then
 		self.lastUpdatedTime = g_time
@@ -189,24 +217,69 @@ function Revamp.updateProduction(self, superFunc) ---@diagnostic disable-line: u
 				cyclesPerMinuteMinuteFactor = cyclesPerMinuteMinuteFactor / numSharedThroughputCapacity
 			end
 
+			-- Master-Booster zuerst ermitteln: seine eigene Bestandsprüfung läuft unskaliert (er soll
+			-- sich nicht selbst hochskalieren), alles andere in dieser Produktion skaliert danach mit.
+			local masterFactor = 1
+			local masterConsume = nil
+			if production.master then
+				local masterWinner = nil
+				for x = 1, #production.inputs do
+					local input = production.inputs[x]
+					if input.mix == Revamp.MIX_MASTER then
+						local fillLevel = self:getFillLevel(input.type)
+						input.boostSatisfied = fillLevel >= input.amount * cyclesPerMinuteMinuteFactor
+						if input.boostSatisfied then
+							if production.boostMode == "MOST" then
+								if masterWinner == nil or input.boostFactor > production.inputs[masterWinner].boostFactor then
+									masterWinner = x
+								end
+							elseif production.boostMode == "LEAST" then
+								if masterWinner == nil or input.boostFactor < production.inputs[masterWinner].boostFactor then
+									masterWinner = x
+								end
+							else
+								masterFactor = masterFactor * input.boostFactor
+								masterConsume = masterConsume or {}
+								masterConsume[x] = true
+							end
+						end
+					end
+				end
+				if masterWinner ~= nil then
+					masterFactor = production.inputs[masterWinner].boostFactor
+					masterConsume = {[masterWinner] = true}
+				end
+			end
+			production.masterFactor = masterFactor
+
+			-- Skalierter Takt für alles außer dem Master-Input selbst (s.o.)
+			local factor = cyclesPerMinuteMinuteFactor * masterFactor
+
 			local enoughInputResources = true
 			local enoughOutputSpace = true
 			-- Mix-Gruppen-ID -> Index des production.inputs-Eintrags, der laut mixMode "gewinnt"
 			local groupSelection = {}
 			local groupFillLevel = {}
 			local seenGroups = {}
+			local booster = 1
 
 			for x = 1, #production.inputs do
 				local input = production.inputs[x]
 				if input.mix == 0 then
 					local fillLevel = self:getFillLevel(input.type)
-					if self.isOwned and fillLevel < input.amount * cyclesPerMinuteMinuteFactor then
+					if self.isOwned and fillLevel < input.amount * factor then
 						enoughInputResources = false
 					end
-				elseif input.mix ~= Revamp.MIX_BOOST and input.mix ~= Revamp.MIX_MASTER then
+				elseif input.mix == Revamp.MIX_BOOST then
+					local fillLevel = self:getFillLevel(input.type)
+					input.boostSatisfied = fillLevel >= input.amount * factor
+					if input.boostSatisfied then
+						booster = booster * input.boostFactor
+					end
+				elseif input.mix ~= Revamp.MIX_MASTER then
 					seenGroups[input.mix] = true
 					local fillLevel = self:getFillLevel(input.type)
-					local needAmount = input.amount * cyclesPerMinuteMinuteFactor
+					local needAmount = input.amount * factor
 					if fillLevel >= needAmount then
 						local currentWinner = groupSelection[input.mix]
 						if currentWinner == nil
@@ -219,6 +292,7 @@ function Revamp.updateProduction(self, superFunc) ---@diagnostic disable-line: u
 					end
 				end
 			end
+			production.boosterFactor = booster
 
 			production.mixGroupSatisfied = production.mixGroupSatisfied or {}
 			for mix in pairs(seenGroups) do
@@ -250,8 +324,14 @@ function Revamp.updateProduction(self, superFunc) ---@diagnostic disable-line: u
 				for x = 1, #production.outputs do
 					local output = production.outputs[x]
 					if not output.sellDirectly then
+						local outputMultiplier = 1
+						if output.boost == true then
+							outputMultiplier = booster
+						elseif output.boost == "reverse" then
+							outputMultiplier = 1 / booster
+						end
 						local freeCapacity = self.storage:getFreeCapacity(output.type)
-						if freeCapacity < output.amount * cyclesPerMinuteMinuteFactor then
+						if freeCapacity < output.amount * factor * outputMultiplier then
 							enoughOutputSpace = false
 							if production.status ~= ProductionPoint.PROD_STATUS.NO_OUTPUT_SPACE then
 								production.status = ProductionPoint.PROD_STATUS.NO_OUTPUT_SPACE
@@ -272,8 +352,13 @@ function Revamp.updateProduction(self, superFunc) ---@diagnostic disable-line: u
 					local input = production.inputs[x]
 					local isRequired = input.mix == 0
 					local isSelectedGroupMember = input.mix ~= 0 and input.mix ~= Revamp.MIX_BOOST and input.mix ~= Revamp.MIX_MASTER and groupSelection[input.mix] == x
-					if isRequired or isSelectedGroupMember then
-						local amount = input.amount * cyclesPerMinuteMinuteFactor
+					local isBoostConsumed = input.mix == Revamp.MIX_BOOST and input.boostSatisfied
+					local isMasterConsumed = masterConsume ~= nil and masterConsume[x] == true
+					if isRequired or isSelectedGroupMember or isBoostConsumed or isMasterConsumed then
+						-- Der Master-Input selbst verbraucht sich unskaliert, damit er sich nicht über
+						-- masterFactor selbst hochschaukelt - alle anderen Inputs nutzen den skalierten Takt.
+						local consumeFactor = isMasterConsumed and cyclesPerMinuteMinuteFactor or factor
+						local amount = input.amount * consumeFactor
 						if input.rngAffected then
 							amount = amount * math.random()
 						end
@@ -289,7 +374,13 @@ function Revamp.updateProduction(self, superFunc) ---@diagnostic disable-line: u
 				if self.isOwned then
 					for x = 1, #production.outputs do
 						local output = production.outputs[x]
-						local amount = output.amount * cyclesPerMinuteMinuteFactor
+						local outputMultiplier = 1
+						if output.boost == true then
+							outputMultiplier = booster
+						elseif output.boost == "reverse" then
+							outputMultiplier = 1 / booster
+						end
+						local amount = output.amount * factor * outputMultiplier
 						if output.rngAffected then
 							amount = amount * math.random()
 						end

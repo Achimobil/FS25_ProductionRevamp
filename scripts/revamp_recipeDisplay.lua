@@ -1,29 +1,28 @@
--- Ticket #8: Rezept-Anzeige für Mix-Gruppen.
+-- Rezept-Anzeige für Mix-Gruppen und Booster/Master-Booster.
 --
 -- Laut Architektur.md gehört die Anzeige einer Funktion zum Bau der Funktion selbst statt in ein
 -- eigenes, späteres Ticket. Vanilla zeigt Rezept-Inputs als flache Liste (ein Icon+Menge+Name pro
 -- Input, ProductionFrame.xml "recipeItemTemplate"), ohne jedes Konzept von Mix-Gruppen. Diese
--- Datei baut nur den Input-Teil der Rezeptzeile (cell.name == "recipeCell") neu auf: pro
--- Mix-Gruppe (input.mix in 1..97) eine Überschriftzeile + die zugehörigen Zutaten-Zeilen; nicht
--- gruppierte Zutaten (mix=0) bleiben unverändert darunter stehen.
+-- Datei baut den Input-Teil der Rezeptzeile (cell.name == "recipeCell") neu auf: pro Mix-Gruppe
+-- (input.mix in 1..97) eine Überschriftzeile + die zugehörigen Zutaten-Zeilen, mit alternierendem
+-- Hintergrund pro Gruppen-Block. Jede Zeile wird direkt in inputLayout geklont (recipeItemTemplate),
+-- dessen eigener vertikaler Auto-Flow übernimmt die Positionierung; der Hintergrund kommt dabei als
+-- zusätzliches Bitmap-Kind-Element pro Zeile, nicht über einen eigenen Wrapper-Container.
 --
--- Der alternierende Hintergrund pro Gruppen-Block (siehe Plan/Absprache mit Achim) ist in diesem
--- Durchgang bewusst noch nicht umgesetzt: ein erster Versuch über eine eigene, manuell
--- positionierte BoxLayoutElement-Wrapper-Konstruktion (nach Vorbild des unfertigen FS25-WIP) blieb
--- unsichtbar, vermutlich weil das GUI-Element-Verhalten dabei falsch angenommen wurde. Diese
--- Fassung nutzt nur die im Projekt bereits nachweislich funktionierende Technik (direktes Klonen
--- von recipeItemTemplate in inputLayout, dessen eigener Auto-Flow positioniert). Hintergrundfarbe
--- pro Gruppe ist ein Folgeschritt, sobald die reine Struktur bestätigt sichtbar ist.
+-- Welche einzelne Zutat einer Mix-Gruppe gerade aktiv verbraucht wird, wird bewusst NICHT markiert
+-- (mit Achim abgestimmt) - das ergibt sich für den Spieler aus dem mixMode-Hinweis im Rezept-Titel
+-- plus den ohnehin sichtbaren Füllständen. Nur die Gesamt-Erfüllbarkeit der Gruppe wird farblich
+-- markiert (weiß=genug, rot=Gruppe komplett leer).
 --
--- Ausdrücklich nicht Teil dieses Tickets: ein eigener Block für Booster/Master-Booster
--- (input.mix == Revamp.MIX_BOOST/MIX_MASTER) – die Backend-Auswertung dafür kommt erst mit #9,
--- vorher gibt es keinen aktiv/inaktiv-Zustand zum Anzeigen. Solche Inputs laufen hier wie mix=0
--- einfach unverändert mit durch. outputLayout/arrowLayout werden nicht angefasst.
---
--- Wichtig: welche einzelne Zutat einer Mix-Gruppe gerade aktiv verbraucht wird, wird bewusst
--- NICHT markiert (mit Achim abgestimmt) – das ergibt sich für den Spieler aus dem mixMode-Hinweis
--- im Rezept-Titel plus den ohnehin sichtbaren Füllständen. Nur die Gesamt-Erfüllbarkeit der
--- Gruppe wird farblich markiert (weiß=genug, rot=Gruppe komplett leer).
+-- Booster/Master-Booster (input.mix == Revamp.MIX_BOOST/MIX_MASTER) bekommen eigene Blöcke nach
+-- den Mix-Gruppen und den normalen Zutaten. Sie blockieren die Produktion nie (rein optional),
+-- deshalb keine rote Fehlfarbe wie bei einer leeren Mix-Gruppe, sondern ein gedimmter Grauton für
+-- "gerade nicht aktiv" (Revamp.RECIPE_INACTIVE_COLOR). Da bei Booster/Master jede Zutat unabhängig
+-- für sich zählt (kein Sieger wie bei einer Mix-Gruppe), wird jede Zeile einzeln nach ihrem eigenen
+-- input.boostSatisfied gefärbt und zeigt zusätzlich ihren eigenen festen boostFactor. Die
+-- Gruppenüberschrift zeigt den aktuell wirksamen Gesamt-Faktor (mehrere gleichzeitig aktive Booster
+-- multiplizieren sich) nur, wenn er von 1 abweicht. Revamp.updateRecipeCellOutputs() (weiter unten)
+-- ergänzt am Output analog die tatsächlich geboostete Menge neben der Basis-Menge.
 
 Revamp.RECIPE_ITEM_HEIGHT = 35
 
@@ -46,6 +45,16 @@ function Revamp.getProductionMixGroups(production)
 	end
 	table.sort(order)
 	return groups, order
+end
+
+function Revamp.getProductionBoostInputs(production, mix)
+	local result = {}
+	for _, input in ipairs(production.inputs) do
+		if input.mix == mix then
+			table.insert(result, input)
+		end
+	end
+	return result
 end
 
 function Revamp.getMixModeL10nKey(mixMode)
@@ -89,19 +98,22 @@ function Revamp.clearRecipeInputElements(inputLayout)
 	end
 end
 
--- Zwei Farben wie in der PRICES-Liste (fs25_pricesProductListItem: Grundfarbe fs25_colorGrey,
--- Wechselfarbe fs25_colorGreyDark_50) - genau der Mechanismus, den Vanilla selbst für
--- abwechselnde Listenzeilen benutzt.
+-- Alternierender Hintergrund für Mix-Gruppen- und Booster/Master-Booster-Blöcke.
 Revamp.RECIPE_GROUP_COLORS = {
-	{0.04231, 0.04231, 0.04231, 1}, -- fs25_colorGrey
-	{0.02956, 0.02956, 0.02956, 0.5}, -- fs25_colorGreyDark_50
+	{0.15, 0.15, 0.15, 1},
+	{0.08, 0.08, 0.08, 1},
 }
 
+-- Fehlfarbe für eine komplett unerfüllbare Mix-Gruppe (blockiert die Produktion)
+Revamp.RECIPE_MISSING_COLOR = {1, 0, 0, 1}
+-- Fehlfarbe für einen gerade nicht aktiven Booster/Master-Booster (rein optional, blockiert nicht) -
+-- gedimmter Grauton statt Rot, siehe Kommentar oben.
+Revamp.RECIPE_INACTIVE_COLOR = {0.3, 0.3, 0.3, 1}
+
 function Revamp.addRecipeRowBackground(row, color)
-	-- BitmapElement.new() + applyProfile() rendert bei einem zur Laufzeit erzeugten Element
-	-- nicht richtig (bestätigt per Test, wiederholt). Stattdessen ein bereits vorhandenes,
-	-- nachweislich funktionierendes Bitmap-Element klonen (row hat durch recipeItemTemplate
-	-- immer ein "icon") und zum Hintergrund umbauen, statt eins neu zu erzeugen.
+	-- BitmapElement.new() + applyProfile() rendert bei einem zur Laufzeit erzeugten Element nicht
+	-- richtig. Stattdessen ein bereits vorhandenes Bitmap-Element klonen (row hat durch
+	-- recipeItemTemplate immer ein "icon") und zum Hintergrund umbauen, statt eins neu zu erzeugen.
 	local background = row:getDescendantByName("icon"):clone(row)
 	background.revampLine = true
 	background.name = nil -- sonst kollidiert es mit getDescendantByName("icon") an anderer Stelle
@@ -113,7 +125,7 @@ function Revamp.addRecipeRowBackground(row, color)
 	background:updateAbsolutePosition()
 end
 
-function Revamp.addRecipeItemRow(parent, input, isSatisfied, groupColor)
+function Revamp.addRecipeItemRow(parent, input, isSatisfied, groupColor, unsatisfiedColor)
 	local row = Revamp.recipeItemTemplate:clone(parent)
 	row.revampLine = true
 	if groupColor ~= nil then
@@ -124,15 +136,23 @@ function Revamp.addRecipeItemRow(parent, input, isSatisfied, groupColor)
 	local amount = row:getDescendantByName("amount")
 	amount:setText(g_i18n:formatNumber(input.amount, 2))
 	local name = row:getDescendantByName("name")
-	name:setText("x " .. fillType.title)
+	local nameText = "x " .. fillType.title
+	if input.mix == Revamp.MIX_BOOST or input.mix == Revamp.MIX_MASTER then
+		-- Zeigt den EIGENEN, festen boostFactor dieser Zutat (nicht den aktuell wirksamen
+		-- Gesamtfaktor der Gruppe - der steht in der Gruppenüberschrift) - sonst sieht man nicht,
+		-- was diese eine Zutat überhaupt bewirken würde, sobald sie verfügbar ist.
+		nameText = nameText .. " (x" .. g_i18n:formatNumber(input.boostFactor, 2) .. ")"
+	end
+	name:setText(nameText)
 	if not isSatisfied then
-		name:setTextColor(1, 0, 0, 1)
-		amount:setTextColor(1, 0, 0, 1)
+		local color = unsatisfiedColor or Revamp.RECIPE_MISSING_COLOR
+		name:setTextColor(color[1], color[2], color[3], color[4])
+		amount:setTextColor(color[1], color[2], color[3], color[4])
 	end
 	return row
 end
 
-function Revamp.addRecipeGroupHeaderRow(parent, mixGroupIndex, isSatisfied, groupColor)
+function Revamp.addRecipeGroupHeaderRow(parent, titleText, isSatisfied, groupColor, unsatisfiedColor)
 	local row = Revamp.recipeItemTemplate:clone(parent)
 	row.revampLine = true
 	if groupColor ~= nil then
@@ -143,9 +163,10 @@ function Revamp.addRecipeGroupHeaderRow(parent, mixGroupIndex, isSatisfied, grou
 	local name = row:getDescendantByName("name")
 	name:applyProfile("Revamp_recipeGroupHeaderName") -- volle Zeilenbreite statt nur des rechten Teils (kein Icon/Menge in dieser Zeile)
 	name.textBold = true
-	name:setText(g_i18n:getText("revamp_ui_production_mixGroup"):format(mixGroupIndex))
+	name:setText(titleText)
 	if not isSatisfied then
-		name:setTextColor(1, 0, 0, 1)
+		local color = unsatisfiedColor or Revamp.RECIPE_MISSING_COLOR
+		name:setTextColor(color[1], color[2], color[3], color[4])
 	end
 	return row
 end
@@ -157,8 +178,10 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 	end
 
 	local groups, order = Revamp.getProductionMixGroups(production)
-	if #order == 0 then
-		return -- keine Mix-Gruppe in diesem Rezept, Vanilla-Darstellung von superFunc bleibt unangetastet
+	local hasBoostInputs = #Revamp.getProductionBoostInputs(production, Revamp.MIX_BOOST) > 0
+		or #Revamp.getProductionBoostInputs(production, Revamp.MIX_MASTER) > 0
+	if #order == 0 and not hasBoostInputs then
+		return -- weder Mix-Gruppe noch Booster/Master-Booster in diesem Rezept, Vanilla-Darstellung von superFunc bleibt unangetastet
 	end
 
 	-- Hier nicht versuchen, den Neuaufbau bei "unveränderten" Daten zu überspringen: superFunc()
@@ -170,27 +193,66 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 	-- Technik, mit der Vanilla selbst die Output-Seite (arrowLayout/outputLayout) füllt. Das lässt
 	-- inputLayouts eigenen vertikalen Auto-Flow die Positionierung übernehmen, statt sie selbst
 	-- nachzurechnen. Ein farbiger Hintergrund pro Block kommt dabei nicht über einen eigenen
-	-- Wrapper-Container (siehe gescheiterter erster Versuch, Memory-Notiz dazu), sondern als
-	-- zusätzliches Bitmap-Kind-Element pro einzelner Zeile - sieht bei lückenlos aneinander
-	-- stoßenden Zeilen wie ein durchgehender Block aus.
+	-- Wrapper-Container, sondern als zusätzliches Bitmap-Kind-Element pro einzelner Zeile - sieht
+	-- bei lückenlos aneinander stoßenden Zeilen wie ein durchgehender Block aus.
 	local inputLayout = cell:getAttribute("inputLayout")
 	Revamp.clearRecipeInputElements(inputLayout)
 
-	for groupPosition, mixGroupIndex in ipairs(order) do
+	local groupPosition = 0
+	for _, mixGroupIndex in ipairs(order) do
+		groupPosition = groupPosition + 1
 		local isSatisfied = production.mixGroupSatisfied ~= nil and production.mixGroupSatisfied[mixGroupIndex]
 		local groupColor = Revamp.RECIPE_GROUP_COLORS[(groupPosition - 1) % #Revamp.RECIPE_GROUP_COLORS + 1]
-		Revamp.addRecipeGroupHeaderRow(inputLayout, mixGroupIndex, isSatisfied, groupColor)
+		Revamp.addRecipeGroupHeaderRow(inputLayout, g_i18n:getText("revamp_ui_production_mixGroup"):format(mixGroupIndex), isSatisfied, groupColor)
 
 		for _, input in ipairs(groups[mixGroupIndex]) do
 			Revamp.addRecipeItemRow(inputLayout, input, isSatisfied, groupColor)
 		end
 	end
 
-	-- Nicht gruppierte Zutaten (mix=0) sowie Booster/Master-Booster (#9, hier noch unstyled)
-	-- unverändert im bisherigen Stil darunter anhängen
+	-- Nicht gruppierte, nicht optionale Zutaten (mix=0) unverändert im bisherigen Stil darunter
+	-- anhängen - vor Booster/Master-Booster: Mix-Gruppen stehen automatisch oben, danach die
+	-- normalen Zutaten, Booster/Master-Booster erst ganz am Ende.
 	for _, input in ipairs(production.inputs) do
-		if input.mix == 0 or input.mix == Revamp.MIX_BOOST or input.mix == Revamp.MIX_MASTER then
+		if input.mix == 0 then
 			Revamp.addRecipeItemRow(inputLayout, input, true)
+		end
+	end
+
+	-- Booster/Master-Booster: eigener Block je Typ, in derselben abwechselnden Gruppenfarbe wie die
+	-- Mix-Gruppen oben. isActive/isSatisfied hier ist bewusst NICHT "blockiert die Produktion"
+	-- (Booster/Master blockieren nie), sondern "trägt gerade tatsächlich bei". Die Kopfzeile zeigt
+	-- den aktuell wirksamen GESAMT-Faktor (mehrere gleichzeitig aktive Booster multiplizieren sich),
+	-- die einzelne Zutatenzeile daneben ihren eigenen, festen boostFactor (siehe addRecipeItemRow).
+	local boostInputs = Revamp.getProductionBoostInputs(production, Revamp.MIX_BOOST)
+	if #boostInputs > 0 then
+		groupPosition = groupPosition + 1
+		local groupColor = Revamp.RECIPE_GROUP_COLORS[(groupPosition - 1) % #Revamp.RECIPE_GROUP_COLORS + 1]
+		local factor = production.boosterFactor or 1
+		local isActive = factor ~= 1
+		local title = g_i18n:getText("revamp_ui_production_booster")
+		if isActive then
+			title = title .. " (" .. g_i18n:getText("revamp_ui_production_boostFactorCurrent"):format(g_i18n:formatNumber(factor, 2)) .. ")"
+		end
+		Revamp.addRecipeGroupHeaderRow(inputLayout, title, isActive, groupColor, Revamp.RECIPE_INACTIVE_COLOR)
+		for _, input in ipairs(boostInputs) do
+			Revamp.addRecipeItemRow(inputLayout, input, input.boostSatisfied == true, groupColor, Revamp.RECIPE_INACTIVE_COLOR)
+		end
+	end
+
+	local masterInputs = Revamp.getProductionBoostInputs(production, Revamp.MIX_MASTER)
+	if #masterInputs > 0 then
+		groupPosition = groupPosition + 1
+		local groupColor = Revamp.RECIPE_GROUP_COLORS[(groupPosition - 1) % #Revamp.RECIPE_GROUP_COLORS + 1]
+		local factor = production.masterFactor or 1
+		local isActive = factor ~= 1
+		local title = g_i18n:getText("revamp_ui_production_masterBooster")
+		if isActive then
+			title = title .. " (" .. g_i18n:getText("revamp_ui_production_boostFactorCurrent"):format(g_i18n:formatNumber(factor, 2)) .. ")"
+		end
+		Revamp.addRecipeGroupHeaderRow(inputLayout, title, isActive, groupColor, Revamp.RECIPE_INACTIVE_COLOR)
+		for _, input in ipairs(masterInputs) do
+			Revamp.addRecipeItemRow(inputLayout, input, input.boostSatisfied == true, groupColor, Revamp.RECIPE_INACTIVE_COLOR)
 		end
 	end
 
@@ -207,6 +269,65 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 	self.detailsList.cellDatabase.recipeCell.size[2] = cell.size[2]
 	cell:updateAnchorDeltas(true)
 	self.detailsList:buildSectionInfo()
+end
+
+-- Zeigt bei einem aktiven Booster/Master-Booster zusätzlich zur Basis-Menge auch die tatsächlich
+-- produzierte (geboostete) Menge an, z.B. "5.00 (15.00)" statt nur "5.00". Ohne Boost
+-- (Gesamtfaktor 1) bleibt es bei der Basis-Menge. outputLayout wird von superFunc() immer flach neu
+-- aufgebaut (ein Element pro production.outputs-Eintrag, in dessen Reihenfolge - siehe
+-- InGameMenuProductionFrame:populateCellForItemInSection), deshalb reicht hier ein Nachbearbeiten
+-- der bereits vorhandenen Zeilen statt eines eigenen Neuaufbaus wie bei inputLayout.
+function Revamp.updateRecipeCellOutputs(self, cell)
+	local production = self:getSelectedProduction()
+	if production == nil then
+		return
+	end
+
+	local outputLayout = cell:getAttribute("outputLayout")
+	for x = 1, #production.outputs do
+		local output = production.outputs[x]
+		local row = outputLayout.elements[x]
+		if row == nil then
+			break -- sollte nicht vorkommen, superFunc() legt für jeden Output genau eine Zeile an
+		end
+
+		-- Die Menge-Spalte ist im Original nur 40px breit (fs25_productionDetailsRecipeItemAmount,
+		-- textLayoutMode="resize") - für kurze Basiswerte wie "6.00" gedacht. Mit Basis- UND
+		-- geboosteter Menge zusammen ("5.00 (15.00)") schrumpft die Schrift sonst winzig. Die Spalte
+		-- wird deshalb immer verbreitert statt nur bei aktivem Boost - das hält alle Outputs einer
+		-- Produktion gleich breit (auch wenn nur ein Teil der Outputs geboostet wird) und die Breite
+		-- springt nicht sichtbar, wenn der Booster-Bestand während des Betrachtens schwankt. Menge
+		-- UND Name sind beide "anchorTopRight"
+		-- mit festen Pixel-Abständen zum rechten Zeilenrand - wird die ganze Zeile (row) breiter,
+		-- verschiebt sich dieser Rand für beide automatisch mit, Name behält seine volle Breite. Die
+		-- Zeile selbst ist nur 250px breit, aber outputLayout (der Container) ist 400px breit -
+		-- reichlich Platz zum Verbreitern, ohne dass es dort abgeschnitten wird.
+		local rowSize = GuiUtils.getNormalizedScreenValues("310px 0px", "0px 0px")
+		local amountSize = GuiUtils.getNormalizedScreenValues("100px 0px", "0px 0px")
+		row:setSize(rowSize[1], nil)
+		local amount = row:getDescendantByName("amount")
+		amount:setSize(amountSize[1], nil)
+		row:updateAnchorDeltas()
+		row:updateAbsolutePosition()
+		amount:updateAnchorDeltas()
+		amount:updateAbsolutePosition()
+		local name = row:getDescendantByName("name")
+		name:updateAnchorDeltas()
+		name:updateAbsolutePosition()
+
+		local totalMultiplier = production.masterFactor or 1
+		if output.boost == true then
+			totalMultiplier = totalMultiplier * (production.boosterFactor or 1)
+		elseif output.boost == "reverse" then
+			totalMultiplier = totalMultiplier / (production.boosterFactor or 1)
+		end
+
+		if totalMultiplier ~= 1 then
+			amount:setText(g_i18n:formatNumber(output.amount, 2) .. " (" .. g_i18n:formatNumber(output.amount * totalMultiplier, 2) .. ")")
+		else
+			amount:setText(g_i18n:formatNumber(output.amount, 2))
+		end
+	end
 end
 
 function Revamp.getIsSharedThroughputCapacityUniform(productionPoint)
@@ -246,6 +367,55 @@ function Revamp.updateProductsListRow(self, cell, production, productionPoint)
 	end
 end
 
+-- Gesamt-Boostfaktor als vierte Zeile im Status/Zyklen/Kosten-Infokasten (cell.name ==
+-- "detailsCell"), damit Modder/Spieler das Zusammenspiel von Booster UND Master-Booster (sie
+-- multiplizieren sich) nicht selbst ausrechnen müssen. Wie schon beim Gebäudekosten-Eintrag in der
+-- pointsList (siehe revamp_productionDialog.lua) wird dafür kein neues Element per .new() erzeugt
+-- (siehe Kommentar bei addRecipeRowBackground - applyProfile() auf frisch erzeugten Elementen
+-- rendert nicht zuverlässig), sondern der bereits vorhandene "infoCosts"-Text zweimal geklont
+-- (einmal als Beschriftung mit umgehängtem Profil, einmal als Wert) und eine Zeile tiefer
+-- verschoben. Bewusst ohne den Hintergrundbalken der anderen drei Zeilen
+-- (fs25_productionDetailsInfoBg) - der hat kein eigenes "name"-Attribut zum sicheren Klonen.
+function Revamp.updateDetailsCellBoostInfo(self, cell)
+	local infoCosts = cell:getAttribute("infoCosts")
+	local infoBox = infoCosts.parent
+	-- Unsere geklonten Zeilen hängen im infoBox-Container (Elternelement von infoCosts), nicht
+	-- direkt in "cell" - Aufräumen muss deshalb dort ansetzen, sonst bleiben sie bei jedem
+	-- Produktionswechsel stehen.
+	Revamp.removeRevampElements(infoBox)
+
+	local production = self:getSelectedProduction()
+	if production == nil then
+		return
+	end
+
+	local hasBoostInputs = #Revamp.getProductionBoostInputs(production, Revamp.MIX_BOOST) > 0
+		or #Revamp.getProductionBoostInputs(production, Revamp.MIX_MASTER) > 0
+	if not hasBoostInputs then
+		return -- kein Booster/Master-Booster in diesem Rezept, keine zusätzliche Zeile nötig
+	end
+
+	local combinedFactor = (production.boosterFactor or 1) * (production.masterFactor or 1)
+
+	local label = infoCosts:clone(infoBox)
+	label.revampLine = true
+	label:applyProfile("fs25_productionDetailsInfoName")
+	label.textBold = false -- applyProfile setzt das von infoCosts geerbte textBold=true nicht zurück
+	label:setText(g_i18n:getText("revamp_ui_production_totalBoost"))
+	local labelPos = GuiUtils.getNormalizedScreenValues("15px -96px", "0px 0px")
+	label:setPosition(labelPos[1], labelPos[2])
+	label:updateAnchorDeltas()
+	label:updateAbsolutePosition()
+
+	local value = infoCosts:clone(infoBox)
+	value.revampLine = true
+	value:setText("x" .. g_i18n:formatNumber(combinedFactor, 2))
+	local valuePos = GuiUtils.getNormalizedScreenValues("-15px -96px", "0px 0px")
+	value:setPosition(valuePos[1], valuePos[2])
+	value:updateAnchorDeltas()
+	value:updateAbsolutePosition()
+end
+
 function Revamp.populateRecipeCellForItemInSection(self, superFunc, list, section, index, cell)
 	-- Der echte, vom Spieler gesetzte Scroll-Wert muss VOR superFunc() gesichert werden: superFunc
 	-- berechnet für die Rezeptzelle selbst schon eine (zu kleine, weil ohne unsere Gruppen-
@@ -272,8 +442,11 @@ function Revamp.populateRecipeCellForItemInSection(self, superFunc, list, sectio
 			Revamp.recipeItemTemplate = self.recipeItemTemplate
 		end
 		Revamp.updateRecipeCellMixGroups(self, cell)
+		Revamp.updateRecipeCellOutputs(self, cell)
 		self.detailsList.viewOffset = viewOffset
 		self.detailsList.targetViewOffset = targetViewOffset
+	elseif list == self.detailsList and cell.name == "detailsCell" then
+		Revamp.updateDetailsCellBoostInfo(self, cell)
 	end
 end
 

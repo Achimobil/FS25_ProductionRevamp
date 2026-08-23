@@ -8,5 +8,10 @@
     <text name="revamp_ui_production_mixModeMost"           text="larger stock"/>
     <text name="revamp_ui_production_mixModeLeast"          text="smaller stock"/>
     <text name="revamp_ui_production_mixGroup"              text="Mix group %d"/>
+    <text name="revamp_ui_production_booster"               text="Booster"/>
+    <text name="revamp_ui_production_masterBooster"         text="Master booster"/>
+    <text name="revamp_ui_production_boostFactorCurrent"    text="current: x%s"/>
+    <text name="revamp_recipe_boostedFlour"                 text="Boosted Flour"/>
+    <text name="revamp_ui_production_totalBoost"            text="Total boost"/>
   </texts>
 </l10n>
