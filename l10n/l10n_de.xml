@@ -13,5 +13,17 @@
     <text name="revamp_ui_production_boostFactorCurrent"    text="aktuell: x%s"/>
     <text name="revamp_recipe_boostedFlour"                 text="Booster-Mehl"/>
     <text name="revamp_ui_production_totalBoost"            text="Gesamt-Boost"/>
+    <text name="revamp_ui_production_outputModeStore"       text="Einlagern"/>
+    <text name="revamp_ui_production_outputModeManual"      text="Auslagern"/>
+    <text name="revamp_manageDialogTitle"                   text="Verwalten"/>
+    <text name="revamp_manageSectionBoth"                   text="Input und Output"/>
+    <text name="revamp_manageButton"                        text="Verwalten"/>
+    <text name="revamp_chooseSpawnOptionsText"              text="Bitte auswählen:"/>
+    <text name="revamp_storageOpenProduction"               text="Produktion verwalten."/>
+    <text name="revamp_storageEmpty"                        text="Lager ist leer."/>
+    <text name="revamp_storageButtonSpawn"                  text="Waren auslagern"/>
+    <text name="revamp_storageMax"                          text="Max"/>
+    <text name="revamp_storageNone"                         text="Nix"/>
+    <text name="revamp_storageAll"                          text="Alles"/>
   </texts>
 </l10n>

@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUI onOpen="onOpen" onClose="onClose" onCreate="onCreate">
+    <GuiElement profile="newLayer"/>
+    <Bitmap profile="dialogFullscreenBg" id="dialogBg"/>
+    <GuiElement profile="revamp_storageDialogBg" id="dialogElement">
+        <ThreePartBitmap profile="fs25_dialogBgMiddleSmall"/>
+        <ThreePartBitmap profile="fs25_dialogBgTopSmall"/>
+        <ThreePartBitmap profile="fs25_dialogBgBottom"/>
+        <GuiElement profile="fs25_dialogContentContainer">
+            <Text profile="fs25_dialogTitle"                                            id="dialogTitleElement" position="0px -35px"/>
+            <Text profile="fs25_dialogText"  text="$l10n_revamp_chooseSpawnOptionsText" id="dialogTextElement"  position="0px -85px"/>
+
+            <MultiTextOption profile="revamp_storageMultiTextOption" id="fillTypeElement" focusId="storageFillType" focusChangeTop="storageAmount" position="0px 225px" onClick="onClickFillType" focusInit="onOpen">
+                <Text profile="fs25_multiTextOptionText" id="fillTypeText" name="text"/>
+            </MultiTextOption>
+            <Bitmap profile="revamp_storageFillTypeIcon" name="fillTypeIcon" id="fillTypeIcon"/>
+
+            <MultiTextOption profile="revamp_storageMultiTextOption" id="fillTypePackageElement" position="0px 165px" onClick="onClickPackages">
+                <Text profile="fs25_multiTextOptionText" id="fillTypePackageText" name="text"/>
+            </MultiTextOption>
+            <Bitmap profile="revamp_storageModIcon" name="modIcon" id="modIcon"/>
+
+            <MultiTextOption profile="revamp_storageMultiTextOption" id="farmIDElement" position="0px 105px" onClick="onClickIDElement">
+                <Text profile="fs25_multiTextOptionText" id="farmIDText" name="text"/>
+            </MultiTextOption>
+            <Bitmap profile="revamp_storageFarmIcon" name="farmIcon" id="farmIcon"/>
+
+            <!-- Gemeinsame Hintergründe für -10|-1 und +1|+10|Max (nur außen rund, nahtlos verbunden) - müssen vor den Buttons stehen, damit sie dahinter liegen.
+                 Die Buttons selbst sind unsichtbar (nur Klickfläche+Text) - die _left/_middle/_right-Slices sind nur als Teile EINES ThreePartBitmap gültig, nicht einzeln pro Button einsetzbar.
+                 Nix/Alles bleiben eigenständige, selbst sichtbare Buttons (kein Partner zum Verbinden). -->
+            <ThreePartBitmap profile="revamp_storageMinusGroupBg"/>
+            <Bitmap profile="revamp_storagePlusGroupDivider" position="-276px 52px"/>
+            <ThreePartBitmap profile="revamp_storagePlusGroupBg"/>
+            <Bitmap profile="revamp_storagePlusGroupDivider" position="276px 52px"/>
+            <Bitmap profile="revamp_storagePlusGroupDivider" position="324px 52px"/>
+            <GuiElement onCreate="onCreateButten">
+                <Button profile="revamp_storageMultiTextOptionLeft1"   name="left1"   text="-1"                      onClick="onClickLeft1"   focusId="10000_left"  focusChangeTop="1000_left"  focusChangeBottom="100000_left"/>
+                <Button profile="revamp_storageMultiTextOptionRight1"  name="right1"  text="+1"                      onClick="onClickRight1"  focusId="10000_right" focusChangeTop="1000_right" focusChangeBottom="100000_right"/>
+            </GuiElement>
+            <GuiElement onCreate="onCreateButten">
+                <Button profile="revamp_storageMultiTextOptionLeft10"  name="left10"  text="-10"                     onClick="onClickLeft10"  focusId="10000_left"  focusChangeTop="1000_left"  focusChangeBottom="100000_left"/>
+                <Button profile="revamp_storageMultiTextOptionRight10" name="right10" text="+10"                     onClick="onClickRight10" focusId="10000_right" focusChangeTop="1000_right" focusChangeBottom="100000_right"/>
+            </GuiElement>
+            <GuiElement onCreate="onCreateButten">
+                <Button profile="revamp_storageMultiTextOptionMax"     name="max"     text="$l10n_revamp_storageMax" onClick="onClickMax"     focusId="10000_right" focusChangeTop="1000_right" focusChangeBottom="100000_right"/>
+            </GuiElement>
+            <!-- Hintergrund für Nix/Alles: gleiches Prinzip wie die Gruppen oben - eigener, unsichtbarer Button auf einem separaten ThreePartBitmap (_left/_middle/_right sind nur als Teile EINES gemeinsamen Bitmaps gültig).
+                 gui.3dShop_button (einzeln, ohne Slicing) ist kein generischer Rundrechteck-Hintergrund, sondern das quadratische Pfeiltasten-Icon der MultiTextOption-Buttons (siehe menu/gui.xml/imageInvertX) -
+                 daher auf 60x24 gestreckt nur einseitig rund und dunkel. -->
+            <ThreePartBitmap profile="revamp_storageNixBg"/>
+            <ThreePartBitmap profile="revamp_storageAllesBg"/>
+            <GuiElement onCreate="onCreateButten">
+                <Button profile="revamp_storageMultiTextOptionNix"   name="nix"   text="$l10n_revamp_storageNone" onClick="onClickNix"/>
+                <Button profile="revamp_storageMultiTextOptionAlles" name="alles" text="$l10n_revamp_storageAll"  onClick="onClickAlles"/>
+            </GuiElement>
+            <!-- Feste Schleife über die 4 echten Auswahlelemente (FillType/Paket/Farm/Regler) -
+                 FocusManager.linkElements setzt beim Verlinken immer die focusId des Zielelements (siehe FocusManager.lua),
+                 deshalb bekommt der Regler eine eigene focusId ("storageAmount") und springt mit focusChangeBottom zurück auf fillTypeElement (focusId "storageFillType", oben im Dialog),
+                 das seinerseits mit focusChangeTop zurück auf den Regler zeigt.
+                 Paket/Farm dazwischen brauchen keine eigenen Einträge, die automatische Positionssuche findet die Nachbarn in der Kette von selbst.
+                 Die Tasten-Reihe (-10/-1/+1/+10/Max/Nix/Alles) bleibt dadurch komplett außen vor und weiterhin mausonly. -->
+            <OptionSlider profile="revamp_storageOptionSlider" onClick="onClickAmount" id="amountElement" focusId="storageAmount" position="0px 45px" focusChangeBottom="storageFillType">
+                <Text profile="fs25_optionSliderText" id="itemTextAmount" name="text"/>
+            </OptionSlider>
+
+            <GuiElement profile="revamp_storageMultiTextOption" position="85px 240px">
+                <Button onClick="onClickChangeColor" id="changeColorButton" size="80px 31px" pivot="1 0.5">
+                    <ThreePartBitmap profile="fs25_colorButtonPicked" id="changeColorButtonImage"/>
+                    <Bitmap profile="fs25_colorButtonIconBox">
+                        <Bitmap profile="fs25_colorButtonIcon"/>
+                    </Bitmap>
+                    <Bitmap profile="fs25_colorButtonOverlay"/>
+                </Button>
+            </GuiElement>
+        </GuiElement>
+
+        <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
+            <Button profile="buttonOK" text="$l10n_button_select" onClick="onClickOk" id="yesButton"/>
+            <Bitmap profile="fs25_dialogButtonBoxSeparator"/>
+            <Button profile="buttonBack" text="$l10n_button_back" onClick="onClickBack" id="noButton"/>
+        </BoxLayout>
+    </GuiElement>
+    <GUIProfiles>
+        <Profile name="revamp_storageDialogBg" extends="fs25_dialogBg">
+            <size value="820px 460px"/>
+        </Profile>
+        <Profile name="revamp_storageFillTypeIcon" extends="baseReference" with="anchorMiddleLeft">
+            <size value="66px 66px"/>
+            <position value="35px 62px"/>
+            <imageSliceId value="noSlice"/>
+        </Profile>
+        <Profile name="revamp_storageFarmIcon" extends="baseReference" with="anchorMiddleLeft">
+            <size value="66px 66px"/>
+            <position value="35px -66px"/>
+            <imageSliceId value="gui.multiplayer_blackBox_right"/>
+            <startImageSize value="20px 0"/>
+            <startImageSliceId value="gui.multiplayer_blackBox_left"/>
+            <endImageSize value="0px 0"/>
+        </Profile>
+        <Profile name="revamp_storageModIcon" extends="baseReference" with="anchorMiddleLeft">
+            <size value="66px 66px"/>
+            <position value="35px -3px"/>
+            <imageSliceId value="noSlice"/>
+        </Profile>
+        <Profile name="revamp_storageMultiTextOption" extends="baseReference" with="anchorBottomCenter">
+            <size value="440px 36px"/>
+            <autoAddDefaultElements value="true"/>
+            <defaultProfileButtonLeft value="fs25_multiTextOptionLeft"/>
+            <defaultProfileButtonRight value="fs25_multiTextOptionRight"/>
+            <defaultProfileText value="fs25_multiTextOptionText"/>
+            <defaultProfileBgThreePart value="fs25_multiTextOptionBg"/>
+        </Profile>
+        <Profile name="revamp_storageOptionSlider" extends="fs25_multiTextOption" with="anchorBottomCenter">
+            <width value="440px"/>
+            <sliderOffset value="5px"/>
+            <useFillingBar value="true"/>
+            <updateTextPosition value="false"/>
+            <hideLeftRightButtons value="true"/>
+            <defaultProfileBgThreePart value="fs25_optionSliderBg"/>
+            <defaultProfileText value="fs25_optionSliderText"/>
+            <defaultProfileSlider value="fs25_optionSliderIcon"/>
+            <defaultProfileFillingBarThreePart value="fs25_optionSliderFillingBar"/>
+        </Profile>
+        <!-- Basis für Buttons, die auf einem GEMEINSAMEN, externen Hintergrund sitzen (-10|-1 und +1|+10|Max) - der Button selbst ist unsichtbar (nur Klickfläche+Text).
+             Bewusst keine eigene Fokus-Farbe/-Slice: noSlice als Fokus-Slice rendert bei dieser Engine einen kaputten Platzhalter statt einer schlichten Fläche
+             (nicht lösbar, da _left/_right als Fokus-Slice nicht einzeln pro Button nutzbar sind, siehe revamp_storageGroupBg).
+             Da diese Buttons ohnehin nur per Maus bedienbar sind (kein focusId/focusChange), reicht der Maus-Cursor als Rückmeldung, kein optischer Klick-Zustand nötig. -->
+        <Profile name="revamp_storageGroupedButton" extends="fs25_multiTextOptionLeft" with="anchorBottomCenter">
+            <size value="40px 24px"/>
+            <iconSliceId value="noSlice"/>
+            <imageInvertX value="false"/>
+            <imageFocusedInvertX value="false"/>
+            <imageSliceId value="noSlice"/>
+            <imageFocusedSliceId value="noSlice"/>
+            <imageColor value="$preset_colorTransparent"/>
+            <imageFocusedColor value="$preset_colorTransparent"/>
+            <textSize value="16px"/>
+            <textOffset value="-7px 1px"/>
+            <clickSound value="CLICK"/>
+        </Profile>
+        <!-- Basis für eigenständige Buttons ohne Partner (Nix, Alles) - selbst unsichtbar (nur Klickfläche+Text), der sichtbare Hintergrund kommt von revamp_storageSoloBg
+             (eigenes ThreePartBitmap je Taste, gleiches Prinzip wie revamp_storageGroupBg).
+             Bewusst keine eigene Fokus-Farbe (noSlice als Fokus-Slice rendert kaputt, siehe revamp_storageGroupedButton). -->
+        <Profile name="revamp_storageSoloButton" extends="revamp_storageGroupedButton" with="anchorBottomCenter">
+            <size value="60px 24px"/>
+        </Profile>
+        <!-- Gemeinsamer, sichtbarer Hintergrund je Gruppe - Basis + zwei Positionsvarianten (-10|-1 und +1|+10|Max).
+             Rund nur außen, nahtlos verbunden über die volle Gruppenbreite. -->
+        <Profile name="revamp_storageGroupBg" extends="baseReference" with="anchorBottomCenter">
+            <size value="88px 24px"/>
+            <imageSliceId value="gui.3dShop_button_middle"/>
+            <startImageSize value="12px 0"/>
+            <startImageSliceId value="gui.3dShop_button_left"/>
+            <endImageSize value="12px 0"/>
+            <endImageSliceId value="gui.3dShop_button_right"/>
+            <imageColor value="$preset_fs25_colorGrey"/>
+            <startImageColor value="$preset_fs25_colorGrey"/>
+            <endImageColor value="$preset_fs25_colorGrey"/>
+        </Profile>
+        <!-- Spannt von -10s linkem Rand (-320px) bis -1s rechtem Rand (-232px) - Breite 88px, Mitte -276px. -->
+        <Profile name="revamp_storageMinusGroupBg" extends="revamp_storageGroupBg" with="anchorBottomCenter">
+            <position value="-276px 52px"/>
+        </Profile>
+        <!-- Spannt von +1s linkem Rand (232px) bis Max' rechtem Rand (373px) - Breite 141px, Mitte 302px. -->
+        <Profile name="revamp_storagePlusGroupBg" extends="revamp_storageGroupBg" with="anchorBottomCenter">
+            <size value="141px 24px"/>
+            <position value="302px 52px"/>
+        </Profile>
+        <!-- Eigenständiger Hintergrund für eine einzelne Solo-Taste (Nix, Alles) - gleiches Prinzip wie revamp_storageGroupBg, nur für die Breite EINER Taste statt einer Gruppe. -->
+        <Profile name="revamp_storageSoloBg" extends="baseReference" with="anchorBottomCenter">
+            <size value="60px 24px"/>
+            <imageSliceId value="gui.3dShop_button_middle"/>
+            <startImageSize value="12px 0"/>
+            <startImageSliceId value="gui.3dShop_button_left"/>
+            <endImageSize value="12px 0"/>
+            <endImageSliceId value="gui.3dShop_button_right"/>
+            <imageColor value="$preset_fs25_colorGrey"/>
+            <startImageColor value="$preset_fs25_colorGrey"/>
+            <endImageColor value="$preset_fs25_colorGrey"/>
+        </Profile>
+        <Profile name="revamp_storageNixBg" extends="revamp_storageSoloBg" with="anchorBottomCenter">
+            <position value="-276px 20px"/>
+        </Profile>
+        <Profile name="revamp_storageAllesBg" extends="revamp_storageSoloBg" with="anchorBottomCenter">
+            <position value="300px 20px"/>
+        </Profile>
+        <!-- Dünne Trennlinie zwischen Klickzonen auf einem gemeinsamen Hintergrund, damit erkennbar bleibt dass es mehrere einzelne Tasten sind, nicht eine. -->
+        <Profile name="revamp_storagePlusGroupDivider" extends="fs25_dialogButtonBoxSeparator" with="anchorBottomCenter">
+            <size value="2dp 20px"/>
+        </Profile>
+        <Profile name="revamp_storageMultiTextOptionLeft1" extends="revamp_storageGroupedButton" with="anchorBottomCenter">
+            <position value="-252px 52px"/>
+        </Profile>
+        <Profile name="revamp_storageMultiTextOptionLeft10" extends="revamp_storageGroupedButton" with="anchorBottomCenter">
+            <position value="-300px 52px"/>
+        </Profile>
+        <Profile name="revamp_storageMultiTextOptionRight1" extends="revamp_storageGroupedButton" with="anchorBottomCenter">
+            <position value="252px 52px"/>
+        </Profile>
+        <Profile name="revamp_storageMultiTextOptionRight10" extends="revamp_storageGroupedButton" with="anchorBottomCenter">
+            <position value="300px 52px"/>
+        </Profile>
+        <Profile name="revamp_storageMultiTextOptionMax" extends="revamp_storageGroupedButton" with="anchorBottomCenter">
+            <size value="50px 24px"/>
+            <position value="348px 52px"/>
+        </Profile>
+        <Profile name="revamp_storageMultiTextOptionNix" extends="revamp_storageSoloButton" with="anchorBottomCenter">
+            <position value="-276px 20px"/>
+        </Profile>
+        <Profile name="revamp_storageMultiTextOptionAlles" extends="revamp_storageSoloButton" with="anchorBottomCenter">
+            <position value="300px 20px"/>
+        </Profile>
+    </GUIProfiles>
+</GUI>

@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.6</version>
+    <version>0.0.0.7</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,10 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.7
+- Neuer Ausgangsmodus "Einlagern": Erzeugnisse sammeln sich im Lager, statt automatisch als Paletten/Ballen zu erscheinen
+- Neuer "Verwalten"-Dialog zeigt alle Zutaten und Erzeugnisse einer Produktion mit genauen Mengenangaben und erlaubt das Umschalten des Ausgangsmodus
+- Neuer "Auslagern"-Button (im Menü und direkt am Gebäude): eingelagerte Erzeugnisse können jetzt gezielt in der gewünschten Menge als Paletten oder Ballen ausgelagert werden
 0.0.0.6 - Booster und Master-Booster (optionale Zusatz-Zutaten, die die Ausbeute erhöhen) funktionieren jetzt und werden übersichtlich im Rezept angezeigt, inklusive Gesamt-Boost-Anzeige
 0.0.0.5 - Mix-Gruppen werden jetzt auch im Rezept angezeigt
 0.0.0.4 - Mit Mix-Gruppen begonnen

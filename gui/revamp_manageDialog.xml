@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUI onOpen="onOpen" onClose="onClose" onCreate="onCreate">
+    <GuiElement profile="newLayer"/>
+    <Bitmap profile="dialogFullscreenBg" id="dialogBg"/>
+    <GuiElement profile="revamp_manageDialogBg" id="dialogElement">
+        <ThreePartBitmap profile="fs25_dialogBgMiddleSmall"/>
+        <ThreePartBitmap profile="fs25_dialogBgTopSmall"/>
+        <ThreePartBitmap profile="fs25_dialogBgBottom"/>
+        <GuiElement profile="fs25_dialogContentContainer">
+            <Text profile="fs25_dialogTitle" id="dialogTitleElement" position="0px -35px"/>
+
+            <GuiElement profile="revamp_manageListContainer" id="manageListContainer">
+                <SmoothList profile="revamp_manageList" id="manageList" listSectionHeader="section" startClipperElementName="startClipperManage" endClipperElementName="endClipperManage">
+                    <ListItem profile="revamp_manageListItem" name="fillTypeRow">
+                        <Bitmap profile="revamp_manageListItemIcon" name="icon"/>
+                        <Text profile="revamp_manageListItemName"              name="name"/>
+                        <Text profile="revamp_manageListItemAmount"            name="amount"/>
+                        <Text profile="revamp_manageListItemMode"              name="mode"/>
+                    </ListItem>
+                    <ListItem profile="fs25_productionDetailsListSection" name="section">
+                        <Text profile="fs25_productionDetailsListSectionTitle" name="title"/>
+                    </ListItem>
+                </SmoothList>
+                <Bitmap profile="fs25_secondaryMenuStartClipper" name="startClipperManage"/>
+                <Bitmap profile="fs25_secondaryMenuStopClipper"  name="endClipperManage"/>
+                <ThreePartBitmap profile="fs25_subCategoryListSliderBox" position="10px 0px">
+                    <Slider profile="fs25_listSlider" dataElementId="manageList"/>
+                </ThreePartBitmap>
+            </GuiElement>
+        </GuiElement>
+
+        <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
+            <Button profile="buttonOK" text="$l10n_ui_production_changeOutputMode" onClick="onClickChangeMode" id="yesButton"/>
+            <Bitmap profile="fs25_dialogButtonBoxSeparator"/>
+            <Button profile="buttonBack" text="$l10n_button_back" onClick="onClickBack" id="noButton"/>
+        </BoxLayout>
+    </GuiElement>
+    <GUIProfiles>
+        <Profile name="revamp_manageDialogBg" extends="fs25_dialogBg">
+            <size value="1100px 700px"/>
+        </Profile>
+        <Profile name="revamp_manageListContainer" extends="emptyPanel" with="anchorTopLeft">
+            <size value="1020px 480px"/>
+            <position value="20px -100px"/>
+        </Profile>
+        <Profile name="revamp_manageList" extends="fs25_subCategoryList" with="anchorTopLeft">
+            <size value="1020px 480px"/>
+            <listItemSpacing value="8px"/>
+            <listSectionSpacing value="16px"/>
+        </Profile>
+        <Profile name="revamp_manageListItem" extends="baseReference" with="anchorTopStretchingX alternating">
+            <height value="50px"/>
+            <imageColor value="$preset_fs25_colorGrey"/>
+            <imageSelectedColor value="$preset_fs25_colorMainHighlight"/>
+            <alternateBackgroundColor value="$preset_fs25_colorGreyDark_50"/>
+        </Profile>
+        <Profile name="revamp_manageListItemIcon" extends="baseReference" with="anchorMiddleLeft">
+            <size value="30px 30px"/>
+            <position value="10px 0px"/>
+            <imageSliceId value="noSlice"/>
+        </Profile>
+        <Profile name="revamp_manageListItemName" extends="fs25_textDarkHighlight" with="anchorMiddleLeft">
+            <position value="55px 0px"/>
+            <width value="300px"/>
+            <textBold value="true"/>
+        </Profile>
+        <Profile name="revamp_manageListItemAmount" extends="fs25_textDarkHighlight" with="anchorMiddleLeft">
+            <position value="380px 0px"/>
+            <width value="320px"/>
+            <textAlignment value="right"/>
+        </Profile>
+        <Profile name="revamp_manageListItemMode" extends="fs25_textDarkHighlight" with="anchorMiddleLeft">
+            <position value="730px 0px"/>
+            <width value="260px"/>
+            <textColor value="$preset_fs25_colorMainHighlight"/>
+        </Profile>
+    </GUIProfiles>
+</GUI>

@@ -1,4 +1,12 @@
 source(g_currentModDirectory .. "scripts/revamp_main.lua")
 source(g_currentModDirectory .. "scripts/revamp_production.lua")
+source(g_currentModDirectory .. "scripts/revamp_storage.lua")
 source(g_currentModDirectory .. "scripts/revamp_productionDialog.lua")
 source(g_currentModDirectory .. "scripts/revamp_recipeDisplay.lua")
+source(g_currentModDirectory .. "scripts/revamp_manageDialog.lua")
+source(g_currentModDirectory .. "scripts/events/revamp_eventSpawn.lua")
+source(g_currentModDirectory .. "scripts/revamp_storageDialog.lua")
+source(g_currentModDirectory .. "scripts/revamp_spawner.lua")
+
+RevampManageDialog.register()
+RevampStorageDialog.register()

@@ -130,6 +130,18 @@
                     <output fillType="FLOUR" amount="5" boost="true"/>
                 </outputs>
             </production>
+            <!-- Testfall für Input+Output-Doppelrolle: FLOUR wird von den anderen Linien oben erzeugt,
+                 hier aber selbst verbraucht - am Produktionspunkt insgesamt also gleichzeitig Input UND
+                 Output, für die geplante Input+Output-Zwischen-Sektion in der Rezeptliste -->
+            <production id="packagedFlour" name="%s" params="$l10n_fillType_flour" cyclesPerHour="40" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="FLOUR" amount="3"/>
+                    <input fillType="WATER" amount="1"/>
+                </inputs>
+                <outputs>
+                    <output fillType="STRAW" amount="2"/>
+                </outputs>
+            </production>
         </productions>
 
         <storage isExtension="false" fillLevelSyncThreshold="50">
@@ -139,6 +151,7 @@
             <capacity fillType="SORGHUM"  capacity="60000"/>
             <capacity fillType="WATER"    capacity="60000"/>
             <capacity fillType="FLOUR"    capacity="60000"/>
+            <capacity fillType="STRAW"    capacity="60000"/>
         </storage>
 
         <sellingStation supportsExtension="false">
