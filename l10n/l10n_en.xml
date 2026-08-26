@@ -1,29 +1,34 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <l10n>
-  <texts>
-    <text name="revamp_ui_production_buildingCostsPerMonth" text="Building costs"/>
-    <text name="revamp_station_testMill"                    text="Revamp Test Mill"/>
-    <text name="revamp_ui_production_mixModeAsc"            text="ascending"/>
-    <text name="revamp_ui_production_mixModeDesc"           text="descending"/>
-    <text name="revamp_ui_production_mixModeMost"           text="larger stock"/>
-    <text name="revamp_ui_production_mixModeLeast"          text="smaller stock"/>
-    <text name="revamp_ui_production_mixGroup"              text="Mix group %d"/>
-    <text name="revamp_ui_production_booster"               text="Booster"/>
-    <text name="revamp_ui_production_masterBooster"         text="Master booster"/>
-    <text name="revamp_ui_production_boostFactorCurrent"    text="current: x%s"/>
-    <text name="revamp_recipe_boostedFlour"                 text="Boosted Flour"/>
-    <text name="revamp_ui_production_totalBoost"            text="Total boost"/>
-    <text name="revamp_ui_production_outputModeStore"       text="Keep"/>
-    <text name="revamp_ui_production_outputModeManual"      text="Spawn"/>
-    <text name="revamp_manageDialogTitle"                   text="Manage"/>
-    <text name="revamp_manageSectionBoth"                   text="Input and output"/>
-    <text name="revamp_manageButton"                        text="Manage"/>
-    <text name="revamp_chooseSpawnOptionsText"              text="Please choose:"/>
-    <text name="revamp_storageOpenProduction"               text="Open production menu."/>
-    <text name="revamp_storageEmpty"                        text="Storage is empty."/>
-    <text name="revamp_storageButtonSpawn"                  text="Spawn goods"/>
-    <text name="revamp_storageMax"                          text="Max"/>
-    <text name="revamp_storageNone"                         text="None"/>
-    <text name="revamp_storageAll"                          text="All"/>
-  </texts>
+    <texts>
+        <text name="revamp_ui_production_buildingCostsPerMonth" text="Building costs"/>
+        <text name="revamp_station_testMill"                    text="Revamp Test Mill"/>
+        <text name="revamp_ui_production_mixModeAsc"            text="ascending"/>
+        <text name="revamp_ui_production_mixModeDesc"           text="descending"/>
+        <text name="revamp_ui_production_mixModeMost"           text="larger stock"/>
+        <text name="revamp_ui_production_mixModeLeast"          text="smaller stock"/>
+        <text name="revamp_ui_production_mixGroup"              text="Mix group %d"/>
+        <text name="revamp_ui_production_booster"               text="Booster"/>
+        <text name="revamp_ui_production_masterBooster"         text="Master booster"/>
+        <text name="revamp_ui_production_boostFactorCurrent"    text="current: x%s"/>
+        <text name="revamp_recipe_boostedFlour"                 text="Boosted Flour"/>
+        <text name="revamp_ui_production_totalBoost"            text="Total boost"/>
+        <text name="revamp_ui_production_outputModeStore"       text="Keep"/>
+        <text name="revamp_ui_production_outputModeManual"      text="Spawn"/>
+        <text name="revamp_manageDialogTitle"                   text="Manage"/>
+        <text name="revamp_manageSectionBoth"                   text="Input and output"/>
+        <text name="revamp_manageButton"                        text="Manage"/>
+        <text name="revamp_chooseSpawnOptionsText"              text="Please choose:"/>
+        <text name="revamp_storageOpenProduction"               text="Open production menu."/>
+        <text name="revamp_storageEmpty"                        text="Storage is empty."/>
+        <text name="revamp_storageButtonSpawn"                  text="Spawn goods"/>
+        <text name="revamp_storageMax"                          text="Max"/>
+        <text name="revamp_storageNone"                         text="None"/>
+        <text name="revamp_storageAll"                          text="All"/>
+        <text name="revamp_buyButton"                           text="Buy"/>
+        <text name="revamp_sellButton"                          text="Sell"/>
+        <text name="revamp_descBuy"                             text="Buy goods from the retailer and have them delivered. Note: The retailer charges more if they deliver themselves."/>
+        <text name="revamp_descSell"                            text="Sell goods to a dealer. Note: The dealer pays less if they have to pick up the goods themselves."/>
+        <text name="revamp_buyMax"                              text="maximum"/>
+    </texts>
 </l10n>

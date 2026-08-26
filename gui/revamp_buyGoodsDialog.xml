@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUI onOpen="onOpen" onClose="onClose" onCreate="onCreate">
+    <GuiElement profile="newLayer"/>
+    <Bitmap profile="dialogFullscreenBg" id="dialogBg"/>
+    <GuiElement profile="revamp_buyDialogBg" id="dialogElement">
+        <ThreePartBitmap profile="fs25_dialogBgMiddleSmall"/>
+        <ThreePartBitmap profile="fs25_dialogBgTopSmall"/>
+        <ThreePartBitmap profile="fs25_dialogBgBottom"/>
+        <GuiElement profile="fs25_dialogContentContainer">
+            <Text profile="fs25_dialogTitle" id="dialogTitleElement" position="0px -35px"/>
+            <Text profile="fs25_dialogText"  id="dialogTextElement"  position="0px -85px"/>
+
+            <Bitmap profile="revamp_buyFillTypeIcon" name="fillTypeIcon" id="fillTypeIcon"/>
+            <Text profile="fs25_dialogText" id="fillTypeText"  position="0px -230px"/>
+            <Text profile="fs25_dialogText" id="fillTypePrice" position="0px -260px"/>
+
+            <!-- Pfeil-Reihe direkt neben dem Regler (-1000|-100 links, +100|+1000 rechts) - je Gruppe ein gemeinsamer Hintergrund (nur außen rund, nahtlos verbunden),
+                 gleiches Prinzip wie revamp_storageDialog.xml, nur breiter (fixt abgeschnittenen Text bei -1000/+1000/maximum aus dem ersten Entwurf).
+                 Max und 0 stehen bewusst NICHT in dieser Reihe, sondern eigenständig darunter (siehe unten) - "maximum" ist deutlich länger als -100/+100 und
+                 hätte in der Pfeil-Reihe wieder zu wenig Platz. Hintergründe müssen vor den Buttons stehen, damit sie dahinter liegen;
+                 die Buttons selbst sind unsichtbar (nur Klickfläche+Text). -->
+            <ThreePartBitmap profile="revamp_buyMinusGroupBg"/>
+            <Bitmap profile="revamp_buyGroupDivider" position="-300px 52px"/>
+            <ThreePartBitmap profile="revamp_buyPlusGroupBg"/>
+            <Bitmap profile="revamp_buyGroupDivider" position="300px 52px"/>
+            <GuiElement onCreate="onCreateButten">
+                <Button profile="revamp_buyMultiTextOptionLeft1000"  name="left1000"  text="-1000" onClick="onClickLeft1000"/>
+                <Button profile="revamp_buyMultiTextOptionLeft100"   name="left100"   text="-100"  onClick="onClickLeft100"/>
+            </GuiElement>
+            <GuiElement onCreate="onCreateButten">
+                <Button profile="revamp_buyMultiTextOptionRight100"  name="right100"  text="+100"  onClick="onClickRight100"/>
+                <Button profile="revamp_buyMultiTextOptionRight1000" name="right1000" text="+1000" onClick="onClickRight1000"/>
+            </GuiElement>
+
+            <!-- Zweite Reihe darunter: Nix mittig unter -1000|-100, Max mittig unter +100|+1000 - je ein eigenständiger Button auf eigenem Hintergrund (kein Partner zum Verbinden, kein Divider nötig). -->
+            <ThreePartBitmap profile="revamp_buyNullBg"/>
+            <ThreePartBitmap profile="revamp_buyMaxBg"/>
+            <GuiElement onCreate="onCreateButten">
+                <Button profile="revamp_buyMultiTextOptionNull" name="null" text="$l10n_revamp_storageNone" onClick="onClickNull"/>
+                <Button profile="revamp_buyMultiTextOptionMax"  name="max"  text="$l10n_revamp_buyMax"      onClick="onClickMax"/>
+            </GuiElement>
+
+            <OptionSlider profile="revamp_buyOptionSlider" onClick="onClickAmount" id="amountElement" position="0px 45px">
+                <Text profile="fs25_optionSliderText" id="itemTextAmount" name="text"/>
+            </OptionSlider>
+        </GuiElement>
+
+        <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
+            <Button profile="buttonOK" text="$l10n_button_select" onClick="onClickOk" id="yesButton"/>
+            <Bitmap profile="fs25_dialogButtonBoxSeparator"/>
+            <Button profile="buttonBack" text="$l10n_button_back" onClick="onClickBack" id="noButton"/>
+        </BoxLayout>
+    </GuiElement>
+    <GUIProfiles>
+        <Profile name="revamp_buyDialogBg" extends="fs25_dialogBg">
+            <size value="820px 460px"/>
+        </Profile>
+        <Profile name="revamp_buyFillTypeIcon" extends="baseReference" with="anchorTopCenter">
+            <size value="66px 66px"/>
+            <position value="0px -140px"/>
+            <imageSliceId value="noSlice"/>
+        </Profile>
+        <Profile name="revamp_buyOptionSlider" extends="fs25_multiTextOption" with="anchorBottomCenter">
+            <width value="440px"/>
+            <sliderOffset value="5px"/>
+            <useFillingBar value="true"/>
+            <updateTextPosition value="false"/>
+            <hideLeftRightButtons value="true"/>
+            <defaultProfileBgThreePart value="fs25_optionSliderBg"/>
+            <defaultProfileText value="fs25_optionSliderText"/>
+            <defaultProfileSlider value="fs25_optionSliderIcon"/>
+            <defaultProfileFillingBarThreePart value="fs25_optionSliderFillingBar"/>
+        </Profile>
+        <!-- Basis für Buttons, die auf einem GEMEINSAMEN, externen Hintergrund sitzen (-1000|-100 bzw. +100|+1000) - der Button selbst ist unsichtbar (nur Klickfläche+Text),
+             gleiches Prinzip wie revamp_storageGroupedButton in revamp_storageDialog.xml. 70px Breite (statt dort 40px) - "-1000"/"+1000" brauchen mehr Platz als "-10"/"+10". -->
+        <Profile name="revamp_buyGroupedButton" extends="fs25_multiTextOptionLeft" with="anchorBottomCenter">
+            <size value="70px 24px"/>
+            <iconSliceId value="noSlice"/>
+            <imageInvertX value="false"/>
+            <imageFocusedInvertX value="false"/>
+            <imageSliceId value="noSlice"/>
+            <imageFocusedSliceId value="noSlice"/>
+            <imageColor value="$preset_colorTransparent"/>
+            <imageFocusedColor value="$preset_colorTransparent"/>
+            <textSize value="16px"/>
+            <textOffset value="-7px 1px"/>
+            <clickSound value="CLICK"/>
+        </Profile>
+        <!-- Basis für die eigenständigen 0-/Max-Buttons ohne Partner - selbst unsichtbar, die sichtbaren Hintergründe kommen von revamp_buyNullBg/revamp_buyMaxBg. -->
+        <Profile name="revamp_buySoloButton" extends="revamp_buyGroupedButton" with="anchorBottomCenter">
+            <size value="70px 24px"/>
+        </Profile>
+        <!-- Gemeinsamer, sichtbarer Hintergrund je Gruppe - rund nur außen, nahtlos verbunden über die volle Gruppenbreite. -->
+        <Profile name="revamp_buyGroupBg" extends="baseReference" with="anchorBottomCenter">
+            <size value="140px 24px"/>
+            <imageSliceId value="gui.3dShop_button_middle"/>
+            <startImageSize value="12px 0"/>
+            <startImageSliceId value="gui.3dShop_button_left"/>
+            <endImageSize value="12px 0"/>
+            <endImageSliceId value="gui.3dShop_button_right"/>
+            <imageColor value="$preset_fs25_colorGrey"/>
+            <startImageColor value="$preset_fs25_colorGrey"/>
+            <endImageColor value="$preset_fs25_colorGrey"/>
+        </Profile>
+        <!-- Spannt von -1000s linkem Rand (-370px) bis -100s rechtem Rand (-230px) - Breite 140px, Mitte -300px.
+             -230 lässt 10px Abstand zum Regler-Rand bei -220px (Regler ist 440px breit, siehe revamp_buyOptionSlider). -->
+        <Profile name="revamp_buyMinusGroupBg" extends="revamp_buyGroupBg" with="anchorBottomCenter">
+            <position value="-300px 52px"/>
+        </Profile>
+        <!-- Spannt von +100s linkem Rand (230px) bis +1000s rechtem Rand (370px) - Breite 140px, Mitte 300px, spiegelbildlich zu revamp_buyMinusGroupBg. -->
+        <Profile name="revamp_buyPlusGroupBg" extends="revamp_buyGroupBg" with="anchorBottomCenter">
+            <position value="300px 52px"/>
+        </Profile>
+        <!-- Eigenständiger Hintergrund für den Nix-Button, mittig unter der -1000|-100-Gruppe (deren Mitte ebenfalls bei -300px liegt, siehe revamp_buyMinusGroupBg). -->
+        <Profile name="revamp_buyNullBg" extends="baseReference" with="anchorBottomCenter">
+            <size value="70px 24px"/>
+            <position value="-300px 20px"/>
+            <imageSliceId value="gui.3dShop_button_middle"/>
+            <startImageSize value="12px 0"/>
+            <startImageSliceId value="gui.3dShop_button_left"/>
+            <endImageSize value="12px 0"/>
+            <endImageSliceId value="gui.3dShop_button_right"/>
+            <imageColor value="$preset_fs25_colorGrey"/>
+            <startImageColor value="$preset_fs25_colorGrey"/>
+            <endImageColor value="$preset_fs25_colorGrey"/>
+        </Profile>
+        <!-- Eigenständiger, breiterer Hintergrund für den Max-Button ("maximum" ist deutlich länger als "Nix"), mittig unter der +100|+1000-Gruppe (deren Mitte ebenfalls bei 300px liegt, siehe revamp_buyPlusGroupBg). -->
+        <Profile name="revamp_buyMaxBg" extends="baseReference" with="anchorBottomCenter">
+            <size value="130px 24px"/>
+            <position value="300px 20px"/>
+            <imageSliceId value="gui.3dShop_button_middle"/>
+            <startImageSize value="12px 0"/>
+            <startImageSliceId value="gui.3dShop_button_left"/>
+            <endImageSize value="12px 0"/>
+            <endImageSliceId value="gui.3dShop_button_right"/>
+            <imageColor value="$preset_fs25_colorGrey"/>
+            <startImageColor value="$preset_fs25_colorGrey"/>
+            <endImageColor value="$preset_fs25_colorGrey"/>
+        </Profile>
+        <!-- Dünne Trennlinie zwischen Klickzonen auf einem gemeinsamen Hintergrund, damit erkennbar bleibt dass es mehrere einzelne Tasten sind, nicht eine. -->
+        <Profile name="revamp_buyGroupDivider" extends="fs25_dialogButtonBoxSeparator" with="anchorBottomCenter">
+            <size value="2dp 20px"/>
+        </Profile>
+        <Profile name="revamp_buyMultiTextOptionLeft1000" extends="revamp_buyGroupedButton" with="anchorBottomCenter">
+            <position value="-335px 52px"/>
+        </Profile>
+        <Profile name="revamp_buyMultiTextOptionLeft100" extends="revamp_buyGroupedButton" with="anchorBottomCenter">
+            <position value="-265px 52px"/>
+        </Profile>
+        <Profile name="revamp_buyMultiTextOptionRight100" extends="revamp_buyGroupedButton" with="anchorBottomCenter">
+            <position value="265px 52px"/>
+        </Profile>
+        <Profile name="revamp_buyMultiTextOptionRight1000" extends="revamp_buyGroupedButton" with="anchorBottomCenter">
+            <position value="335px 52px"/>
+        </Profile>
+        <Profile name="revamp_buyMultiTextOptionNull" extends="revamp_buySoloButton" with="anchorBottomCenter">
+            <position value="-300px 20px"/>
+        </Profile>
+        <Profile name="revamp_buyMultiTextOptionMax" extends="revamp_buySoloButton" with="anchorBottomCenter">
+            <size value="130px 24px"/>
+            <position value="300px 20px"/>
+        </Profile>
+    </GUIProfiles>
+</GUI>

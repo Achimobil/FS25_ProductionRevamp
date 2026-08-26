@@ -30,6 +30,8 @@
         </GuiElement>
 
         <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
+            <Button profile="buttonOK" text="$l10n_revamp_buyButton"               onClick="onClickBuy"        id="buyButton"/>
+            <Button profile="buttonOK" text="$l10n_revamp_sellButton"              onClick="onClickSell"       id="sellButton"/>
             <Button profile="buttonOK" text="$l10n_ui_production_changeOutputMode" onClick="onClickChangeMode" id="yesButton"/>
             <Bitmap profile="fs25_dialogButtonBoxSeparator"/>
             <Button profile="buttonBack" text="$l10n_button_back" onClick="onClickBack" id="noButton"/>

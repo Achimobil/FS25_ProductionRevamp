@@ -5,7 +5,9 @@
 -- Bewusst ein eigener Dialog statt Buttons in Vanillas Materialienliste (siehe revamp_storage.lua): detailsList ist von Vanilla explizit von der Fokus-Navigation ausgeschlossen (handleFocus="false"),
 -- ein eigener Dialog mit eigener Liste hat dagegen echte, funktionierende Fokus-Navigation - exakt das Muster, das PSCs eigene Dialoge (RevampStorageDialog-Vorbild) schon nutzen.
 --
--- Kaufen/Verkaufen/Verteil-Priorität-Buttons kommen erst mit ihren jeweiligen Modulen (Buy/Sell, Distribution) - aktuell nur der Ausgangsmodus-Button, zum Testen des Dialog-Grundgerüsts.
+-- Kaufen/Verkaufen-Buttons öffnen RevampBuyGoodsDialog für die aktuell gewählte Zeile (siehe revamp_buyGoodsDialog.lua) -
+-- Kaufen nur bei Input-Rolle, Verkaufen nur bei Output-Rolle, analog zu PSTs eigener Aufteilung (inputFillTypeIdsArray/outputFillTypeIdsArray).
+-- Verteil-Priorität-Button kommt erst mit seinem Modul (Distribution).
 
 RevampManageDialog = {}
 local RevampManageDialog_mt = Class(RevampManageDialog, YesNoDialog)
@@ -79,8 +81,8 @@ function RevampManageDialog:updateRows()
 	self:onListSelectionChanged(self.manageList, self.manageList.selectedSectionIndex, self.manageList.selectedIndex)
 end
 
----Blendet den "Ausgangsmodus ändern"-Button ein/aus - reine Input-Zeilen haben keinen Ausgangsmodus, der Button bliebe sonst klickbar, obwohl er für diese Zeile nichts bewirkt
----(sieht für den Spieler nach einer Funktion aus, die es gar nicht gibt).
+---Blendet "Ausgangsmodus ändern"/"Kaufen"/"Verkaufen" pro Zeilenrolle ein/aus - eine reine Input-Zeile hat z.B. keinen Ausgangsmodus, der Button bliebe sonst klickbar,
+---obwohl er für diese Zeile nichts bewirkt (sieht für den Spieler nach einer Funktion aus, die es gar nicht gibt).
 ---@param list table Liste, deren Auswahl sich geändert hat
 ---@param section number Gewählte Sektion
 ---@param index number Gewählter Zeilenindex innerhalb der Sektion
@@ -89,23 +91,29 @@ function RevampManageDialog:onListSelectionChanged(list, section, index)
 		return
 	end
 
-	local fillTypes, hasOutputRole = self:getSectionFillTypes(section)
-	self.yesButton:setVisible(hasOutputRole and fillTypes[index] ~= nil)
+	local fillTypes, hasInputRole, hasOutputRole = self:getSectionFillTypes(section)
+	local fillType = fillTypes[index]
+	local hasRow = fillType ~= nil
+	self.yesButton:setVisible(hasOutputRole and hasRow)
+	self.buyButton:setVisible(hasInputRole and hasRow)
+	-- Verkaufen nur anbieten, wenn tatsächlich etwas im Lager ist - unter 1 Liter Restbestand (z.B. durch Rundung) gäbe es sonst einen klickbaren Button ohne Wirkung.
+	self.sellButton:setVisible(hasOutputRole and hasRow and self.productionPoint:getFillLevel(fillType) >= 1)
 end
 
----Bildet section (2 oder 3 Abschnitte, je nachdem ob es überhaupt Input+Output-FillTypes gibt) auf die passende FillType-Liste ab, plus ob die Zeile eine Output-Rolle hat
----(Modus-Spalte + Umschalten greifen nur dort - eine reine Input-Zutat hat keinen Ausgangsmodus).
+---Bildet section (2 oder 3 Abschnitte, je nachdem ob es überhaupt Input+Output-FillTypes gibt) auf die passende FillType-Liste ab, plus ob die Zeile eine Input-
+---bzw. Output-Rolle hat (Modus-Spalte/Umschalten und Verkaufen greifen nur bei Output-Rolle, Kaufen nur bei Input-Rolle - eine reine Input-Zutat hat z.B. keinen Ausgangsmodus).
 ---@param section number Sektionsindex
 ---@return table fillTypes FillType-Indizes dieser Sektion
+---@return boolean hasInputRole true, wenn die Sektion Input-FillTypes enthält
 ---@return boolean hasOutputRole true, wenn die Sektion Output-FillTypes enthält
 function RevampManageDialog:getSectionFillTypes(section)
 	if section == 1 then
-		return self.pureInputs, false
+		return self.pureInputs, true, false
 	end
 	if #self.dual > 0 and section == 2 then
-		return self.dual, true
+		return self.dual, true, true
 	end
-	return self.pureOutputs, true
+	return self.pureOutputs, false, true
 end
 
 ---Liefert die Anzahl Sektionen (2 ohne Dual-Rolle-FillTypes, sonst 3).
@@ -156,7 +164,7 @@ function RevampManageDialog:populateCellForItemInSection(list, section, index, c
 		return
 	end
 
-	local fillTypes, hasOutputRole = self:getSectionFillTypes(section)
+	local fillTypes, _, hasOutputRole = self:getSectionFillTypes(section)
 	local fillType = fillTypes[index]
 	local fillTypeDesc = g_fillTypeManager:getFillTypeByIndex(fillType)
 
@@ -183,7 +191,7 @@ function RevampManageDialog:onClickChangeMode()
 		return
 	end
 
-	local fillTypes, hasOutputRole = self:getSectionFillTypes(section)
+	local fillTypes, _, hasOutputRole = self:getSectionFillTypes(section)
 	local fillType = fillTypes[index]
 	if fillType == nil or not hasOutputRole then
 		return
@@ -191,6 +199,40 @@ function RevampManageDialog:onClickChangeMode()
 
 	self.productionPoint:toggleOutputDistributionMode(fillType)
 	self.manageList:reloadData()
+end
+
+---Öffnet RevampBuyGoodsDialog im Kauf-Modus für die aktuell gewählte Zeile.
+function RevampManageDialog:onClickBuy()
+	local section = self.manageList.selectedSectionIndex
+	local index = self.manageList.selectedIndex
+	if section == nil or index == nil then
+		return
+	end
+
+	local fillTypes, hasInputRole = self:getSectionFillTypes(section)
+	local fillType = fillTypes[index]
+	if fillType == nil or not hasInputRole then
+		return
+	end
+
+	RevampBuyGoodsDialog.show(self.productionPoint, self.productionPoint:getName(), {fillTypeIndex = fillType}, 1)
+end
+
+---Öffnet RevampBuyGoodsDialog im Verkauf-Modus für die aktuell gewählte Zeile.
+function RevampManageDialog:onClickSell()
+	local section = self.manageList.selectedSectionIndex
+	local index = self.manageList.selectedIndex
+	if section == nil or index == nil then
+		return
+	end
+
+	local fillTypes, _, hasOutputRole = self:getSectionFillTypes(section)
+	local fillType = fillTypes[index]
+	if fillType == nil or not hasOutputRole then
+		return
+	end
+
+	RevampBuyGoodsDialog.show(self.productionPoint, self.productionPoint:getName(), {fillTypeIndex = fillType}, 2)
 end
 
 ---Schließt den Dialog ohne weitere Aktion.

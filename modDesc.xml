@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.7</version>
+    <version>0.0.0.8</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.8 - Neue "Kaufen"/"Verkaufen"-Buttons im Verwalten-Dialog: Zutaten können jetzt direkt vom Händler gekauft, Erzeugnisse direkt an ihn verkauft werden
 0.0.0.7
 - Neuer Ausgangsmodus "Einlagern": Erzeugnisse sammeln sich im Lager, statt automatisch als Paletten/Ballen zu erscheinen
 - Neuer "Verwalten"-Dialog zeigt alle Zutaten und Erzeugnisse einer Produktion mit genauen Mengenangaben und erlaubt das Umschalten des Ausgangsmodus
