@@ -1,35 +1,60 @@
 ﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <l10n>
     <texts>
-        <text name="revamp_ui_production_buildingCostsPerMonth" text="Building costs"/>
-        <text name="revamp_station_testMill"                    text="Revamp Test Mill"/>
-        <text name="revamp_ui_production_mixModeAsc"            text="ascending"/>
-        <text name="revamp_ui_production_mixModeDesc"           text="descending"/>
-        <text name="revamp_ui_production_mixModeMost"           text="larger stock"/>
-        <text name="revamp_ui_production_mixModeLeast"          text="smaller stock"/>
-        <text name="revamp_ui_production_mixGroup"              text="Mix group %d"/>
-        <text name="revamp_ui_production_converterGroup"        text="Alternative ingredients"/>
-        <text name="revamp_ui_production_booster"               text="Booster"/>
-        <text name="revamp_ui_production_masterBooster"         text="Master booster"/>
-        <text name="revamp_ui_production_boostFactorCurrent"    text="current: x%s"/>
-        <text name="revamp_recipe_boostedFlour"                 text="Boosted Flour"/>
-        <text name="revamp_ui_production_totalBoost"            text="Total boost"/>
-        <text name="revamp_ui_production_outputModeStore"       text="Keep"/>
-        <text name="revamp_ui_production_outputModeManual"      text="Spawn"/>
-        <text name="revamp_manageDialogTitle"                   text="Manage"/>
-        <text name="revamp_manageSectionBoth"                   text="Input and output"/>
-        <text name="revamp_manageButton"                        text="Manage"/>
-        <text name="revamp_chooseSpawnOptionsText"              text="Please choose:"/>
-        <text name="revamp_storageOpenProduction"               text="Open production menu."/>
-        <text name="revamp_storageEmpty"                        text="Storage is empty."/>
-        <text name="revamp_storageButtonSpawn"                  text="Spawn goods"/>
-        <text name="revamp_storageMax"                          text="Max"/>
-        <text name="revamp_storageNone"                         text="None"/>
-        <text name="revamp_storageAll"                          text="All"/>
-        <text name="revamp_buyButton"                           text="Buy"/>
-        <text name="revamp_sellButton"                          text="Sell"/>
-        <text name="revamp_descBuy"                             text="Buy goods from the retailer and have them delivered. Note: The retailer charges more if they deliver themselves."/>
-        <text name="revamp_descSell"                            text="Sell goods to a dealer. Note: The dealer pays less if they have to pick up the goods themselves."/>
-        <text name="revamp_buyMax"                              text="maximum"/>
+        <text name="revamp_ui_production_buildingCostsPerMonth"  text="Building costs"/>
+        <text name="revamp_station_testMill"                     text="Revamp Test Mill"/>
+        <text name="revamp_ui_production_mixModeAsc"             text="ascending"/>
+        <text name="revamp_ui_production_mixModeDesc"            text="descending"/>
+        <text name="revamp_ui_production_mixModeMost"            text="larger stock"/>
+        <text name="revamp_ui_production_mixModeLeast"           text="smaller stock"/>
+        <text name="revamp_ui_production_mixGroup"               text="Mix group %d"/>
+        <text name="revamp_ui_production_converterGroup"         text="Alternative ingredients"/>
+        <text name="revamp_ui_production_booster"                text="Booster"/>
+        <text name="revamp_ui_production_masterBooster"          text="Master booster"/>
+        <text name="revamp_ui_production_boostFactorCurrent"     text="current: x%s"/>
+        <text name="revamp_recipe_boostedFlour"                  text="Boosted Flour"/>
+        <text name="revamp_recipe_sunFlour"                      text="Sun Flour"/>
+        <text name="revamp_recipe_rainFlour"                     text="Rain Flour"/>
+        <text name="revamp_recipe_windTempFlour"                 text="Wind and Warmth Flour"/>
+        <text name="revamp_recipe_openingHoursFlour"             text="Shift Flour"/>
+        <text name="revamp_recipe_seasonalFlour"                 text="Summer Flour"/>
+        <text name="revamp_recipe_limitBoostedFlour"             text="Single Booster Flour"/>
+        <text name="revamp_ui_production_totalBoost"             text="Total boost"/>
+        <text name="revamp_ui_production_weatherFactor"          text="Weather factor"/>
+        <text name="revamp_ui_production_modeSun"                text="Depending on sunshine"/>
+        <text name="revamp_ui_production_modeNight"              text="Depending on moonlight"/>
+        <text name="revamp_ui_production_modeRain"               text="Depending on precipitation"/>
+        <text name="revamp_ui_production_modeWind"               text="Depending on wind"/>
+        <text name="revamp_ui_production_modeTemp"               text="Depending on warmth"/>
+        <text name="revamp_ui_production_modeTempNegative"       text="Depending on cold"/>
+        <text name="revamp_ui_production_modeHours"              text="Opening hours: %s"/>
+        <text name="revamp_ui_production_modeSeasons"            text="Seasons: %s"/>
+        <text name="revamp_ui_production_modeMonths"             text="Months: %s"/>
+        <text name="revamp_ui_production_modeLimitBoosters"      text="Strongest booster only"/>
+        <text name="revamp_ui_production_statusOutsideOfHours"   text="Outside opening hours"/>
+        <text name="revamp_ui_production_statusOutsideOfSeasons" text="Wrong season"/>
+        <text name="revamp_ui_production_statusOutsideOfMonths"  text="Wrong month"/>
+        <text name="revamp_ui_production_statusNoWeather"        text="Not enough weather"/>
+        <text name="revamp_ui_season_spring"                     text="Spring"/>
+        <text name="revamp_ui_season_summer"                     text="Summer"/>
+        <text name="revamp_ui_season_autumn"                     text="Autumn"/>
+        <text name="revamp_ui_season_winter"                     text="Winter"/>
+        <text name="revamp_ui_production_outputModeStore"        text="Keep"/>
+        <text name="revamp_ui_production_outputModeManual"       text="Spawn"/>
+        <text name="revamp_manageDialogTitle"                    text="Manage"/>
+        <text name="revamp_manageSectionBoth"                    text="Input and output"/>
+        <text name="revamp_manageButton"                         text="Manage"/>
+        <text name="revamp_chooseSpawnOptionsText"               text="Please choose:"/>
+        <text name="revamp_storageOpenProduction"                text="Open production menu."/>
+        <text name="revamp_storageEmpty"                         text="Storage is empty."/>
+        <text name="revamp_storageButtonSpawn"                   text="Spawn goods"/>
+        <text name="revamp_storageMax"                           text="Max"/>
+        <text name="revamp_storageNone"                          text="None"/>
+        <text name="revamp_storageAll"                           text="All"/>
+        <text name="revamp_buyButton"                            text="Buy"/>
+        <text name="revamp_sellButton"                           text="Sell"/>
+        <text name="revamp_descBuy"                              text="Buy goods from the retailer and have them delivered. Note: The retailer charges more if they deliver themselves."/>
+        <text name="revamp_descSell"                             text="Sell goods to a dealer. Note: The dealer pays less if they have to pick up the goods themselves."/>
+        <text name="revamp_buyMax"                               text="maximum"/>
     </texts>
 </l10n>

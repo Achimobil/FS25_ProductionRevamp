@@ -243,8 +243,10 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 		end
 	end
 
-	if #order == 0 and not hasBoostInputs and not hasConverterInputs then
-		return -- weder Mix-Gruppe noch Booster/Master-Booster noch Converter-Alternative in diesem Rezept, Vanilla-Darstellung von superFunc bleibt unangetastet
+	local modeTexts = Revamp.getProductionModeTexts(production)
+
+	if #order == 0 and not hasBoostInputs and not hasConverterInputs and #modeTexts == 0 then
+		return -- weder Mix-Gruppe noch Booster/Master-Booster noch Converter-Alternative noch Wetter-/Zeit-Modus in diesem Rezept, Vanilla-Darstellung von superFunc bleibt unangetastet
 	end
 
 	-- Hier nicht versuchen, den Neuaufbau bei "unveränderten" Daten zu überspringen: superFunc()
@@ -260,6 +262,13 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 	-- bei lückenlos aneinander stoßenden Zeilen wie ein durchgehender Block aus.
 	local inputLayout = cell:getAttribute("inputLayout")
 	Revamp.clearRecipeInputElements(inputLayout)
+
+	-- Die Wetter- und Zeit-Bedingungen stehen über allen Zutaten, weil sie für die gesamte Linie gelten und nicht für eine einzelne Zutat.
+	-- Jeder Modus bekommt eine eigene Zeile, für zwei Bedingungen nebeneinander reicht die Breite der Zutatenspalte nicht.
+	-- Solange die Linie wegen einer dieser Bedingungen steht, werden die Zeilen gedimmt - genau wie ein Booster, der gerade nicht beiträgt.
+	for _, modeText in ipairs(modeTexts) do
+		Revamp.addRecipeGroupHeaderRow(inputLayout, modeText, production.modeStatus == nil, nil, Revamp.RECIPE_INACTIVE_COLOR)
+	end
 
 	local groupPosition = 0
 	for _, mixGroupIndex in ipairs(order) do
@@ -449,21 +458,49 @@ function Revamp.updateProductsListRow(self, cell, production, productionPoint)
 	end
 end
 
--- Gesamt-Boostfaktor als vierte Zeile im Status/Zyklen/Kosten-Infokasten (cell.name ==
--- "detailsCell"), damit Modder/Spieler das Zusammenspiel von Booster UND Master-Booster (sie
--- multiplizieren sich) nicht selbst ausrechnen müssen. Wie schon beim Gebäudekosten-Eintrag in der
--- pointsList (siehe revamp_productionDialog.lua) wird dafür kein neues Element per .new() erzeugt
--- (siehe Kommentar bei addRecipeRowBackground - applyProfile() auf frisch erzeugten Elementen
--- rendert nicht zuverlässig), sondern der bereits vorhandene "infoCosts"-Text zweimal geklont
--- (einmal als Beschriftung mit umgehängtem Profil, einmal als Wert) und eine Zeile tiefer
--- verschoben. Bewusst ohne den Hintergrundbalken der anderen drei Zeilen
--- (fs25_productionDetailsInfoBg) - der hat kein eigenes "name"-Attribut zum sicheren Klonen.
-function Revamp.updateDetailsCellBoostInfo(self, cell)
+-- Zusätzliche Zeilen unter dem Status/Zyklen/Kosten-Infokasten (cell.name == "detailsCell") für Werte, die sich laufend ändern und die sich der Spieler sonst selbst ausrechnen müsste.
+-- Das ist einmal der Gesamt-Boost (Booster und Master-Booster multiplizieren sich) und einmal der aktuelle Wetterfaktor.
+-- Wie schon beim Gebäudekosten-Eintrag in der pointsList (siehe revamp_productionDialog.lua) wird dafür kein neues Element per .new() erzeugt (siehe Kommentar bei addRecipeRowBackground - applyProfile() auf frisch erzeugten Elementen rendert nicht zuverlässig).
+-- Stattdessen wird der bereits vorhandene "infoCosts"-Text zweimal geklont, einmal als Beschriftung mit umgehängtem Profil und einmal als Wert, und um die passende Anzahl Zeilen nach unten verschoben.
+-- Bewusst ohne den Hintergrundbalken der anderen drei Zeilen (fs25_productionDetailsInfoBg) - der hat kein eigenes "name"-Attribut zum sicheren Klonen.
+
+-- Abstand der ersten zusätzlichen Zeile zur Kostenzeile und Höhe einer weiteren Zeile, beides in Pixeln des Vanilla-Rasters.
+Revamp.DETAILS_INFO_FIRST_ROW = -96
+Revamp.DETAILS_INFO_ROW_HEIGHT = -32
+
+---Hängt eine weitere Beschriftung/Wert-Zeile unter den Infokasten.
+---@param infoCosts any Vorhandene Kostenzeile, die als Vorlage geklont wird
+---@param infoBox any Container, in dem die Zeilen hängen
+---@param rowIndex number Nullbasierte Nummer der zusätzlichen Zeile
+---@param labelText string Beschriftung
+---@param valueText string Wert
+function Revamp.addDetailsInfoLine(infoCosts, infoBox, rowIndex, labelText, valueText)
+	local offset = Revamp.DETAILS_INFO_FIRST_ROW + rowIndex * Revamp.DETAILS_INFO_ROW_HEIGHT
+
+	local label = infoCosts:clone(infoBox)
+	label.revampLine = true
+	label:applyProfile("fs25_productionDetailsInfoName")
+	label.textBold = false -- applyProfile setzt das von infoCosts geerbte textBold=true nicht zurück
+	label:setText(labelText)
+	local labelPos = GuiUtils.getNormalizedScreenValues(string.format("15px %dpx", offset), "0px 0px")
+	label:setPosition(labelPos[1], labelPos[2])
+	label:updateAnchorDeltas()
+	label:updateAbsolutePosition()
+
+	local value = infoCosts:clone(infoBox)
+	value.revampLine = true
+	value:setText(valueText)
+	local valuePos = GuiUtils.getNormalizedScreenValues(string.format("-15px %dpx", offset), "0px 0px")
+	value:setPosition(valuePos[1], valuePos[2])
+	value:updateAnchorDeltas()
+	value:updateAbsolutePosition()
+end
+
+function Revamp.updateDetailsCellInfoLines(self, cell)
 	local infoCosts = cell:getAttribute("infoCosts")
 	local infoBox = infoCosts.parent
-	-- Unsere geklonten Zeilen hängen im infoBox-Container (Elternelement von infoCosts), nicht
-	-- direkt in "cell" - Aufräumen muss deshalb dort ansetzen, sonst bleiben sie bei jedem
-	-- Produktionswechsel stehen.
+	-- Unsere geklonten Zeilen hängen im infoBox-Container (Elternelement von infoCosts), nicht direkt in "cell".
+	-- Aufräumen muss deshalb dort ansetzen, sonst bleiben sie bei jedem Produktionswechsel stehen.
 	Revamp.removeRevampElements(infoBox)
 
 	local production = self:getSelectedProduction()
@@ -471,31 +508,20 @@ function Revamp.updateDetailsCellBoostInfo(self, cell)
 		return
 	end
 
-	local hasBoostInputs = #Revamp.getProductionBoostInputs(production, Revamp.MIX_BOOST) > 0
-		or #Revamp.getProductionBoostInputs(production, Revamp.MIX_MASTER) > 0
-	if not hasBoostInputs then
-		return -- kein Booster/Master-Booster in diesem Rezept, keine zusätzliche Zeile nötig
+	local rowIndex = 0
+
+	if production.weatherFactorCurrent ~= nil then
+		Revamp.addDetailsInfoLine(infoCosts, infoBox, rowIndex, g_i18n:getText("revamp_ui_production_weatherFactor"), "x" .. g_i18n:formatNumber(production.weatherFactorCurrent, 2))
+		rowIndex = rowIndex + 1
 	end
 
-	local combinedFactor = (production.boosterFactor or 1) * (production.masterFactor or 1)
-
-	local label = infoCosts:clone(infoBox)
-	label.revampLine = true
-	label:applyProfile("fs25_productionDetailsInfoName")
-	label.textBold = false -- applyProfile setzt das von infoCosts geerbte textBold=true nicht zurück
-	label:setText(g_i18n:getText("revamp_ui_production_totalBoost"))
-	local labelPos = GuiUtils.getNormalizedScreenValues("15px -96px", "0px 0px")
-	label:setPosition(labelPos[1], labelPos[2])
-	label:updateAnchorDeltas()
-	label:updateAbsolutePosition()
-
-	local value = infoCosts:clone(infoBox)
-	value.revampLine = true
-	value:setText("x" .. g_i18n:formatNumber(combinedFactor, 2))
-	local valuePos = GuiUtils.getNormalizedScreenValues("-15px -96px", "0px 0px")
-	value:setPosition(valuePos[1], valuePos[2])
-	value:updateAnchorDeltas()
-	value:updateAbsolutePosition()
+	local hasBoostInputs = #Revamp.getProductionBoostInputs(production, Revamp.MIX_BOOST) > 0
+		or #Revamp.getProductionBoostInputs(production, Revamp.MIX_MASTER) > 0
+	if hasBoostInputs then
+		local combinedFactor = (production.boosterFactor or 1) * (production.masterFactor or 1)
+		Revamp.addDetailsInfoLine(infoCosts, infoBox, rowIndex, g_i18n:getText("revamp_ui_production_totalBoost"), "x" .. g_i18n:formatNumber(combinedFactor, 2))
+		rowIndex = rowIndex + 1
+	end
 end
 
 function Revamp.populateRecipeCellForItemInSection(self, superFunc, list, section, index, cell)
@@ -528,7 +554,7 @@ function Revamp.populateRecipeCellForItemInSection(self, superFunc, list, sectio
 		self.detailsList.viewOffset = viewOffset
 		self.detailsList.targetViewOffset = targetViewOffset
 	elseif list == self.detailsList and cell.name == "detailsCell" then
-		Revamp.updateDetailsCellBoostInfo(self, cell)
+		Revamp.updateDetailsCellInfoLines(self, cell)
 	end
 end
 

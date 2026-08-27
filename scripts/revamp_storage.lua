@@ -227,7 +227,9 @@ function Revamp.getOutputModeText(productionPoint, fillType)
 	return g_i18n:getText("revamp_ui_production_outputModeManual")
 end
 
----Zeigt den aktuellen Ausgangsmodus des primären Outputs als Kurzinfo neben dem Rezeptnamen in der Rezept-Auswahlliste (productsList) - unabhängig vom Umschalt-Button in der Materialienliste unten.
+---Entfernt den Ausgangsmodus-Text aus der Rezept-Auswahlliste (productsList).
+---Vanilla zeigt dort den Modus des primären Outputs an, was bei mehreren Erzeugnissen einer Linie ohnehin nur die halbe Wahrheit ist.
+---Die Liste der ausgehenden Erzeugnisse darunter zeigt den Modus jedes einzelnen Fülltyps, damit ist die Kurzinfo hier doppelt und irreführend zugleich.
 ---@param self table InGameMenuProductionFrame-Instanz
 ---@param list table Liste, deren Zelle gerade befüllt wird
 ---@param section number Sektionsindex innerhalb der Liste
@@ -236,9 +238,7 @@ end
 ---@diagnostic disable-line: unused-local
 function Revamp.populateProductsListActivity(self, list, section, index, cell)
 	if list == self.productsList then
-		local _, productionPoint = self:getSelectedProduction()
-		local production = productionPoint.sortedProductions[index]
-		cell:getAttribute("activity"):setText(Revamp.getOutputModeText(productionPoint, production.primaryProductFillType))
+		cell:getAttribute("activity"):setText("")
 	end
 end
 

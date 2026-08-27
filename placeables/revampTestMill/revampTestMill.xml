@@ -130,6 +130,65 @@
                     <output fillType="FLOUR" amount="5" boost="true"/>
                 </outputs>
             </production>
+            <!-- Testfälle für die Wetter-Modi. sunFlour steht nachts komplett still (Status "Wetter reicht
+                 nicht"), rainFlour läuft dank minPower auch bei trockenem Wetter mit 5% weiter und
+                 windTempFlour zeigt, dass sich zwei Wetter-Modi miteinander multiplizieren.
+                 minPower liegt bewusst unter der schwächsten Regenstufe des Spiels (Nieselregen 0,1),
+                 sonst wäre der Unterschied zwischen "kein Regen" und "leichter Regen" gar nicht sichtbar -->
+            <production id="sunFlour" name="$l10n_revamp_recipe_sunFlour" modes="sun" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="WHEAT" amount="6"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FLOUR" amount="5"/>
+                </outputs>
+            </production>
+            <production id="rainFlour" name="$l10n_revamp_recipe_rainFlour" modes="rain" minPower="0.05" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="WHEAT" amount="6"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FLOUR" amount="5"/>
+                </outputs>
+            </production>
+            <production id="windTempFlour" name="$l10n_revamp_recipe_windTempFlour" modes="wind temp" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="WHEAT" amount="6"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FLOUR" amount="5"/>
+                </outputs>
+            </production>
+            <!-- Testfälle für die Zeit-Modi. openingHoursFlour hat zwei getrennte Zeitfenster am Tag,
+                 seasonalFlour läuft nur im Frühling und Sommer und davon nur in den Monaten Mai bis August -->
+            <production id="openingHoursFlour" name="$l10n_revamp_recipe_openingHoursFlour" modes="hourly" startHours="8 16" endHours="12 20" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="WHEAT" amount="6"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FLOUR" amount="5"/>
+                </outputs>
+            </production>
+            <production id="seasonalFlour" name="$l10n_revamp_recipe_seasonalFlour" modes="seasonal monthly" seasons="1 2" months="3 4 5 6" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="WHEAT" amount="6"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FLOUR" amount="5"/>
+                </outputs>
+            </production>
+            <!-- Testfall für limitBoosters: von den beiden bevorrateten Boostern zählt und verbraucht sich
+                 nur der stärkste, statt dass sich beide Faktoren miteinander multiplizieren -->
+            <production id="limitBoostedFlour" name="$l10n_revamp_recipe_limitBoostedFlour" modes="limitBoosters" boostMode="MOST" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="WHEAT"   amount="6"/>
+                    <input fillType="WATER"   amount="1" mix="boost" boostFactor="1.5"/>
+                    <input fillType="SORGHUM" amount="1" mix="boost" boostFactor="2"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FLOUR" amount="5" boost="true"/>
+                </outputs>
+            </production>
             <!-- Testfall für Input+Output-Doppelrolle: FLOUR wird von den anderen Linien oben erzeugt,
                  hier aber selbst verbraucht - am Produktionspunkt insgesamt also gleichzeitig Input UND
                  Output, für die geplante Input+Output-Zwischen-Sektion in der Rezeptliste -->
@@ -144,12 +203,14 @@
             </production>
         </productions>
 
+        <!-- Testfall für das wetterabhängige Lager: WATER sammelt sich bei Niederschlag von selbst an,
+             mit 2000 Litern pro Stunde bei vollem Regen und entsprechend weniger bei Nieselregen -->
         <storage isExtension="false" fillLevelSyncThreshold="50">
             <capacity fillType="WHEAT"   capacity="126000"/>
             <capacity fillType="BARLEY"  capacity="144000"/>
             <capacity fillType="OAT"     capacity="60000"/>
             <capacity fillType="SORGHUM" capacity="60000"/>
-            <capacity fillType="WATER"   capacity="60000"/>
+            <capacity fillType="WATER"   capacity="60000" weatherModes="rain" weatherAmount="2000"/>
             <capacity fillType="FLOUR"   capacity="60000"/>
             <capacity fillType="STRAW"   capacity="60000"/>
         </storage>

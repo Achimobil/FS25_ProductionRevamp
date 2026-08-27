@@ -3,9 +3,8 @@
 -- aufgerufen statt komplett neu geschrieben, damit alles, was Vanilla schon selbst leistet
 -- (Storage/Verkaufsstelle/Palettenspawner/Validierung), unverändert bleibt.
 --
--- FillTypeCategory-basierte Inputs/Outputs, FeedMixer-/Tier-Trigger-Anbindung sowie Storage-Kauf/
--- Verkauf/Wetter-Felder werden hier nicht geladen. Wetter-Felder werden aktuell an keiner Stelle
--- ausgewertet; Mix-Gruppen und Booster/Master-Booster wertet Revamp.updateProduction weiter unten aus.
+-- FillTypeCategory-basierte Inputs/Outputs sowie die FeedMixer-/Tier-Trigger-Anbindung werden hier nicht geladen.
+-- Mix-Gruppen, Booster/Master-Booster und die Wetter-/Zeit-Modi wertet Revamp.updateProduction weiter unten aus, die Modus-Berechnung selbst steht in revamp_productionModes.lua.
 
 Revamp.MIX_BOOST = 98
 Revamp.MIX_MASTER = 99
@@ -29,6 +28,25 @@ function Revamp.registerProductionXMLPaths(schema, basePath)
 	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?)#mixMode", "Auswahlmodus für Mix-Gruppen dieser Produktionslinie (ASC/DESC/MOST/LEAST)", "ASC")
 	schema:register(XMLValueType.STRING, basePath .. ".productions#boostMode", "Standard-Auswahlmodus bei mehreren gleichzeitig verfügbaren Master-Booster-Inputs (ASC/DESC/MOST/LEAST)", "ASC")
 	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?)#boostMode", "Auswahlmodus für den Master-Booster dieser Produktionslinie (ASC/DESC/MOST/LEAST)", "ASC")
+	schema:register(XMLValueType.STRING, basePath .. ".productions#modes", "Standard-Modi der Produktionslinien (hourly, seasonal, monthly, limitBoosters, sun, night, rain, wind, temp, tempNegative)", "")
+	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?)#modes", "Modi dieser Produktionslinie (hourly, seasonal, monthly, limitBoosters, sun, night, rain, wind, temp, tempNegative)", "")
+	schema:register(XMLValueType.STRING, basePath .. ".productions#startHours", "Standard-Beginn der Öffnungszeiten, mehrere Zeitfenster durch Leerzeichen getrennt", "0")
+	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?)#startHours", "Beginn der Öffnungszeiten dieser Produktionslinie, mehrere Zeitfenster durch Leerzeichen getrennt", "0")
+	schema:register(XMLValueType.STRING, basePath .. ".productions#endHours", "Standard-Ende der Öffnungszeiten, mehrere Zeitfenster durch Leerzeichen getrennt", "24")
+	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?)#endHours", "Ende der Öffnungszeiten dieser Produktionslinie, mehrere Zeitfenster durch Leerzeichen getrennt", "24")
+	schema:register(XMLValueType.STRING, basePath .. ".productions#seasons", "Standard-Jahreszeiten, in denen produziert wird (1 Frühling bis 4 Winter)", "1 2 3 4")
+	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?)#seasons", "Jahreszeiten, in denen diese Produktionslinie läuft (1 Frühling bis 4 Winter)", "1 2 3 4")
+	schema:register(XMLValueType.STRING, basePath .. ".productions#months", "Standard-Monate, in denen produziert wird (1 März bis 12 Februar)", "1 2 3 4 5 6 7 8 9 10 11 12")
+	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?)#months", "Monate, in denen diese Produktionslinie läuft (1 März bis 12 Februar)", "1 2 3 4 5 6 7 8 9 10 11 12")
+	schema:register(XMLValueType.FLOAT, basePath .. ".productions#weatherFactor", "Standard-Skalierung des Wetterfaktors", 1)
+	schema:register(XMLValueType.FLOAT, basePath .. ".productions.production(?)#weatherFactor", "Skalierung des Wetterfaktors dieser Produktionslinie", 1)
+	schema:register(XMLValueType.FLOAT, basePath .. ".productions#minPower", "Standard-Untergrenze des Wetterfaktors (Grundlast auch bei schlechtestem Wetter)", 0)
+	schema:register(XMLValueType.FLOAT, basePath .. ".productions.production(?)#minPower", "Untergrenze des Wetterfaktors dieser Produktionslinie (Grundlast auch bei schlechtestem Wetter)", 0)
+	schema:register(XMLValueType.FLOAT, basePath .. ".productions#maxPower", "Standard-Obergrenze des Wetterfaktors", 1)
+	schema:register(XMLValueType.FLOAT, basePath .. ".productions.production(?)#maxPower", "Obergrenze des Wetterfaktors dieser Produktionslinie", 1)
+	schema:register(XMLValueType.STRING, basePath .. ".storage.capacity(?)#weatherModes", "Wetter-Modus, der den Bestand dieses Fülltyps ohne Produktion verändert (sun, night, rain, wind, temp, tempNegative)", "")
+	schema:register(XMLValueType.FLOAT, basePath .. ".storage.capacity(?)#weatherAmount", "Menge pro Stunde bei vollem Wetterfaktor, negative Werte sind ein wetterabhängiger Verlust", 0)
+	schema:register(XMLValueType.FLOAT, basePath .. ".storage.capacity(?)#weatherFactor", "Skalierung der wetterabhängigen Bestandsänderung dieses Fülltyps", 1)
 	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?).inputs.input(?)#mix", "Mix-Gruppe des Inputs (Zahl, 'boost' oder 'master')", "0")
 	schema:register(XMLValueType.FLOAT, basePath .. ".productions.production(?).inputs.input(?)#boostFactor", "Multiplikator für Booster/Master-Booster (> 0, 1 ist unzulässig weil wirkungslos) - Pflichtfeld bei mix='boost'/'master'")
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).inputs.input(?)#rngAffected", "Input ist von einem Zufallsfaktor betroffen", false)
@@ -51,6 +69,23 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 	local pointMixMode = xmlFile:getValue(key .. ".productions#mixMode", "ASC"):upper()
 	local pointBoostMode = xmlFile:getValue(key .. ".productions#boostMode", "ASC"):upper()
 
+	-- Vorgabewerte für alle Rezeptlinien dieses Produktionspunktes, jede Linie kann sie einzeln überschreiben.
+	local pointModeDefaults = {
+		modes = xmlFile:getValue(key .. ".productions#modes", ""),
+		startHours = xmlFile:getValue(key .. ".productions#startHours", "0"),
+		endHours = xmlFile:getValue(key .. ".productions#endHours", "24"),
+		seasons = xmlFile:getValue(key .. ".productions#seasons", "1 2 3 4"),
+		months = xmlFile:getValue(key .. ".productions#months", "1 2 3 4 5 6 7 8 9 10 11 12"),
+		weatherFactor = xmlFile:getValue(key .. ".productions#weatherFactor", 1),
+		minPower = xmlFile:getValue(key .. ".productions#minPower", 0),
+		maxPower = xmlFile:getValue(key .. ".productions#maxPower", 1)
+	}
+
+	Revamp.loadWeatherStorage(self, xmlFile, key)
+
+	-- Öffnungszeiten aller Rezeptlinien zusammen: der Betrieb gilt als offen, solange mindestens eine Linie laufen darf.
+	self.openingHoursTable = {}
+
 	xmlFile:iterate(key .. ".productions.production", function(_, productionKey)
 		local id = xmlFile:getValue(productionKey .. "#id")
 		local production = self.productionsIdToObj[id]
@@ -64,6 +99,11 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 		production.hideFromMenu = xmlFile:getBool(productionKey .. "#hideFromMenu", pointHideFromMenu)
 		production.autoStart = xmlFile:getBool(productionKey .. "#autoStart", pointAutoStart)
 		production.master = false
+
+		Revamp.loadProductionModes(production, xmlFile, productionKey, pointModeDefaults)
+		for hour in pairs(production.hoursTable) do
+			self.openingHoursTable[hour] = true
+		end
 
 		if production.autoStart or production.hideFromMenu then
 			production.status = ProductionPoint.PROD_STATUS.RUNNING
@@ -154,11 +194,251 @@ end
 
 ProductionPoint.load = Utils.overwrittenFunction(ProductionPoint.load, Revamp.loadProductionPoint)
 
+---Verarbeitet eine einzelne Rezeptlinie für den aktuellen Takt.
+---Ausgelagert aus Revamp.updateProduction, damit eine gerade angehaltene Linie einfach per return übersprungen werden kann.
+---@param self table ProductionPoint-Instanz
+---@param production table Rezeptlinie aus self.activeProductions
+---@param minuteFactorDt number Vergangene Spielminuten seit dem letzten Takt
+---@param numSharedThroughputCapacity number Anzahl der Linien, die sich die Durchsatzkapazität gerade teilen
+function Revamp.updateSingleProduction(self, production, minuteFactorDt, numSharedThroughputCapacity)
+	if production.modeStatus ~= nil then
+		-- Eine angehaltene Linie verbraucht nichts, erzeugt nichts und verursacht auch keine Betriebskosten - anders als bei fehlenden Zutaten steht hier nicht die Produktion still, sondern der ganze Betrieb.
+		if self.isOwned and production.status ~= production.modeStatus then
+			Revamp.DebugText("updateSingleProduction(): %s haelt an, Status=%d", production.id, production.modeStatus)
+			production.status = production.modeStatus
+			self.owningPlaceable:productionStatusChanged(production, production.modeStatus)
+			self:setProductionStatus(production.id, production.modeStatus)
+		end
+		return
+	end
+
+	local cyclesPerMinuteMinuteFactor = production.cyclesPerMinute * minuteFactorDt
+	if self.sharedThroughputCapacity and production.sharedThroughputCapacity then
+		cyclesPerMinuteMinuteFactor = cyclesPerMinuteMinuteFactor / numSharedThroughputCapacity
+	end
+	if production.weatherFactorCurrent ~= nil then
+		cyclesPerMinuteMinuteFactor = cyclesPerMinuteMinuteFactor * production.weatherFactorCurrent
+	end
+
+	-- Master-Booster zuerst ermitteln: seine eigene Bestandsprüfung läuft unskaliert (er soll
+	-- sich nicht selbst hochskalieren), alles andere in dieser Produktion skaliert danach mit.
+	local masterFactor = 1
+	local masterConsume = nil
+	if production.master then
+		local masterWinner = nil
+		for x = 1, #production.inputs do
+			local input = production.inputs[x]
+			if input.mix == Revamp.MIX_MASTER then
+				local fillLevel = self:getFillLevel(input.type)
+				input.boostSatisfied = fillLevel >= input.amount * cyclesPerMinuteMinuteFactor
+				if input.boostSatisfied then
+					if production.boostMode == "MOST" then
+						if masterWinner == nil or input.boostFactor > production.inputs[masterWinner].boostFactor then
+							masterWinner = x
+						end
+					elseif production.boostMode == "LEAST" then
+						if masterWinner == nil or input.boostFactor < production.inputs[masterWinner].boostFactor then
+							masterWinner = x
+						end
+					else
+						masterFactor = masterFactor * input.boostFactor
+						masterConsume = masterConsume or {}
+						masterConsume[x] = true
+					end
+				end
+			end
+		end
+		if masterWinner ~= nil then
+			masterFactor = production.inputs[masterWinner].boostFactor
+			masterConsume = {[masterWinner] = true}
+		end
+	end
+	production.masterFactor = masterFactor
+
+	-- Skalierter Takt für alles außer dem Master-Input selbst (s.o.)
+	local factor = cyclesPerMinuteMinuteFactor * masterFactor
+
+	local enoughInputResources = true
+	local enoughOutputSpace = true
+	-- Mix-Gruppen-ID -> Index des production.inputs-Eintrags, der laut mixMode "gewinnt"
+	local groupSelection = {}
+	local groupFillLevel = {}
+	local seenGroups = {}
+	local booster = 1
+	local satisfiedBoosters = {}
+
+	for x = 1, #production.inputs do
+		local input = production.inputs[x]
+		if input.mix == 0 then
+			local fillLevel = self:getFillLevel(input.type)
+			if self.isOwned and fillLevel < input.amount * factor then
+				enoughInputResources = false
+			end
+		elseif input.mix == Revamp.MIX_BOOST then
+			local fillLevel = self:getFillLevel(input.type)
+			input.boostSatisfied = fillLevel >= input.amount * factor
+			if input.boostSatisfied then
+				table.insert(satisfiedBoosters, x)
+			end
+		elseif input.mix ~= Revamp.MIX_MASTER then
+			seenGroups[input.mix] = true
+			local fillLevel = self:getFillLevel(input.type)
+			local needAmount = input.amount * factor
+			if fillLevel >= needAmount then
+				local currentWinner = groupSelection[input.mix]
+				if currentWinner == nil
+					or production.mixMode == "DESC"
+					or (production.mixMode == "MOST" and fillLevel > groupFillLevel[input.mix])
+					or (production.mixMode == "LEAST" and fillLevel < groupFillLevel[input.mix]) then
+					groupSelection[input.mix] = x
+					groupFillLevel[input.mix] = fillLevel
+				end
+			end
+		end
+	end
+	-- Ohne den Modus limitBoosters trägt jeder ausreichend bevorratete Booster seinen eigenen Faktor bei und mehrere gleichzeitig aktive multiplizieren sich.
+	-- Mit limitBoosters zählt und verbraucht sich nur ein einziger Booster, ausgewählt nach boostMode: bei MOST/LEAST der stärkste bzw. schwächste Faktor, bei ASC/DESC der erste bzw. letzte in der Reihenfolge des Rezepts.
+	if production.limitBoosters and #satisfiedBoosters > 0 then
+		local winner = satisfiedBoosters[1]
+		for _, x in ipairs(satisfiedBoosters) do
+			if production.boostMode == "MOST" then
+				if production.inputs[x].boostFactor > production.inputs[winner].boostFactor then
+					winner = x
+				end
+			elseif production.boostMode == "LEAST" then
+				if production.inputs[x].boostFactor < production.inputs[winner].boostFactor then
+					winner = x
+				end
+			elseif production.boostMode == "DESC" then
+				winner = x
+			end
+		end
+		for _, x in ipairs(satisfiedBoosters) do
+			production.inputs[x].boostSatisfied = x == winner
+		end
+		booster = production.inputs[winner].boostFactor
+	else
+		for _, x in ipairs(satisfiedBoosters) do
+			booster = booster * production.inputs[x].boostFactor
+		end
+	end
+	production.boosterFactor = booster
+
+	production.mixGroupSatisfied = production.mixGroupSatisfied or {}
+	for mix in pairs(seenGroups) do
+		production.mixGroupSatisfied[mix] = groupSelection[mix] ~= nil
+
+		if groupSelection[mix] == nil then
+			if self.isOwned then
+				enoughInputResources = false
+			end
+		else
+			local winnerType = production.inputs[groupSelection[mix]].type
+			production.mixGroupWinnerType = production.mixGroupWinnerType or {}
+			if production.mixGroupWinnerType[mix] ~= winnerType then
+				production.mixGroupWinnerType[mix] = winnerType
+				Revamp.DebugText("updateSingleProduction(): %s Mix-Gruppe %d waehlt jetzt %s (mixMode=%s)", production.id, mix, g_fillTypeManager:getFillTypeNameByIndex(winnerType), production.mixMode)
+			end
+		end
+	end
+
+	if enoughInputResources == false and self.isOwned then
+		if production.status ~= ProductionPoint.PROD_STATUS.MISSING_INPUTS then
+			production.status = ProductionPoint.PROD_STATUS.MISSING_INPUTS
+			self.owningPlaceable:productionStatusChanged(production, ProductionPoint.PROD_STATUS.MISSING_INPUTS)
+			self:setProductionStatus(production.id, production.status)
+		end
+	end
+
+	if enoughInputResources and self.isOwned then
+		for x = 1, #production.outputs do
+			local output = production.outputs[x]
+			if not output.sellDirectly then
+				local outputMultiplier = 1
+				if output.boost == true then
+					outputMultiplier = booster
+				elseif output.boost == "reverse" then
+					outputMultiplier = 1 / booster
+				end
+				local freeCapacity = self.storage:getFreeCapacity(output.type)
+				if freeCapacity < output.amount * factor * outputMultiplier then
+					enoughOutputSpace = false
+					if production.status ~= ProductionPoint.PROD_STATUS.NO_OUTPUT_SPACE then
+						production.status = ProductionPoint.PROD_STATUS.NO_OUTPUT_SPACE
+						self:setProductionStatus(production.id, production.status)
+					end
+					break
+				end
+			end
+		end
+	end
+
+	if self.isOwned then
+		self.productionCostsToClaim = self.productionCostsToClaim + production.costsPerActiveMinute * minuteFactorDt
+	end
+
+	if not self.isOwned or (enoughInputResources and enoughOutputSpace) then
+		for x = 1, #production.inputs do
+			local input = production.inputs[x]
+			local isRequired = input.mix == 0
+			local isSelectedGroupMember = input.mix ~= 0 and input.mix ~= Revamp.MIX_BOOST and input.mix ~= Revamp.MIX_MASTER and groupSelection[input.mix] == x
+			local isBoostConsumed = input.mix == Revamp.MIX_BOOST and input.boostSatisfied
+			local isMasterConsumed = masterConsume ~= nil and masterConsume[x] == true
+			if isRequired or isSelectedGroupMember or isBoostConsumed or isMasterConsumed then
+				-- Der Master-Input selbst verbraucht sich unskaliert, damit er sich nicht über
+				-- masterFactor selbst hochschaukelt - alle anderen Inputs nutzen den skalierten Takt.
+				local consumeFactor = isMasterConsumed and cyclesPerMinuteMinuteFactor or factor
+				local amount = input.amount * consumeFactor
+				if input.rngAffected then
+					amount = amount * math.random()
+				end
+				if self.loadingStation == nil then
+					local fillLevel = self:getFillLevel(input.type)
+					self.storage:setFillLevel(fillLevel - amount, input.type)
+				else
+					self.loadingStation:removeFillLevel(input.type, amount, self:getOwnerFarmId())
+				end
+			end
+		end
+
+		if self.isOwned then
+			for x = 1, #production.outputs do
+				local output = production.outputs[x]
+				local outputMultiplier = 1
+				if output.boost == true then
+					outputMultiplier = booster
+				elseif output.boost == "reverse" then
+					outputMultiplier = 1 / booster
+				end
+				local amount = output.amount * factor * outputMultiplier
+				if output.rngAffected then
+					amount = amount * math.random()
+				end
+				if output.sellDirectly then
+					if self.isServer then
+						self.soldFillTypesToPayOut[output.type] = self.soldFillTypesToPayOut[output.type] + amount
+					end
+				else
+					local fillLevel = self.storage:getFillLevel(output.type)
+					self.storage:setFillLevel(fillLevel + amount, output.type)
+				end
+			end
+		end
+
+		if production.status ~= ProductionPoint.PROD_STATUS.RUNNING then
+			production.status = ProductionPoint.PROD_STATUS.RUNNING
+			self.owningPlaceable:productionStatusChanged(production, production.status)
+			ProductionPointProductionStatusEvent.sendEvent(self, production.index, production.status)
+		end
+	end
+end
+
 -- Vanilla bietet innerhalb von ProductionPoint:updateProduction() keinen Erweiterungspunkt, über
 -- den sich beeinflussen ließe, welcher Input als "vorhanden" zählt bzw. abgebucht wird. Deshalb wird
 -- die komplette Funktion überschrieben (kein Aufruf von superFunc): Inputs mit input.mix in 1..97
 -- sind alternative Zutaten, von denen pro Zyklus nur eine (nach production.mixMode: ASC/DESC/
 -- MOST/LEAST) benötigt und abgebucht wird, statt wie bei Vanilla alle gleichzeitig.
+-- Die eigentliche Arbeit je Rezeptlinie steht in Revamp.updateSingleProduction weiter oben, hier bleiben nur die Dinge, die den ganzen Produktionspunkt betreffen.
 --
 -- production.sharedThroughputCapacity nimmt eine einzelne Rezeptlinie von der punktweiten
 -- Kapazitätsteilung aus; input/output.rngAffected lässt Verbrauch/Ertrag zufällig schwanken statt
@@ -172,11 +452,8 @@ ProductionPoint.load = Utils.overwrittenFunction(ProductionPoint.load, Revamp.lo
 -- Validierung in Revamp.loadProductionPoint oben) - damit hat "Faktor" dieselbe Bedeutung wie in
 -- Vanilla (z.B. foodFactor/productionFactor in der Tierhaltung: 1 = neutral, multiplikativ).
 --
--- Booster (mix=98): jeder gerade ausreichend bevorratete Booster-Input trägt seinen eigenen
--- boostFactor bei, mehrere gleichzeitig aktive multiplizieren sich (booster = Produkt aller aktiven
--- boostFactor-Werte). Ein Einzel-Sieger-Modus (nur der laut boostMode "beste" Booster zählt) ist
--- nicht umgesetzt - er würde einen generischen production.modes-Mechanismus voraussetzen, den es
--- hier noch nicht gibt.
+-- Booster (mix=98): jeder gerade ausreichend bevorratete Booster-Input trägt seinen eigenen boostFactor bei, mehrere gleichzeitig aktive multiplizieren sich (booster = Produkt aller aktiven boostFactor-Werte).
+-- Der Modus limitBoosters schaltet das auf einen einzigen Sieger um, ausgewählt nach boostMode.
 --
 -- Master-Booster (mix=99): wirkt als globaler Durchsatz-Multiplikator auf die gesamte Produktion
 -- (alle anderen Inputs/Outputs), außer auf seinen eigenen Verbrauch (sonst rückgekoppelt). Bei
@@ -198,213 +475,34 @@ function Revamp.updateProduction(self, superFunc) ---@diagnostic disable-line: u
 	local timeAdjust = g_currentMission.environment.timeAdjustment
 	local numActiveProductions = #self.activeProductions
 
-	if numActiveProductions > 0 then
-		local minuteFactorDt = dt * self.minuteFactorTimescaled * timeAdjust
+	local minuteFactorDt = dt * self.minuteFactorTimescaled * timeAdjust
 
+	-- Wetterabhängige Lager laufen unabhängig von den Rezeptlinien: ein Regenfass sammelt auch dann, wenn am Punkt gerade gar keine Produktion eingeschaltet ist.
+	if self.hasWeatherStorage and self.isOwned then
+		Revamp.processWeatherStorage(self, minuteFactorDt / 60)
+	end
+
+	if numActiveProductions > 0 then
+		-- Die Wetter- und Zeit-Modi werden für alle Linien vorab ausgewertet, weil eine gerade angehaltene Linie auch keinen Anteil an der geteilten Durchsatzkapazität belegen soll.
+		-- Sonst würden die tatsächlich laufenden Linien nachts von einer stehenden Solar-Linie mit ausgebremst.
 		local numSharedThroughputCapacity = 0
-		if self.sharedThroughputCapacity then
-			for i = 1, numActiveProductions do
-				if self.activeProductions[i].sharedThroughputCapacity then
-					numSharedThroughputCapacity = numSharedThroughputCapacity + 1
-				end
+		for i = 1, numActiveProductions do
+			local production = self.activeProductions[i]
+			production.modeStatus = Revamp.processProductionModes(production)
+			if production.modeStatus == nil and self.sharedThroughputCapacity and production.sharedThroughputCapacity then
+				numSharedThroughputCapacity = numSharedThroughputCapacity + 1
 			end
 		end
 
 		for i = 1, numActiveProductions do
-			local production = self.activeProductions[i]
-			local cyclesPerMinuteMinuteFactor = production.cyclesPerMinute * minuteFactorDt
-			if self.sharedThroughputCapacity and production.sharedThroughputCapacity then
-				cyclesPerMinuteMinuteFactor = cyclesPerMinuteMinuteFactor / numSharedThroughputCapacity
-			end
-
-			-- Master-Booster zuerst ermitteln: seine eigene Bestandsprüfung läuft unskaliert (er soll
-			-- sich nicht selbst hochskalieren), alles andere in dieser Produktion skaliert danach mit.
-			local masterFactor = 1
-			local masterConsume = nil
-			if production.master then
-				local masterWinner = nil
-				for x = 1, #production.inputs do
-					local input = production.inputs[x]
-					if input.mix == Revamp.MIX_MASTER then
-						local fillLevel = self:getFillLevel(input.type)
-						input.boostSatisfied = fillLevel >= input.amount * cyclesPerMinuteMinuteFactor
-						if input.boostSatisfied then
-							if production.boostMode == "MOST" then
-								if masterWinner == nil or input.boostFactor > production.inputs[masterWinner].boostFactor then
-									masterWinner = x
-								end
-							elseif production.boostMode == "LEAST" then
-								if masterWinner == nil or input.boostFactor < production.inputs[masterWinner].boostFactor then
-									masterWinner = x
-								end
-							else
-								masterFactor = masterFactor * input.boostFactor
-								masterConsume = masterConsume or {}
-								masterConsume[x] = true
-							end
-						end
-					end
-				end
-				if masterWinner ~= nil then
-					masterFactor = production.inputs[masterWinner].boostFactor
-					masterConsume = {[masterWinner] = true}
-				end
-			end
-			production.masterFactor = masterFactor
-
-			-- Skalierter Takt für alles außer dem Master-Input selbst (s.o.)
-			local factor = cyclesPerMinuteMinuteFactor * masterFactor
-
-			local enoughInputResources = true
-			local enoughOutputSpace = true
-			-- Mix-Gruppen-ID -> Index des production.inputs-Eintrags, der laut mixMode "gewinnt"
-			local groupSelection = {}
-			local groupFillLevel = {}
-			local seenGroups = {}
-			local booster = 1
-
-			for x = 1, #production.inputs do
-				local input = production.inputs[x]
-				if input.mix == 0 then
-					local fillLevel = self:getFillLevel(input.type)
-					if self.isOwned and fillLevel < input.amount * factor then
-						enoughInputResources = false
-					end
-				elseif input.mix == Revamp.MIX_BOOST then
-					local fillLevel = self:getFillLevel(input.type)
-					input.boostSatisfied = fillLevel >= input.amount * factor
-					if input.boostSatisfied then
-						booster = booster * input.boostFactor
-					end
-				elseif input.mix ~= Revamp.MIX_MASTER then
-					seenGroups[input.mix] = true
-					local fillLevel = self:getFillLevel(input.type)
-					local needAmount = input.amount * factor
-					if fillLevel >= needAmount then
-						local currentWinner = groupSelection[input.mix]
-						if currentWinner == nil
-							or production.mixMode == "DESC"
-							or (production.mixMode == "MOST" and fillLevel > groupFillLevel[input.mix])
-							or (production.mixMode == "LEAST" and fillLevel < groupFillLevel[input.mix]) then
-							groupSelection[input.mix] = x
-							groupFillLevel[input.mix] = fillLevel
-						end
-					end
-				end
-			end
-			production.boosterFactor = booster
-
-			production.mixGroupSatisfied = production.mixGroupSatisfied or {}
-			for mix in pairs(seenGroups) do
-				production.mixGroupSatisfied[mix] = groupSelection[mix] ~= nil
-
-				if groupSelection[mix] == nil then
-					if self.isOwned then
-						enoughInputResources = false
-					end
-				else
-					local winnerType = production.inputs[groupSelection[mix]].type
-					production.mixGroupWinnerType = production.mixGroupWinnerType or {}
-					if production.mixGroupWinnerType[mix] ~= winnerType then
-						production.mixGroupWinnerType[mix] = winnerType
-						Revamp.DebugText("updateProduction(): %s Mix-Gruppe %d waehlt jetzt %s (mixMode=%s)", production.id, mix, g_fillTypeManager:getFillTypeNameByIndex(winnerType), production.mixMode)
-					end
-				end
-			end
-
-			if enoughInputResources == false and self.isOwned then
-				if production.status ~= ProductionPoint.PROD_STATUS.MISSING_INPUTS then
-					production.status = ProductionPoint.PROD_STATUS.MISSING_INPUTS
-					self.owningPlaceable:productionStatusChanged(production, ProductionPoint.PROD_STATUS.MISSING_INPUTS)
-					self:setProductionStatus(production.id, production.status)
-				end
-			end
-
-			if enoughInputResources and self.isOwned then
-				for x = 1, #production.outputs do
-					local output = production.outputs[x]
-					if not output.sellDirectly then
-						local outputMultiplier = 1
-						if output.boost == true then
-							outputMultiplier = booster
-						elseif output.boost == "reverse" then
-							outputMultiplier = 1 / booster
-						end
-						local freeCapacity = self.storage:getFreeCapacity(output.type)
-						if freeCapacity < output.amount * factor * outputMultiplier then
-							enoughOutputSpace = false
-							if production.status ~= ProductionPoint.PROD_STATUS.NO_OUTPUT_SPACE then
-								production.status = ProductionPoint.PROD_STATUS.NO_OUTPUT_SPACE
-								self:setProductionStatus(production.id, production.status)
-							end
-							break
-						end
-					end
-				end
-			end
-
-			if self.isOwned then
-				self.productionCostsToClaim = self.productionCostsToClaim + production.costsPerActiveMinute * minuteFactorDt
-			end
-
-			if not self.isOwned or (enoughInputResources and enoughOutputSpace) then
-				for x = 1, #production.inputs do
-					local input = production.inputs[x]
-					local isRequired = input.mix == 0
-					local isSelectedGroupMember = input.mix ~= 0 and input.mix ~= Revamp.MIX_BOOST and input.mix ~= Revamp.MIX_MASTER and groupSelection[input.mix] == x
-					local isBoostConsumed = input.mix == Revamp.MIX_BOOST and input.boostSatisfied
-					local isMasterConsumed = masterConsume ~= nil and masterConsume[x] == true
-					if isRequired or isSelectedGroupMember or isBoostConsumed or isMasterConsumed then
-						-- Der Master-Input selbst verbraucht sich unskaliert, damit er sich nicht über
-						-- masterFactor selbst hochschaukelt - alle anderen Inputs nutzen den skalierten Takt.
-						local consumeFactor = isMasterConsumed and cyclesPerMinuteMinuteFactor or factor
-						local amount = input.amount * consumeFactor
-						if input.rngAffected then
-							amount = amount * math.random()
-						end
-						if self.loadingStation == nil then
-							local fillLevel = self:getFillLevel(input.type)
-							self.storage:setFillLevel(fillLevel - amount, input.type)
-						else
-							self.loadingStation:removeFillLevel(input.type, amount, self:getOwnerFarmId())
-						end
-					end
-				end
-
-				if self.isOwned then
-					for x = 1, #production.outputs do
-						local output = production.outputs[x]
-						local outputMultiplier = 1
-						if output.boost == true then
-							outputMultiplier = booster
-						elseif output.boost == "reverse" then
-							outputMultiplier = 1 / booster
-						end
-						local amount = output.amount * factor * outputMultiplier
-						if output.rngAffected then
-							amount = amount * math.random()
-						end
-						if output.sellDirectly then
-							if self.isServer then
-								self.soldFillTypesToPayOut[output.type] = self.soldFillTypesToPayOut[output.type] + amount
-							end
-						else
-							local fillLevel = self.storage:getFillLevel(output.type)
-							self.storage:setFillLevel(fillLevel + amount, output.type)
-						end
-					end
-				end
-
-				if production.status ~= ProductionPoint.PROD_STATUS.RUNNING then
-					production.status = ProductionPoint.PROD_STATUS.RUNNING
-					self.owningPlaceable:productionStatusChanged(production, production.status)
-					ProductionPointProductionStatusEvent.sendEvent(self, production.index, production.status)
-				end
-			end
+			Revamp.updateSingleProduction(self, self.activeProductions[i], minuteFactorDt, numSharedThroughputCapacity)
 		end
 	end
 
-	if self.isServer and self.isOwned and g_time > self.palletSpawnCooldown and not self.waitingForPalletToSpawn then
+	-- Ein wegen seiner Öffnungszeiten geschlossener Betrieb stellt auch keine Paletten mehr raus.
+	local isWithinOpeningHours = self.openingHoursTable == nil or self.openingHoursTable[g_currentMission.environment.currentHour] == true
+
+	if self.isServer and self.isOwned and isWithinOpeningHours and g_time > self.palletSpawnCooldown and not self.waitingForPalletToSpawn then
 		local nextFillTypeId = nil
 		while true do
 			local fillTypeId = self.lastPalletFillTypeId
