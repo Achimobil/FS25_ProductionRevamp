@@ -47,6 +47,35 @@ function Revamp.getProductionMixGroups(production)
 	return groups, order
 end
 
+-- Findet alle Fülltypen, die per Vanilla-fillTypeConversion (UnloadTrigger.lua, an den
+-- productionPoint.unloadingStation.unloadTriggers hängend) auf fillTypeIndex abgebildet werden -
+-- z.B. wenn ein community Rezept ROGGEN als WEIZEN-Ersatz akzeptiert. Rein informativ für die
+-- Anzeige, keine eigene XML-Struktur nötig - die Konvertierung selbst passiert schon beim Abladen,
+-- im Lager zählt danach nur noch fillTypeIndex.
+function Revamp.getInputConverterAlternatives(productionPoint, fillTypeIndex)
+	local result = {}
+	local unloadingStation = productionPoint.unloadingStation
+	if unloadingStation == nil or unloadingStation.unloadTriggers == nil then
+		return result
+	end
+	-- Dieselbe Konvertierung taucht oft in mehreren Trigger-Objekten am selben Produktionspunkt
+	-- auf (z.B. identisch sowohl im unloadTrigger als auch im palletTrigger hinterlegt, damit
+	-- sowohl per Anhänger als auch per Palette abgeladen werden kann) - pro Ziel-Fülltyp deshalb
+	-- nur einmal aufnehmen, sonst erscheint dieselbe Alternative mehrfach im Rezept.
+	local seenIncomingFillTypes = {}
+	for _, trigger in ipairs(unloadingStation.unloadTriggers) do
+		if trigger.fillTypeConversions ~= nil then
+			for incomingFillType, conversion in pairs(trigger.fillTypeConversions) do
+				if conversion.outgoingFillType == fillTypeIndex and not seenIncomingFillTypes[incomingFillType] then
+					seenIncomingFillTypes[incomingFillType] = true
+					table.insert(result, {type = incomingFillType, ratio = conversion.ratio})
+				end
+			end
+		end
+	end
+	return result
+end
+
 function Revamp.getProductionBoostInputs(production, mix)
 	local result = {}
 	for _, input in ipairs(production.inputs) do
@@ -152,6 +181,22 @@ function Revamp.addRecipeItemRow(parent, input, isSatisfied, groupColor, unsatis
 	return row
 end
 
+-- Eine Converter-Alternative hat keine eigene, aus dem Rezept stammende Menge (siehe
+-- getInputConverterAlternatives) - die Menge-Spalte zeigt deshalb statt einer Zahl das
+-- Konvertierungsverhältnis (dieselbe multiplikative Konvention wie boostFactor).
+function Revamp.addRecipeConverterAltRow(parent, alternative, groupColor)
+	local row = Revamp.recipeItemTemplate:clone(parent)
+	row.revampLine = true
+	if groupColor ~= nil then
+		Revamp.addRecipeRowBackground(row, groupColor)
+	end
+	local fillType = g_fillTypeManager:getFillTypeByIndex(alternative.type)
+	row:getDescendantByName("icon"):setImageFilename(fillType.hudOverlayFilename)
+	row:getDescendantByName("amount"):setText("")
+	row:getDescendantByName("name"):setText(fillType.title .. " (x" .. g_i18n:formatNumber(alternative.ratio, 2) .. ")")
+	return row
+end
+
 function Revamp.addRecipeGroupHeaderRow(parent, titleText, isSatisfied, groupColor, unsatisfiedColor)
 	local row = Revamp.recipeItemTemplate:clone(parent)
 	row.revampLine = true
@@ -172,7 +217,7 @@ function Revamp.addRecipeGroupHeaderRow(parent, titleText, isSatisfied, groupCol
 end
 
 function Revamp.updateRecipeCellMixGroups(self, cell)
-	local production = self:getSelectedProduction()
+	local production, productionPoint = self:getSelectedProduction()
 	if production == nil then
 		return
 	end
@@ -180,8 +225,26 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 	local groups, order = Revamp.getProductionMixGroups(production)
 	local hasBoostInputs = #Revamp.getProductionBoostInputs(production, Revamp.MIX_BOOST) > 0
 		or #Revamp.getProductionBoostInputs(production, Revamp.MIX_MASTER) > 0
-	if #order == 0 and not hasBoostInputs then
-		return -- weder Mix-Gruppe noch Booster/Master-Booster in diesem Rezept, Vanilla-Darstellung von superFunc bleibt unangetastet
+
+	-- Converter-Alternativen nur für normale, nicht gruppierte Inputs (mix=0) - eine
+	-- Mix-Gruppen-Zutat bekommt bewusst keine Converter-Anzeige (mit Achim abgestimmt): sonst
+	-- könnten Mix-Gruppen- und Converter-Block-Optik für dieselbe Zutat kollidieren. Einmal pro
+	-- Input vorab ermittelt statt weiter unten im Anzeige-Loop noch einmal, damit auch der
+	-- Früh-Ausstieg direkt darunter weiß, ob es überhaupt etwas zu bauen gibt.
+	local converterAlternativesByInput = {}
+	local hasConverterInputs = false
+	for _, input in ipairs(production.inputs) do
+		if input.mix == 0 then
+			local alternatives = Revamp.getInputConverterAlternatives(productionPoint, input.type)
+			if #alternatives > 0 then
+				converterAlternativesByInput[input] = alternatives
+				hasConverterInputs = true
+			end
+		end
+	end
+
+	if #order == 0 and not hasBoostInputs and not hasConverterInputs then
+		return -- weder Mix-Gruppe noch Booster/Master-Booster noch Converter-Alternative in diesem Rezept, Vanilla-Darstellung von superFunc bleibt unangetastet
 	end
 
 	-- Hier nicht versuchen, den Neuaufbau bei "unveränderten" Daten zu überspringen: superFunc()
@@ -210,12 +273,26 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 		end
 	end
 
-	-- Nicht gruppierte, nicht optionale Zutaten (mix=0) unverändert im bisherigen Stil darunter
-	-- anhängen - vor Booster/Master-Booster: Mix-Gruppen stehen automatisch oben, danach die
-	-- normalen Zutaten, Booster/Master-Booster erst ganz am Ende.
+	-- Nicht gruppierte, nicht optionale Zutaten (mix=0) darunter anhängen - vor Booster/Master-
+	-- Booster: Mix-Gruppen stehen automatisch oben, danach die normalen Zutaten, Booster/Master-
+	-- Booster erst ganz am Ende. Ein Input mit Converter-Alternativen bekommt denselben
+	-- Kopfzeile+Zeilen-Aufbau wie eine Mix-Gruppe (siehe converterAlternativesByInput oben) - der
+	-- echte Input bleibt dabei als ganz normale erste Zeile erhalten, nur die alternativ
+	-- akzeptierten Fülltypen kommen als zusätzliche Zeilen darunter.
 	for _, input in ipairs(production.inputs) do
 		if input.mix == 0 then
-			Revamp.addRecipeItemRow(inputLayout, input, true)
+			local alternatives = converterAlternativesByInput[input]
+			if alternatives == nil then
+				Revamp.addRecipeItemRow(inputLayout, input, true)
+			else
+				groupPosition = groupPosition + 1
+				local groupColor = Revamp.RECIPE_GROUP_COLORS[(groupPosition - 1) % #Revamp.RECIPE_GROUP_COLORS + 1]
+				Revamp.addRecipeGroupHeaderRow(inputLayout, g_i18n:getText("revamp_ui_production_converterGroup"), true, groupColor)
+				Revamp.addRecipeItemRow(inputLayout, input, true, groupColor)
+				for _, alternative in ipairs(alternatives) do
+					Revamp.addRecipeConverterAltRow(inputLayout, alternative, groupColor)
+				end
+			end
 		end
 	end
 
@@ -256,7 +333,12 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 		end
 	end
 
-	inputLayout:invalidateLayout()
+	-- BoxLayoutElement.size wird von der Engine nie an den tatsächlichen Inhalt angepasst (bleibt
+	-- immer bei der aus dem GUI-Profil geladenen Größe) - die wirkliche Inhaltshöhe liefert nur der
+	-- Rückgabewert von invalidateLayout() (BoxLayoutElement.maxFlowSize). inputLayout.size[2] hier zu
+	-- lesen sähe bei kurzen Listen zufällig richtig aus (Profil-Standardhöhe reicht zufällig), lieferte
+	-- bei mehr Inhalt aber weiterhin nur die alte Standardhöhe.
+	local inputLayoutContentHeight = inputLayout:invalidateLayout()
 
 	-- Größe/buildSectionInfo() hier NICHT mehr selbst sichern/wiederherstellen - superFunc() hat
 	-- VOR diesem Code schon seine eigene (zu kleine, weil ohne Gruppen-Überschriften berechnete)
@@ -265,7 +347,7 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 	-- anfängt - ein "vorher" ab hier zu sichern rettet also nur den bereits falschen Wert. Die
 	-- eigentliche Sicherung/Wiederherstellung passiert jetzt eine Ebene höher, um superFunc()
 	-- herum, siehe Revamp.populateRecipeCellForItemInSection.
-	cell:setSize(cell.size[1], inputLayout.size[2])
+	cell:setSize(cell.size[1], inputLayoutContentHeight)
 	self.detailsList.cellDatabase.recipeCell.size[2] = cell.size[2]
 	cell:updateAnchorDeltas(true)
 	self.detailsList:buildSectionInfo()

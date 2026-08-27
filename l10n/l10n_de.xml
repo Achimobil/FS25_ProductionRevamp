@@ -8,6 +8,7 @@
         <text name="revamp_ui_production_mixModeMost"           text="größerer Bestand"/>
         <text name="revamp_ui_production_mixModeLeast"          text="kleinerer Bestand"/>
         <text name="revamp_ui_production_mixGroup"              text="Mix-Gruppe %d"/>
+        <text name="revamp_ui_production_converterGroup"        text="Alternative Zutaten"/>
         <text name="revamp_ui_production_booster"               text="Booster"/>
         <text name="revamp_ui_production_masterBooster"         text="Master-Booster"/>
         <text name="revamp_ui_production_boostFactorCurrent"    text="aktuell: x%s"/>
