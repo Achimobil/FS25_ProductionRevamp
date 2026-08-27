@@ -1,9 +1,7 @@
--- Erweitert die Vanilla-Produktions-Ladefunktion um die Revamp-eigenen Rezept-Felder
--- (Mix-Gruppen, Booster, erzwungener Primär-Output, Sichtbarkeit). Die Vanilla-Funktion wird dafür
--- aufgerufen statt komplett neu geschrieben, damit alles, was Vanilla schon selbst leistet
--- (Storage/Verkaufsstelle/Palettenspawner/Validierung), unverändert bleibt.
+-- Erweitert die Vanilla-Produktions-Ladefunktion um die Revamp-eigenen Rezept-Felder (Mix-Gruppen, Booster, Fülltyp-Kategorien als Zutat, erzwungener Primär-Output, Sichtbarkeit).
+-- Die Vanilla-Funktion wird dafür aufgerufen statt komplett neu geschrieben, damit alles, was Vanilla schon selbst leistet (Storage/Verkaufsstelle/Palettenspawner/Validierung), unverändert bleibt.
 --
--- FillTypeCategory-basierte Inputs/Outputs sowie die FeedMixer-/Tier-Trigger-Anbindung werden hier nicht geladen.
+-- Die FeedMixer-/Tier-Trigger-Anbindung wird hier nicht geladen.
 -- Mix-Gruppen, Booster/Master-Booster und die Wetter-/Zeit-Modi wertet Revamp.updateProduction weiter unten aus, die Modus-Berechnung selbst steht in revamp_productionModes.lua.
 
 Revamp.MIX_BOOST = 98
@@ -51,6 +49,8 @@ function Revamp.registerProductionXMLPaths(schema, basePath)
 	schema:register(XMLValueType.FLOAT, basePath .. ".productions.production(?).inputs.input(?)#boostFactor", "Multiplikator für Booster/Master-Booster (> 0, 1 ist unzulässig weil wirkungslos) - Pflichtfeld bei mix='boost'/'master'")
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).inputs.input(?)#rngAffected", "Input ist von einem Zufallsfaktor betroffen", false)
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).inputs.input(?)#hideFromMenu", "Input ist standardmäßig im Menü versteckt", false)
+	schema:register(XMLValueType.STRING, basePath .. ".productions.production(?).inputs.input(?)#fillTypeCategory", "Fülltyp-Kategorie(n) als Zutat statt eines einzelnen Fülltyps, mehrere durch Leerzeichen getrennt - braucht zwingend eine Mix-Gruppe über 'mix'")
+	schema:register(XMLValueType.L10N_STRING, basePath .. ".productions.production(?).inputs.input(?)#title", "Überschrift der Mix-Gruppe dieses Inputs im Rezept, statt der Standardüberschrift 'Mix-Gruppe N'")
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).outputs.output(?)#primaryProductFillType", "Erzwingt diesen Output als primären FillType", false)
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).outputs.output(?)#boost", "Output ist von einem Booster betroffen", true)
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).outputs.output(?)#rngAffected", "Output ist von einem Zufallsfaktor betroffen", false)
@@ -59,10 +59,142 @@ end
 
 ProductionPoint.registerXMLPaths = Utils.prependedFunction(ProductionPoint.registerXMLPaths, Revamp.registerProductionXMLPaths)
 
+-- Attribute eines Kategorie-Inputs, die beim Auflösen an jede daraus erzeugte Einzel-Zutat weitergereicht werden.
+Revamp.PRODUCTION_INPUT_ATTRIBUTES = {"amount", "mix", "boostFactor", "rngAffected", "hideFromMenu", "title"}
+
+---Kopiert die Attribute eines Kategorie-Inputs auf eine daraus erzeugte Einzel-Zutat.
+---Bewusst als Rohtext über eine feste Attributliste: der Wert soll unverändert durchgereicht werden, und ein hier unbekanntes Attribut soll nicht mit einem falsch geratenen Typ neu geschrieben werden.
+---@param xmlFile table XML-Datei der Placeable
+---@param sourceKey string Pfad des Kategorie-Inputs
+---@param targetKey string Pfad der neuen Einzel-Zutat
+function Revamp.copyProductionInputAttributes(xmlFile, sourceKey, targetKey)
+	for _, attribute in ipairs(Revamp.PRODUCTION_INPUT_ATTRIBUTES) do
+		local value = xmlFile:getString(sourceKey .. "#" .. attribute)
+		if value ~= nil then
+			xmlFile:setString(targetKey .. "#" .. attribute, value)
+		end
+	end
+end
+
+---Löst Zutaten mit #fillTypeCategory in einzelne <input>-Knoten auf, noch bevor der Vanilla-Loader die Rezepte überhaupt sieht.
+---Eine Kategorie als Zutat bedeutet "eine beliebige Sorte daraus" - genau das, was eine Mix-Gruppe zur Laufzeit ohnehin schon leistet.
+---Statt dafür einen zweiten, dynamischen Auswahlpfad zu bauen, wird die Kategorie deshalb einmalig beim Laden zu ganz normalen Zutaten derselben Mix-Gruppe aufgelöst.
+---Der Inhalt einer Kategorie steht nach dem Laden der Map ohnehin fest, und die konkrete Fülltyp-Liste wird auch sonst schon beim Laden gebraucht (Abladestelle, Lager, Rezept-Anzeige).
+---Das Auflösen passiert vor superFunc, weil Vanilla #fillTypeCategory nicht kennt: es wirft eine Zutat ohne gültiges #fillType weg und verwirft eine Rezeptlinie sogar komplett ("No inputs for production"), wenn danach keine Zutat mehr übrig ist.
+---Danach sieht Vanilla nur noch gewöhnliche Zutaten und erledigt seine eigene Buchführung (inputFillTypeIds, Prüfung der Abladestelle) unverändert mit.
+---@param xmlFile table XML-Datei der Placeable
+---@param key string Basis-Pfad des productionPoint-Knotens
+---@return table categoryFillTypes Menge aller aus einer Kategorie aufgelösten Fülltypen dieses Produktionspunktes
+function Revamp.expandFillTypeCategoryInputs(xmlFile, key)
+	local categoryFillTypes = {}
+
+	xmlFile:iterate(key .. ".productions.production", function(_, productionKey)
+		local inputsKey = productionKey .. ".inputs"
+		local usedFillTypes = {}
+		local categoryInputs = {}
+		local numInputs = 0
+
+		xmlFile:iterate(inputsKey .. ".input", function(_, inputKey)
+			local fillTypeName = xmlFile:getString(inputKey .. "#fillType")
+			if fillTypeName ~= nil then
+				local fillType = g_fillTypeManager:getFillTypeIndexByName(fillTypeName)
+				if fillType ~= nil then
+					usedFillTypes[fillType] = true
+				end
+			elseif xmlFile:getString(inputKey .. "#fillTypeCategory") ~= nil then
+				table.insert(categoryInputs, {key = inputKey, index = numInputs})
+			end
+			numInputs = numInputs + 1
+		end)
+
+		local emptyCategoryIndices = {}
+		for _, categoryInput in ipairs(categoryInputs) do
+			local inputKey = categoryInput.key
+			local categoryNames = xmlFile:getString(inputKey .. "#fillTypeCategory")
+			local mixValue = xmlFile:getString(inputKey .. "#mix")
+			local mixUpper = mixValue ~= nil and mixValue:upper() or nil
+			local mixGroup = tonumber(mixValue)
+			-- Ohne Mix-Gruppe würde die Kategorie zu lauter einzeln zwingend benötigten Zutaten aufgelöst, also "alle Sorten der Kategorie gleichzeitig".
+			-- Das ist nie gemeint und fällt dem Modder am Ergebnis kaum auf, deshalb hier ein harter Fehler statt einer stillen Annahme.
+			if mixUpper ~= "BOOST" and mixUpper ~= "MASTER" and (mixGroup == nil or mixGroup == 0) then
+				Logging.xmlError(xmlFile, "Production Revamp: input '%s' with fillTypeCategory '%s' needs a mix group - set 'mix' to a group number, 'boost' or 'master'", inputKey, categoryNames)
+				table.insert(emptyCategoryIndices, categoryInput.index)
+			else
+				-- Die Warnung von getFillTypesByCategoryNames wird bewusst nicht genutzt, ein unbekannter Kategoriename wird stattdessen unten am leeren Ergebnis erkannt.
+				-- Vanilla füttert diese Warnung nämlich über string.format mit dem Ergebnis der fehlgeschlagenen Suche statt mit dem gesuchten Namen, was aus einem Tippfehler im Rezept einen Absturz beim Laden machen kann.
+				local fillTypes = g_fillTypeManager:getFillTypesByCategoryNames(categoryNames)
+				-- getFillTypesByCategoryNames liefert die Fülltypen in pairs()-Reihenfolge - sortiert ist die Reihenfolge im Rezept und damit auch die ASC/DESC-Auswahl der Mix-Gruppe vorhersagbar.
+				table.sort(fillTypes)
+
+				local numAdded = 0
+				for _, fillType in ipairs(fillTypes) do
+					-- Ein Fülltyp kann pro Rezeptlinie nur einmal Zutat sein, sonst hätten zwei Einträge in production.inputs dieselbe Identität und die Attribut-Zuordnung träfe immer nur den ersten davon.
+					if not usedFillTypes[fillType] then
+						usedFillTypes[fillType] = true
+						local targetKey = inputKey
+						if numAdded > 0 then
+							-- Der erste Fülltyp übernimmt den vorhandenen Knoten, damit die Kategorie an ihrer Stelle im Rezept stehen bleibt, alle weiteren werden hinten angehängt.
+							targetKey = string.format("%s.input(%d)", inputsKey, numInputs)
+							numInputs = numInputs + 1
+							Revamp.copyProductionInputAttributes(xmlFile, inputKey, targetKey)
+						end
+						xmlFile:setString(targetKey .. "#fillType", g_fillTypeManager:getFillTypeNameByIndex(fillType))
+						categoryFillTypes[fillType] = true
+						numAdded = numAdded + 1
+					end
+				end
+
+				if #fillTypes == 0 then
+					Logging.xmlError(xmlFile, "Production Revamp: input '%s' has an unknown or empty fillTypeCategory '%s'", inputKey, categoryNames)
+					table.insert(emptyCategoryIndices, categoryInput.index)
+				elseif numAdded == 0 then
+					Logging.xmlError(xmlFile, "Production Revamp: fillTypeCategory '%s' of input '%s' adds no new fillType, all of them are already an input of this production", categoryNames, inputKey)
+					table.insert(emptyCategoryIndices, categoryInput.index)
+				else
+					Revamp.DebugText("expandFillTypeCategoryInputs(): %s loest '%s' in %d Zutaten auf", inputKey, categoryNames, numAdded)
+				end
+			end
+		end
+
+		-- Ein Kategorie-Knoten, der nicht aufgelöst werden konnte, brächte keinen Fülltyp mit und würde von Vanilla nur noch eine zweite, irreführende Fehlermeldung auslösen.
+		-- Absteigend entfernen, weil das Entfernen eines Knotens alle dahinter liegenden Indizes nachrücken lässt.
+		for i = #emptyCategoryIndices, 1, -1 do
+			xmlFile:removeProperty(string.format("%s.input(%d)", inputsKey, emptyCategoryIndices[i]))
+		end
+	end)
+
+	return categoryFillTypes
+end
+
+---Gibt jedem aus einer Kategorie aufgelösten Fülltyp eine eigene Lagerkapazität, sofern das Lager ihm nicht ohnehin schon eine per <capacity>-Zeile zuweist.
+---Umgeht damit einen Widerspruch in Vanillas Lagerkapazität, es ist ausdrücklich keine saubere Lösung: Storage:load rechnet den belegten Anteil des gemeinsamen Topfes aus <storage>#capacity nur über die Fülltypen ohne eigene <capacity>-Zeile aus, Storage:getFreeCapacity dagegen über sämtliche Fülltypen.
+---Ein Fülltyp, den erst die Kategorie ins Rezept geholt hat, hat naturgemäß keine eigene <capacity>-Zeile und hätte deshalb null freie Kapazität, sobald die einzeln aufgeführten Fülltypen den gemeinsamen Topf rechnerisch ausschöpfen - er wäre dann weder befüllbar noch kaufbar.
+---Eine eigene Kapazität macht ihn wieder benutzbar, bläht aber die tatsächliche Gesamtkapazität des Produktionspunktes auf, weil danach kein Fülltyp mehr im gemeinsamen Topf liegt und dessen Obergrenze nie mehr greift.
+---@param productionPoint table ProductionPoint-Instanz
+---@param categoryFillTypes table Menge der aus einer Kategorie aufgelösten Fülltypen
+function Revamp.applyCategoryStorageCapacities(productionPoint, categoryFillTypes)
+	local storage = productionPoint.storage
+	if storage == nil then
+		return
+	end
+
+	for fillType in pairs(categoryFillTypes) do
+		-- fillLevels kennt genau die Fülltypen, die dieses Lager überhaupt führt - für alle anderen wäre eine Kapazität sinnlos, die warnt Vanilla ohnehin schon als von der Abladestelle nicht unterstützt an.
+		if storage.fillLevels[fillType] ~= nil and storage.capacities[fillType] == nil then
+			storage.capacities[fillType] = storage.capacity
+			Revamp.DebugText("applyCategoryStorageCapacities(): %s bekommt %d Liter eigene Lagerkapazitaet", g_fillTypeManager:getFillTypeNameByIndex(fillType), storage.capacity)
+		end
+	end
+end
+
 function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, customEnv, i3dMappings)
+	local categoryFillTypes = Revamp.expandFillTypeCategoryInputs(xmlFile, key)
+
 	if not superFunc(self, components, xmlFile, key, customEnv, i3dMappings) then
 		return false
 	end
+
+	Revamp.applyCategoryStorageCapacities(self, categoryFillTypes)
 
 	local pointHideFromMenu = xmlFile:getBool(key .. ".productions#hideFromMenu", false)
 	local pointAutoStart = xmlFile:getBool(key .. ".productions#autoStart", false)
@@ -145,6 +277,16 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 			input.rngAffected = xmlFile:getBool(inputKey .. "#rngAffected", false)
 			input.hideFromMenu = xmlFile:getBool(inputKey .. "#hideFromMenu", false)
 			input.color = 0
+
+			-- Ein gesetzter Titel ersetzt in der Rezept-Anzeige die Standardüberschrift "Mix-Gruppe N".
+			-- Er hängt an der Zutat statt an der Rezeptlinie, weil eine Linie mehrere Mix-Gruppen haben kann - die erste Zutat einer Gruppe, die einen Titel mitbringt, bestimmt ihn.
+			local title = xmlFile:getValue(inputKey .. "#title", nil, customEnv, false)
+			if title ~= nil and input.mix ~= 0 and input.mix ~= Revamp.MIX_BOOST and input.mix ~= Revamp.MIX_MASTER then
+				production.mixGroupTitles = production.mixGroupTitles or {}
+				if production.mixGroupTitles[input.mix] == nil then
+					production.mixGroupTitles[input.mix] = title
+				end
+			end
 		end)
 
 		xmlFile:iterate(productionKey .. ".outputs.output", function(_, outputKey)
@@ -166,11 +308,9 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 			end
 		end)
 
-		-- Inputs/Outputs über fillTypeCategory statt fillType (ein Vanilla-Feature) werden von den
-		-- obigen Iterationen nie erreicht, weil sie kein #fillType-Attribut haben. Ohne diese
-		-- Absicherung bliebe input.mix (bzw. output.boost) bei solchen Einträgen nil statt 0/true, was
-		-- in Revamp.updateProduction und der Rezept-Anzeige zu "table index is nil" führt, sobald nil
-		-- mit 0/98/99 verglichen wird.
+		-- Absicherung für Zutaten und Erzeugnisse, die die obigen Iterationen nicht erreichen, weil sie im XML gar kein #fillType-Attribut haben.
+		-- Revamp.expandFillTypeCategoryInputs deckt den eigenen fillTypeCategory-Fall zwar ab, ein anderer Mod kann aber jederzeit weitere Einträge beisteuern.
+		-- Ohne diese Absicherung bliebe input.mix (bzw. output.boost) bei solchen Einträgen nil statt 0/true, was in Revamp.updateProduction und der Rezept-Anzeige zu "table index is nil" führt, sobald nil mit 0/98/99 verglichen wird.
 		for _, input in ipairs(production.inputs) do
 			if input.mix == nil then
 				input.mix = 0

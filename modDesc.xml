@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.11</version>
+    <version>0.0.0.12</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.12 - Rezepte über Fülltyp-Kategorien, benannte Zutatengruppen und mitgelieferter Kategorie-Katalog
 0.0.0.11 - Wetter- und zeitabhängige Produktion mit Statusanzeige, wetterabhängige Lager und Einzel-Booster-Modus
 0.0.0.10 - Technische Grenzen für Fülltypen und Produktionslinien angehoben, damit auch sehr umfangreiche Produktions-Modpacks (deutlich über 255 Fülltypen) korrekt laden
 0.0.0.9 - Rezept zeigt jetzt an, wenn eine Zutat auch durch einen anderen Rohstoff ersetzt werden kann (z.B. Roggen statt Weizen)
@@ -54,12 +55,12 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
         <storeItem xmlFilename="placeables/revampTestMill/revampTestMill.xml"/>
     </storeItems>
 
+    <fillTypes filename="revamp_fillTypes.xml"/>
+
     <!--
   Auskommentiert, bis die jeweilige Datei tatsächlich existiert (siehe GitHub-Tickets).
   Die geteilte ModTest-Umgebung wird für alle Projekte genutzt und muss immer log-fehlerfrei starten.
   Beim Fertigstellen des jeweiligen Tickets hier wieder einkommentieren.
-
-  <fillTypes filename="revamp_fillTypes.xml"/>
 
   <placeableSpecializations>
     <specialization name="siloObjectFillLevel" className="SiloObjectFillLevelSpecialization" filename="scripts/specializations/siloObjectFillLevelSpecialization.lua"/>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<map xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://validation.gdn.giants-software.com/xml/fs25/fillTypes.xsd">
+    <!-- Sammel-Kategorien, die Rezept-Ersteller als Zutat verwenden können, statt jede Sorte einzeln aufzuzählen.
+         Kategorien dürfen sich überschneiden, eine Möhre steht also gleichzeitig unter Wurzelgemüse und unter Gemüse.
+         Innerhalb einer einzelnen Rezeptlinie zählt ein Fülltyp aber nur einmal, zwei sich überschneidende Kategorien in derselben Linie ergeben also keine doppelte Zutat.
+         Eine Kategorie gehört immer an alle drei Stellen einer Produktion - Rezept, storage und unloadTrigger - und nirgends davon als ausgeschriebene Einzelliste.
+         Nur dann wandert eine Sorte, die ein anderer Mod später in die Kategorie legt, überall automatisch mit rein, statt am Lager oder an der Abladestelle zu fehlen. -->
+    <fillTypeCategories>
+        <!-- Rohstoffe vom Feld -->
+        <fillTypeCategory name="REVAMP_GRAIN">WHEAT BARLEY OAT RICE RICELONGGRAIN</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_BASEFOOD">SORGHUM MAIZE</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_OILFRUITS">SUNFLOWER CANOLA OLIVE</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_PROTEINS">SOYBEAN CANOLA SUNFLOWER PEA GREENBEAN</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_ROOTCROPS">POTATO SUGARBEET SUGARBEET_CUT CARROT PARSNIP BEETROOT</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_SUGARFRUITS">SUGARBEET SUGARBEET_CUT SUGARCANE</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_FRUITS">GRAPE STRAWBERRY</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_VEGETABLES">TOMATO LETTUCE CARROT PARSNIP BEETROOT SPINACH GREENBEAN PEA NAPACABBAGE SPRING_ONION CHILLI GARLIC</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_MUSHROOMS">ENOKI OYSTER</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_GREENFEED">GRASS_WINDROW DRYGRASS_WINDROW</fillTypeCategory>
+
+        <!-- Verarbeitetes und Betriebsstoffe -->
+        <fillTypeCategory name="REVAMP_OIL">SUNFLOWER_OIL CANOLA_OIL OLIVE_OIL RICE_OIL</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_BURNABLE">WOODCHIPS STRAW POPLAR</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_FERTILIZER">FERTILIZER MANURE</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_LIQUIDFERTILIZER">LIQUIDFERTILIZER LIQUIDMANURE DIGESTATE</fillTypeCategory>
+
+        <!-- Tierisches -->
+        <fillTypeCategory name="REVAMP_MILK">MILK GOATMILK BUFFALOMILK</fillTypeCategory>
+        <fillTypeCategory name="REVAMP_ANIMALPRODUCTS">EGG WOOL MILK GOATMILK BUFFALOMILK HONEY</fillTypeCategory>
+
+        <!-- Alles pflanzlich Verwertbare, gedacht für Kompost-, Biogas- und ähnliche Verwertungs-Rezepte -->
+        <fillTypeCategory name="REVAMP_ORGANIC">WHEAT BARLEY OAT RICE RICELONGGRAIN SORGHUM MAIZE CANOLA SUNFLOWER SOYBEAN POTATO SUGARBEET SUGARBEET_CUT CARROT PARSNIP BEETROOT SPINACH GREENBEAN PEA NAPACABBAGE SPRING_ONION CHILLI GARLIC LETTUCE TOMATO STRAWBERRY GRAPE RAISINS OLIVE ENOKI OYSTER SUGARCANE CHAFF SILAGE STRAW GRASS_WINDROW DRYGRASS_WINDROW</fillTypeCategory>
+    </fillTypeCategories>
+</map>

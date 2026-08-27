@@ -201,18 +201,36 @@
                     <output fillType="STRAW" amount="2"/>
                 </outputs>
             </production>
+            <!-- Testfall für Fülltyp-Kategorien als Zutat: die Kategorie wird beim Laden in ihre einzelnen Fülltypen
+                 aufgelöst, die dann gemeinsam die Mix-Gruppe 1 bilden - eine beliebige Getreidesorte reicht also für
+                 einen Takt. Das title-Attribut ersetzt dabei die Standardüberschrift "Mix-Gruppe 1" im Rezept.
+                 Dieselbe Kategorie steht unten auch am Lager und am Abladetrigger: nur dann wandert eine Sorte, die ein
+                 anderer Mod später in die Kategorie legt, automatisch überall mit rein statt an der Abladestelle hängen zu bleiben -->
+            <production id="grainFertilizer" name="$l10n_revamp_recipe_grainFertilizer" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillTypeCategory="REVAMP_GRAIN" amount="4" mix="1" title="$l10n_revamp_category_grain"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FERTILIZER" amount="3"/>
+                </outputs>
+            </production>
         </productions>
 
         <!-- Testfall für das wetterabhängige Lager: WATER sammelt sich bei Niederschlag von selbst an,
-             mit 2000 Litern pro Stunde bei vollem Regen und entsprechend weniger bei Nieselregen -->
-        <storage isExtension="false" fillLevelSyncThreshold="50">
-            <capacity fillType="WHEAT"   capacity="126000"/>
-            <capacity fillType="BARLEY"  capacity="144000"/>
-            <capacity fillType="OAT"     capacity="60000"/>
-            <capacity fillType="SORGHUM" capacity="60000"/>
-            <capacity fillType="WATER"   capacity="60000" weatherModes="rain" weatherAmount="2000"/>
-            <capacity fillType="FLOUR"   capacity="60000"/>
-            <capacity fillType="STRAW"   capacity="60000"/>
+             mit 2000 Litern pro Stunde bei vollem Regen und entsprechend weniger bei Nieselregen.
+             Die Kategorie am storage-Tag deckt alle Getreidesorten ab, die capacity-Zeilen darunter geben einzelnen
+             Fülltypen eine eigene Kapazität. Sorten, die nur über die Kategorie dazukommen, bekommen von Revamp
+             automatisch #capacity als eigene Kapazität - sonst zählte für sie die Gesamtgrenze des Lagers,
+             die die einzeln aufgeführten Fülltypen rechnerisch längst ausschöpfen -->
+        <storage isExtension="false" fillLevelSyncThreshold="50" capacity="60000" fillTypeCategories="REVAMP_GRAIN">
+            <capacity fillType="WHEAT"      capacity="126000"/>
+            <capacity fillType="BARLEY"     capacity="144000"/>
+            <capacity fillType="OAT"        capacity="60000"/>
+            <capacity fillType="SORGHUM"    capacity="60000"/>
+            <capacity fillType="WATER"      capacity="60000" weatherModes="rain" weatherAmount="2000"/>
+            <capacity fillType="FLOUR"      capacity="60000"/>
+            <capacity fillType="STRAW"      capacity="60000"/>
+            <capacity fillType="FERTILIZER" capacity="60000"/>
         </storage>
 
         <sellingStation supportsExtension="false">
@@ -221,7 +239,7 @@
                  auch bei einem Wert ungleich 1 zu testen), landen also nie selbst im Lager. Der
                  wheatFlour-Zutat-Eintrag (mix=0, keine Mix-Gruppe/Booster) ist damit der
                  vorgesehene Testfall für die neue Converter-Gruppen-Anzeige -->
-            <unloadTrigger exactFillRootNode="exactFillNode" aiNode="unloadTriggerAINode" fillTypes="WHEAT BARLEY OAT SORGHUM CANOLA SOYBEAN WATER FLOUR">
+            <unloadTrigger exactFillRootNode="exactFillNode" aiNode="unloadTriggerAINode" fillTypeCategories="REVAMP_GRAIN" fillTypes="SORGHUM CANOLA SOYBEAN WATER FLOUR">
                 <fillTypeConversion incomingFillType="CANOLA"  outgoingFillType="WHEAT" ratio="1"/>
                 <fillTypeConversion incomingFillType="SOYBEAN" outgoingFillType="WHEAT" ratio="0.8"/>
             </unloadTrigger>

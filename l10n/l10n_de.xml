@@ -19,6 +19,8 @@
         <text name="revamp_recipe_openingHoursFlour"             text="Schicht-Mehl"/>
         <text name="revamp_recipe_seasonalFlour"                 text="Sommer-Mehl"/>
         <text name="revamp_recipe_limitBoostedFlour"             text="Einzel-Booster-Mehl"/>
+        <text name="revamp_recipe_grainFertilizer"               text="Getreide-Dünger"/>
+        <text name="revamp_category_grain"                       text="Getreide"/>
         <text name="revamp_ui_production_totalBoost"             text="Gesamt-Boost"/>
         <text name="revamp_ui_production_weatherFactor"          text="Wetterfaktor"/>
         <text name="revamp_ui_production_modeSun"                text="Sonnenabhängig"/>

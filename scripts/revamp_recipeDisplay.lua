@@ -275,7 +275,13 @@ function Revamp.updateRecipeCellMixGroups(self, cell)
 		groupPosition = groupPosition + 1
 		local isSatisfied = production.mixGroupSatisfied ~= nil and production.mixGroupSatisfied[mixGroupIndex]
 		local groupColor = Revamp.RECIPE_GROUP_COLORS[(groupPosition - 1) % #Revamp.RECIPE_GROUP_COLORS + 1]
-		Revamp.addRecipeGroupHeaderRow(inputLayout, g_i18n:getText("revamp_ui_production_mixGroup"):format(mixGroupIndex), isSatisfied, groupColor)
+		-- Ein im Rezept gesetzter Titel ersetzt die Standardüberschrift "Mix-Gruppe N".
+		-- Bei einer aus einer Fülltyp-Kategorie aufgelösten Gruppe sagt dem Spieler ein sprechender Name deutlich mehr als eine laufende Nummer.
+		local groupTitle = production.mixGroupTitles ~= nil and production.mixGroupTitles[mixGroupIndex] or nil
+		if groupTitle == nil then
+			groupTitle = g_i18n:getText("revamp_ui_production_mixGroup"):format(mixGroupIndex)
+		end
+		Revamp.addRecipeGroupHeaderRow(inputLayout, groupTitle, isSatisfied, groupColor)
 
 		for _, input in ipairs(groups[mixGroupIndex]) do
 			Revamp.addRecipeItemRow(inputLayout, input, isSatisfied, groupColor)
