@@ -10,6 +10,11 @@
 -- jedem Füllstand ändert.
 --
 -- Gespeichert wird nur, was vom Normalfall abweicht: ein Ziel ohne Eintrag ist automatisch "Rest".
+--
+-- Ein Ziel wird über die uniqueId seines Placeables angesprochen. Diese Id ist ausdrücklich nur auf dem eigenen Rechner gültig:
+-- Placeable:writeStream überträgt sie nicht, ein Client vergibt beim Empfangen über Utils.getUniqueId eine eigene aus Zeitstempel und Speicheradresse.
+-- Server und Client führen dasselbe Gebäude also unter verschiedenen Ids. Für das Savegame ist die Id trotzdem der richtige Schlüssel, weil sie dort mitgespeichert und beim Laden wieder gesetzt wird.
+-- Wer später Netzwerk-Events dafür baut, muss deshalb das Ziel als Objekt übertragen (NetworkUtil.writeNodeObject) und auf der Gegenseite dessen dortige uniqueId als Schlüssel nehmen - eine Id als Zeichenkette zu verschicken zeigt beim Empfänger ins Leere.
 
 -- Alle Stufen, in der Reihenfolge, in der die Bedienoberfläche sie durchschaltet.
 Revamp.DISTRIBUTION_LEVELS = {"PRIMARY", "SECONDARY", "REST", "NEVER"}
@@ -83,7 +88,8 @@ end
 ---@param limit? number Obergrenze in Litern, nil für unbegrenzt
 ---@param noEventSend? boolean true, wenn die Änderung selbst schon aus einem Event stammt und nicht erneut verschickt werden darf
 function ProductionPoint:setDistributionTarget(fillTypeIndex, uniqueId, level, limit, noEventSend) ---@diagnostic disable-line: unused-local
-	if uniqueId == nil then
+	-- Beides kann aus einem von Hand bearbeiteten Spielstand als nil hereinkommen, und ein nil-Schlüssel bricht das Setzen unten mit "table index is nil" ab.
+	if fillTypeIndex == nil or uniqueId == nil then
 		return
 	end
 
@@ -92,8 +98,9 @@ function ProductionPoint:setDistributionTarget(fillTypeIndex, uniqueId, level, l
 		level = Revamp.DISTRIBUTION_LEVEL_DEFAULT
 	end
 	-- 0 ist eine gültige Obergrenze und bedeutet "nichts liefern", nur negative Werte sind Unsinn.
-	if limit ~= nil and limit < 0 then
-		limit = 0
+	-- Abgerundet wird, weil die Obergrenze als ganze Zahl im Spielstand landet und ein Bruchteil eines Liters ohnehin nichts ändert.
+	if limit ~= nil then
+		limit = math.floor(math.max(limit, 0))
 	end
 
 	if self.distributionTargets == nil then
@@ -212,6 +219,8 @@ end
 ---@param productionPoint table Verteilende ProductionPoint-Instanz
 ---@return table sections Liste aus {fillTypeIndex = ..., targets = {{productionPoint, uniqueId, level, limit, costsPerHour}, ...}}, costsPerHour nil bei Zielen, die gerade nichts bekommen
 function Revamp.getDistributionSections(productionPoint)
+	Revamp.removeInvalidDistributionTargets(productionPoint)
+
 	local sections = {}
 
 	for _, fillTypeIndex in ipairs(productionPoint.outputFillTypeIdsArray) do
@@ -266,6 +275,32 @@ function Revamp.canReceiveFillType(productionPoint, fillTypeIndex)
 		end
 	end
 	return false
+end
+
+---Entfernt Verteilziele, deren Gebäude es nicht mehr gibt.
+---Läuft bei jedem Verteilen und bei jedem Aufbau der Verteilen-Ansicht statt nur beim Speichern: ein Server läuft oft monatelang durch, dort bliebe eine abgerissene Produktion sonst dauerhaft in der Liste stehen und der Dialog griffe weiter auf sie zu.
+---Ein Ziel, das nur den Besitzer gewechselt hat, bleibt dagegen stehen - das Gebäude gibt es ja noch, und nach einem Rückkauf stimmt die alte Einstellung wieder.
+---Braucht kein Netzwerk-Event: das Gebäude fehlt auf jedem Rechner gleichermaßen, jeder räumt also von sich aus dasselbe weg.
+---@param productionPoint table ProductionPoint-Instanz, deren Zielliste geprüft wird
+function Revamp.removeInvalidDistributionTargets(productionPoint)
+	local targets = productionPoint.distributionTargets
+	if targets == nil then
+		return
+	end
+
+	for fillTypeIndex, fillTypeTargets in pairs(targets) do
+		for uniqueId in pairs(fillTypeTargets) do
+			if g_currentMission.placeableSystem:getPlaceableByUniqueId(uniqueId) == nil then
+				fillTypeTargets[uniqueId] = nil
+				Revamp.DebugText("removeInvalidDistributionTargets(): %s verliert das nicht mehr vorhandene Ziel %s", g_fillTypeManager:getFillTypeNameByIndex(fillTypeIndex), uniqueId)
+			end
+		end
+
+		-- Ohne das bliebe für jedes einmal konfigurierte Erzeugnis eine leere Tabelle zurück, die beim Speichern jedes Mal wieder durchlaufen wird.
+		if next(fillTypeTargets) == nil then
+			targets[fillTypeIndex] = nil
+		end
+	end
 end
 
 ---Sammelt alle gerade belieferbaren Ziele eines Fülltyps, nach Verteilstufe getrennt.
@@ -382,6 +417,79 @@ function Revamp.distributeFillType(distributingPoint, fillTypeIndex, prodPointsI
 	end
 end
 
+---Registriert das Savegame-XML-Schema für die Verteilziele.
+---@param schema XMLSchema Schema, in das die neuen Pfade eingetragen werden
+---@param basePath string XML-Basispfad des ProductionPoint-Elements
+function Revamp.registerDistributionSavegameXMLPaths(schema, basePath)
+	schema:register(XMLValueType.STRING, basePath .. ".distributionTarget(?)#fillType", "Erzeugnis, für das dieses Ziel eingestellt ist")
+	schema:register(XMLValueType.STRING, basePath .. ".distributionTarget(?)#targetId", "uniqueId der Produktionsstätte, die beliefert werden soll")
+	schema:register(XMLValueType.STRING, basePath .. ".distributionTarget(?)#level", "Verteilstufe: PRIMARY, SECONDARY, REST oder NEVER")
+	schema:register(XMLValueType.INT, basePath .. ".distributionTarget(?)#limit", "Obergrenze in Litern, bis zu der dieses Ziel beliefert wird")
+end
+
+ProductionPoint.registerSavegameXMLPaths = Utils.prependedFunction(ProductionPoint.registerSavegameXMLPaths, Revamp.registerDistributionSavegameXMLPaths)
+
+---Speichert die Verteilziele eines Produktionspunkts ins Savegame.
+---Das Erzeugnis steht als Name in der Datei, nicht als Fülltyp-Nummer: die Nummern verschieben sich, sobald der Spieler einen Mod hinzunimmt oder entfernt, und eine gespeicherte Nummer zeigte danach auf eine ganz andere Ware.
+---Vanilla hält es beim Ausgangsmodus genauso (autoDeliverFillType).
+---@param self table ProductionPoint-Instanz
+---@param xmlFile table XMLFile, in das geschrieben wird
+---@param key string XML-Basispfad des ProductionPoint-Elements
+---@param usedModNames table Von Vanilla durchgereichte Liste verwendeter Mod-Namen
+function Revamp.saveDistributionToXMLFile(self, xmlFile, key, usedModNames) ---@diagnostic disable-line: unused-local
+	if self.distributionTargets == nil then
+		return
+	end
+
+	local xmlIndex = 0
+	for fillTypeIndex, fillTypeTargets in pairs(self.distributionTargets) do
+		local fillTypeName = g_fillTypeManager:getFillTypeNameByIndex(fillTypeIndex)
+		if fillTypeName ~= nil then
+			for uniqueId, entry in pairs(fillTypeTargets) do
+				local targetKey = string.format("%s.distributionTarget(%d)", key, xmlIndex)
+				xmlFile:setValue(targetKey .. "#fillType", fillTypeName)
+				xmlFile:setValue(targetKey .. "#targetId", uniqueId)
+				xmlFile:setValue(targetKey .. "#level", entry.level)
+				-- Nur schreiben, wenn es überhaupt eine Obergrenze gibt: ein fehlendes Attribut bedeutet beim Laden "unbegrenzt".
+				if entry.limit ~= nil then
+					xmlFile:setValue(targetKey .. "#limit", entry.limit)
+				end
+				xmlIndex = xmlIndex + 1
+			end
+		end
+	end
+end
+
+ProductionPoint.saveToXMLFile = Utils.prependedFunction(ProductionPoint.saveToXMLFile, Revamp.saveDistributionToXMLFile)
+
+---Liest die im Savegame gespeicherten Verteilziele und wendet sie an.
+---Ob es das Ziel-Placeable überhaupt (noch) gibt, wird hier ausdrücklich nicht geprüft: die Placeables werden nacheinander geladen, ein Ziel weiter hinten in der Datei existiert zum Zeitpunkt dieses Aufrufs also noch gar nicht.
+---Nicht mehr vorhandene Ziele räumt stattdessen Revamp.removeInvalidDistributionTargets im laufenden Spiel weg.
+---@param self table ProductionPoint-Instanz
+---@param superFunc function Ursprüngliches ProductionPoint.loadFromXMLFile
+---@param xmlFile table XMLFile des Savegames
+---@param key string XML-Basispfad des ProductionPoint-Elements
+---@return boolean success true, wenn das ursprüngliche Laden erfolgreich war
+function Revamp.loadDistributionFromXMLFile(self, superFunc, xmlFile, key)
+	local success = superFunc(self, xmlFile, key)
+
+	xmlFile:iterate(key .. ".distributionTarget", function(_, targetKey)
+		local fillTypeName = xmlFile:getValue(targetKey .. "#fillType")
+		local fillTypeIndex = g_fillTypeManager:getFillTypeIndexByName(fillTypeName)
+		if fillTypeIndex == nil then
+			-- Kein harter Fehler: die Ware kann aus einem inzwischen entfernten Mod stammen, der Rest des Punktes lädt trotzdem normal weiter.
+			Logging.xmlWarning(xmlFile, "Production Revamp: unknown fillType '%s' for a distribution target", tostring(fillTypeName))
+			return
+		end
+
+		self:setDistributionTarget(fillTypeIndex, xmlFile:getValue(targetKey .. "#targetId"), xmlFile:getValue(targetKey .. "#level"), xmlFile:getValue(targetKey .. "#limit"), true)
+	end)
+
+	return success
+end
+
+ProductionPoint.loadFromXMLFile = Utils.overwrittenFunction(ProductionPoint.loadFromXMLFile, Revamp.loadDistributionFromXMLFile)
+
 ---Verteilt einmal je Spielstunde die Erzeugnisse aller Produktionsstätten, die auf "Verteilen" stehen.
 ---Ersetzt Vanillas eigene Verteilung vollständig, deren Aufteilung nach freiem Lagerplatz es hier nicht mehr gibt.
 ---@param self table ProductionChainManager-Instanz
@@ -396,6 +504,8 @@ function Revamp.distributeGoods(self, superFunc) ---@diagnostic disable-line: un
 	for _, farmTable in pairs(self.farmIds) do
 		if farmTable.productionPoints ~= nil then
 			for _, distributingPoint in ipairs(farmTable.productionPoints) do
+				Revamp.removeInvalidDistributionTargets(distributingPoint)
+
 				-- Ein wegen seiner Öffnungszeiten geschlossener Betrieb verschickt auch nichts, genauso wie er keine Paletten mehr rausstellt.
 				if distributingPoint.openingHoursTable == nil or distributingPoint.openingHoursTable[currentHour] then
 					for fillTypeIndex in pairs(distributingPoint.outputFillTypeIdsAutoDeliver) do

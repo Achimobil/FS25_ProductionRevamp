@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.15</version>
+    <version>0.0.0.16</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.16 - Die eingestellten Verteil-Ziele bleiben jetzt im Spielstand erhalten
 0.0.0.15
 - Verteilen liefert jetzt gleichmäßig an alle Abnehmer und nur noch an Produktionen, die die Ware gerade auch tatsächlich verarbeiten
 - Im Verwalten-Dialog lässt sich pro Ware festlegen, welche Produktionen bevorzugt, nachrangig oder gar nicht beliefert werden, wahlweise mit Obergrenze und mit Anzeige der laufenden Lieferkosten
