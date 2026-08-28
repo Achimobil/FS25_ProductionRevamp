@@ -42,6 +42,10 @@ function Revamp.registerProductionXMLPaths(schema, basePath)
 	schema:register(XMLValueType.FLOAT, basePath .. ".productions.production(?)#minPower", "Untergrenze des Wetterfaktors dieser Produktionslinie (Grundlast auch bei schlechtestem Wetter)", 0)
 	schema:register(XMLValueType.FLOAT, basePath .. ".productions#maxPower", "Standard-Obergrenze des Wetterfaktors", 1)
 	schema:register(XMLValueType.FLOAT, basePath .. ".productions.production(?)#maxPower", "Obergrenze des Wetterfaktors dieser Produktionslinie", 1)
+	schema:register(XMLValueType.BOOL, basePath .. ".storage#allowBuyingForCategories", "Fülltypen, die nur über fillTypeCategories im Lager sind, dürfen im Verwalten-Dialog gekauft werden", true)
+	schema:register(XMLValueType.BOOL, basePath .. ".storage#allowSellingForCategories", "Fülltypen, die nur über fillTypeCategories im Lager sind, dürfen im Verwalten-Dialog verkauft werden", true)
+	schema:register(XMLValueType.BOOL, basePath .. ".storage.capacity(?)#allowBuying", "Fülltyp darf im Verwalten-Dialog gekauft werden", true)
+	schema:register(XMLValueType.BOOL, basePath .. ".storage.capacity(?)#allowSelling", "Fülltyp darf im Verwalten-Dialog verkauft werden", true)
 	schema:register(XMLValueType.STRING, basePath .. ".storage.capacity(?)#weatherModes", "Wetter-Modus, der den Bestand dieses Fülltyps ohne Produktion verändert (sun, night, rain, wind, temp, tempNegative)", "")
 	schema:register(XMLValueType.FLOAT, basePath .. ".storage.capacity(?)#weatherAmount", "Menge pro Stunde bei vollem Wetterfaktor, negative Werte sind ein wetterabhängiger Verlust", 0)
 	schema:register(XMLValueType.FLOAT, basePath .. ".storage.capacity(?)#weatherFactor", "Skalierung der wetterabhängigen Bestandsänderung dieses Fülltyps", 1)
@@ -214,6 +218,7 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 	}
 
 	Revamp.loadWeatherStorage(self, xmlFile, key)
+	Revamp.loadBuySellPermissions(self, xmlFile, key)
 
 	-- Öffnungszeiten aller Rezeptlinien zusammen: der Betrieb gilt als offen, solange mindestens eine Linie laufen darf.
 	self.openingHoursTable = {}

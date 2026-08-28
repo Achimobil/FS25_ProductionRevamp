@@ -221,15 +221,19 @@
              Die Kategorie am storage-Tag deckt alle Getreidesorten ab, die capacity-Zeilen darunter geben einzelnen
              Fülltypen eine eigene Kapazität. Sorten, die nur über die Kategorie dazukommen, bekommen von Revamp
              automatisch #capacity als eigene Kapazität - sonst zählte für sie die Gesamtgrenze des Lagers,
-             die die einzeln aufgeführten Fülltypen rechnerisch längst ausschöpfen -->
-        <storage isExtension="false" fillLevelSyncThreshold="50" capacity="60000" fillTypeCategories="REVAMP_GRAIN">
+             die die einzeln aufgeführten Fülltypen rechnerisch längst ausschöpfen.
+             Testfälle für die Kauf-/Verkaufssperre: BARLEY ist über seine eigene Zeile vom Kaufen ausgenommen,
+             STRAW vom Verkaufen. allowBuyingForCategories am storage-Tag sperrt dagegen nur die Sorten, die
+             ausschließlich über die Kategorie im Lager sind (hier RICE und RICELONGGRAIN) - WHEAT, OAT und
+             SORGHUM haben eine eigene Zeile und bleiben deshalb kaufbar -->
+        <storage isExtension="false" fillLevelSyncThreshold="50" capacity="60000" fillTypeCategories="REVAMP_GRAIN" allowBuyingForCategories="false">
             <capacity fillType="WHEAT"      capacity="126000"/>
-            <capacity fillType="BARLEY"     capacity="144000"/>
+            <capacity fillType="BARLEY"     capacity="144000" allowBuying="false"/>
             <capacity fillType="OAT"        capacity="60000"/>
             <capacity fillType="SORGHUM"    capacity="60000"/>
-            <capacity fillType="WATER"      capacity="60000" weatherModes="rain" weatherAmount="2000"/>
+            <capacity fillType="WATER"      capacity="60000"  weatherModes="rain" weatherAmount="2000"/>
             <capacity fillType="FLOUR"      capacity="60000"/>
-            <capacity fillType="STRAW"      capacity="60000"/>
+            <capacity fillType="STRAW"      capacity="60000"  allowSelling="false"/>
             <capacity fillType="FERTILIZER" capacity="60000"/>
         </storage>
 

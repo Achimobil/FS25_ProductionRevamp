@@ -83,6 +83,7 @@ end
 
 ---Blendet "Ausgangsmodus ändern"/"Kaufen"/"Verkaufen" pro Zeilenrolle ein/aus - eine reine Input-Zeile hat z.B. keinen Ausgangsmodus, der Button bliebe sonst klickbar,
 ---obwohl er für diese Zeile nichts bewirkt (sieht für den Spieler nach einer Funktion aus, die es gar nicht gibt).
+---Genauso ausgeblendet werden Kaufen/Verkaufen für Fülltypen, die der Modder dafür gesperrt hat (siehe revamp_buySell.lua).
 ---@param list table Liste, deren Auswahl sich geändert hat
 ---@param section number Gewählte Sektion
 ---@param index number Gewählter Zeilenindex innerhalb der Sektion
@@ -95,9 +96,9 @@ function RevampManageDialog:onListSelectionChanged(list, section, index)
 	local fillType = fillTypes[index]
 	local hasRow = fillType ~= nil
 	self.yesButton:setVisible(hasOutputRole and hasRow)
-	self.buyButton:setVisible(hasInputRole and hasRow)
+	self.buyButton:setVisible(hasInputRole and hasRow and Revamp.isBuyingAllowed(self.productionPoint, fillType))
 	-- Verkaufen nur anbieten, wenn tatsächlich etwas im Lager ist - unter 1 Liter Restbestand (z.B. durch Rundung) gäbe es sonst einen klickbaren Button ohne Wirkung.
-	self.sellButton:setVisible(hasOutputRole and hasRow and self.productionPoint:getFillLevel(fillType) >= 1)
+	self.sellButton:setVisible(hasOutputRole and hasRow and Revamp.isSellingAllowed(self.productionPoint, fillType) and self.productionPoint:getFillLevel(fillType) >= 1)
 end
 
 ---Bildet section (2 oder 3 Abschnitte, je nachdem ob es überhaupt Input+Output-FillTypes gibt) auf die passende FillType-Liste ab, plus ob die Zeile eine Input-

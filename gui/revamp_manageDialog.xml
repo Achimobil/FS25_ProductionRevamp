@@ -30,14 +30,24 @@
         </GuiElement>
 
         <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
-            <Button profile="buttonOK" text="$l10n_revamp_buyButton"               onClick="onClickBuy"        id="buyButton"/>
-            <Button profile="buttonOK" text="$l10n_revamp_sellButton"              onClick="onClickSell"       id="sellButton"/>
-            <Button profile="buttonOK" text="$l10n_ui_production_changeOutputMode" onClick="onClickChangeMode" id="yesButton"/>
+            <!-- Jede der drei Aktionen braucht eine eigene Taste: mit dem Standardprofil buttonOK lägen alle drei auf Enter und nur der Mausklick würde sie noch auseinanderhalten -->
+            <Button profile="revamp_buttonBuy"  text="$l10n_revamp_buyButton"               onClick="onClickBuy"        id="buyButton"/>
+            <Button profile="revamp_buttonSell" text="$l10n_revamp_sellButton"              onClick="onClickSell"       id="sellButton"/>
+            <Button profile="buttonActivate"    text="$l10n_ui_production_changeOutputMode" onClick="onClickChangeMode" id="yesButton"/>
             <Bitmap profile="fs25_dialogButtonBoxSeparator"/>
             <Button profile="buttonBack" text="$l10n_button_back" onClick="onClickBack" id="noButton"/>
         </BoxLayout>
     </GuiElement>
     <GUIProfiles>
+        <!-- Kaufen und Verkaufen bekommen die beiden freien Menü-Zusatztasten (Standard X und C), der Ausgangsmodus die Aktivieren-Taste (Leertaste) -
+             das ist dieselbe Aufteilung, die Vanilla in seinen mehrknöpfigen Dialogen nutzt (z.B. FieldStateDialog mit buttonActivate neben buttonOK).
+             Enter bleibt bewusst unbelegt, sonst reagiert der Dialog auf eine Taste, ohne dass eindeutig ist welche der drei Aktionen gemeint war -->
+        <Profile name="revamp_buttonBuy" extends="buttonOK">
+            <inputAction value="MENU_EXTRA_1"/>
+        </Profile>
+        <Profile name="revamp_buttonSell" extends="buttonOK">
+            <inputAction value="MENU_EXTRA_2"/>
+        </Profile>
         <Profile name="revamp_manageDialogBg" extends="fs25_dialogBg">
             <size value="1100px 700px"/>
         </Profile>

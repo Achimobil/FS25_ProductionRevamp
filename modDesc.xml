@@ -1,8 +1,8 @@
-<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+﻿<?xml version="1.0" encoding="utf-8" standalone="no" ?>
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.12</version>
+    <version>0.0.0.13</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.13 - Kaufen und Verkaufen kann jetzt für einzelne Waren einer Produktionsstätte gesperrt sein
 0.0.0.12 - Rezepte über Fülltyp-Kategorien, benannte Zutatengruppen und mitgelieferter Kategorie-Katalog
 0.0.0.11 - Wetter- und zeitabhängige Produktion mit Statusanzeige, wetterabhängige Lager und Einzel-Booster-Modus
 0.0.0.10 - Technische Grenzen für Fülltypen und Produktionslinien angehoben, damit auch sehr umfangreiche Produktions-Modpacks (deutlich über 255 Fülltypen) korrekt laden
