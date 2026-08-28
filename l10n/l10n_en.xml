@@ -70,5 +70,19 @@
         <text name="revamp_boostMode_DESC"                       text="Last in recipe"/>
         <text name="revamp_boostMode_MOST"                       text="Strongest booster"/>
         <text name="revamp_boostMode_LEAST"                      text="Weakest booster"/>
+        <text name="revamp_manageViewDistribution"               text="Distribution"/>
+        <text name="revamp_changeDistributionLevel"              text="Change distribution level"/>
+        <text name="revamp_changeDistributionLimit"              text="Change limit"/>
+        <text name="revamp_distributionLevel_PRIMARY"            text="Primary"/>
+        <text name="revamp_distributionLevel_SECONDARY"          text="Secondary"/>
+        <text name="revamp_distributionLevel_REST"               text="Remainder"/>
+        <text name="revamp_distributionLevel_NEVER"              text="Never"/>
+        <text name="revamp_distributionNoLimit"                  text="No limit"/>
+        <text name="revamp_distributionLimitValue"               text="max. %s"/>
+        <text name="revamp_distributionLimitFull"                text="Full"/>
+        <text name="revamp_distributionCostsPerHour"             text="%s / hr"/>
+        <text name="revamp_distributionNoTargets"                text="No consumers available"/>
+        <text name="revamp_distributionTargetCapacity"           text="Storage capacity: %s"/>
+        <text name="revamp_descDistributionLimit"                text="Up to which stock level should this target be supplied?"/>
     </texts>
 </l10n>

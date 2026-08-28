@@ -70,5 +70,19 @@
         <text name="revamp_boostMode_DESC"                       text="Letzter im Rezept"/>
         <text name="revamp_boostMode_MOST"                       text="Größter Booster"/>
         <text name="revamp_boostMode_LEAST"                      text="Kleinster Booster"/>
+        <text name="revamp_manageViewDistribution"               text="Verteilen"/>
+        <text name="revamp_changeDistributionLevel"              text="Verteilstufe ändern"/>
+        <text name="revamp_changeDistributionLimit"              text="Obergrenze ändern"/>
+        <text name="revamp_distributionLevel_PRIMARY"            text="Primär"/>
+        <text name="revamp_distributionLevel_SECONDARY"          text="Sekundär"/>
+        <text name="revamp_distributionLevel_REST"               text="Rest"/>
+        <text name="revamp_distributionLevel_NEVER"              text="Nie"/>
+        <text name="revamp_distributionNoLimit"                  text="Keine Obergrenze"/>
+        <text name="revamp_distributionLimitValue"               text="max. %s"/>
+        <text name="revamp_distributionLimitFull"                text="Voll"/>
+        <text name="revamp_distributionCostsPerHour"             text="%s / Std."/>
+        <text name="revamp_distributionNoTargets"                text="Keine Abnehmer vorhanden"/>
+        <text name="revamp_distributionTargetCapacity"           text="Lagerkapazität: %s"/>
+        <text name="revamp_descDistributionLimit"                text="Bis zu welchem Lagerstand soll dieses Ziel beliefert werden?"/>
     </texts>
 </l10n>

@@ -244,6 +244,13 @@ end
 
 InGameMenuProductionFrame.populateCellForItemInSection = Utils.appendedFunction(InGameMenuProductionFrame.populateCellForItemInSection, Revamp.populateProductsListActivity)
 
+-- Trennt in der Materialienliste das Erzeugnis von seinen Verteilzielen. Steht anstelle des Wortes "Verteilen" und braucht keine Übersetzung.
+-- Der Pfeil ist Teil des Zeichensatzes der Spielschrift (z_locaFont in Vanillas l10n), er wird also nicht als leeres Kästchen dargestellt.
+Revamp.DISTRIBUTION_ARROW = "→"
+
+-- Anteil der Zellenbreite, den die Namensspalte der Materialienliste einnehmen darf, bevor sie in den Füllstandstext läuft.
+Revamp.PRODUCTION_DETAILS_NAME_WIDTH_FACTOR = 0.64
+
 ---Ausgangsmodus als reiner Info-Text in der "OUTGOING PRODUCTS"-Liste (detailsList, cell.name == "fillTypeCell", section 2) -
 ---punktweit über alle Output-FillTypes, unabhängig von der gerade gewählten Rezeptlinie.
 ---Bewusst kein Button hier: detailsList hat handleFocus="false" (Vanilla schließt diese Liste bewusst von der Fokus-Navigation aus) -
@@ -272,7 +279,21 @@ function Revamp.populateOutgoingFillTypeCell(self, list, section, index, cell)
 	end
 
 	local fillTypeDesc = g_fillTypeManager:getFillTypeByIndex(fillType)
-	cell:getAttribute("fillType"):setText(fillTypeDesc.title .. " (" .. Revamp.getOutputModeText(productionPoint, fillType) .. ")")
+
+	-- Beim Verteilen stehen die Primär-Ziele direkt dahinter: wohin ein Erzeugnis geht, schaut man ständig nach, dafür soll niemand erst den Verwalten-Dialog öffnen müssen.
+	-- Nur hier und nicht in Revamp.getOutputModeText selbst, weil die Modus-Spalte des Verwalten-Dialogs dafür zu schmal ist - dort steht die vollständige Zielliste ohnehin in einer eigenen Ansicht.
+	-- Der Pfeil ersetzt dabei das Wort "Verteilen": er sagt dasselbe und lässt Platz für einen zweiten Zielnamen.
+	local targetsText = Revamp.getPrimaryTargetsText(productionPoint, fillType)
+	local text = fillTypeDesc.title .. " (" .. Revamp.getOutputModeText(productionPoint, fillType) .. ")"
+	if targetsText ~= "" then
+		text = fillTypeDesc.title .. " " .. Revamp.DISTRIBUTION_ARROW .. " " .. targetsText
+	end
+
+	local textElement = cell:getAttribute("fillType")
+	-- Vanillas Namensspalte ist auf die reinen Fülltyp-Namen zugeschnitten und schneidet alles Längere mit "..." ab.
+	-- Am rechten Rand der Zeile stehen Füllstand und Prozentwert, dazwischen liegt ungenutzter Platz - gemessen an einer 1920er Auflösung endet der breiteste Füllstandstext ("94.465 L / 144.000 L") rund 64 Prozent der Zellenbreite hinter deren linkem Rand.
+	textElement:setSize(cell.absSize[1] * Revamp.PRODUCTION_DETAILS_NAME_WIDTH_FACTOR)
+	textElement:setText(text)
 end
 
 InGameMenuProductionFrame.populateCellForItemInSection = Utils.appendedFunction(InGameMenuProductionFrame.populateCellForItemInSection, Revamp.populateOutgoingFillTypeCell)

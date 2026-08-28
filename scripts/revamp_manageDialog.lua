@@ -7,20 +7,23 @@
 --
 -- Kaufen/Verkaufen-Buttons öffnen RevampBuyGoodsDialog für die aktuell gewählte Zeile (siehe revamp_buyGoodsDialog.lua) -
 -- Kaufen nur bei Input-Rolle, Verkaufen nur bei Output-Rolle, analog zu PSTs eigener Aufteilung (inputFillTypeIdsArray/outputFillTypeIdsArray).
--- Verteil-Priorität-Button kommt erst mit seinem Modul (Distribution).
 --
--- Über die zweite Ansicht (Produktionslinien) sind zusätzlich die Einstellungen erreichbar, die nicht pro Ware, sondern pro Rezeptlinie gelten -
--- aktuell die Auswahlmodi für Zutaten und Booster (siehe revamp_recipeSettings.lua). Der Dialog ist damit der gemeinsame Ort für alles, was der Spieler
--- an einer eigenen Produktionsstätte einstellen kann, statt für jede weitere Einstellung einen eigenen Menü-Button zu brauchen (die Leiste hat nur sechs Plätze).
+-- Über die weiteren Ansichten sind zusätzlich die Einstellungen erreichbar, die nicht pro Ware gelten: die Auswahlmodi für Zutaten und Booster
+-- pro Rezeptlinie (siehe revamp_recipeSettings.lua) und die Verteilziele je Erzeugnis (siehe revamp_distribution.lua). Der Dialog ist damit der
+-- gemeinsame Ort für alles, was der Spieler an einer eigenen Produktionsstätte einstellen kann, statt für jede weitere Einstellung einen eigenen
+-- Menü-Button zu brauchen (die Leiste hat nur sechs Plätze).
 
 RevampManageDialog = {}
 local RevampManageDialog_mt = Class(RevampManageDialog, YesNoDialog)
 
--- Der Dialog hat zwei Ansichten: die FillType-Ansicht zeigt, was pro Ware gilt (Bestand, Ausgangsmodus, Kaufen/Verkaufen),
--- die Produktionslinien-Ansicht das, was pro Rezeptlinie gilt (aktuell die Auswahlmodi, siehe revamp_recipeSettings.lua).
+-- Der Dialog hat drei Ansichten: die FillType-Ansicht zeigt, was pro Ware gilt (Bestand, Ausgangsmodus, Kaufen/Verkaufen),
+-- die Produktionslinien-Ansicht das, was pro Rezeptlinie gilt (die Auswahlmodi, siehe revamp_recipeSettings.lua),
+-- und die Verteilen-Ansicht die Ziele je Erzeugnis (siehe revamp_distribution.lua).
+-- Die Verteilziele hätten auch in die Waren-Ansicht gepasst, brauchen aber eine Zeile je Ziel statt je Ware und damit eine eigene Liste.
 RevampManageDialog.VIEW = {
 	FILLTYPES = 1,
-	PRODUCTIONS = 2
+	PRODUCTIONS = 2,
+	DISTRIBUTION = 3
 }
 
 ---Lädt die Dialog-XML und registriert die Dialoginstanz beim GUI-System.
@@ -104,16 +107,19 @@ end
 function RevampManageDialog:updateRows()
 	self.pureInputs, self.dual, self.pureOutputs = Revamp.splitFillTypesByRole(self.productionPoint)
 	self.productions = Revamp.getVisibleProductions(self.productionPoint)
+	self.distributionSections = Revamp.getDistributionSections(self.productionPoint)
 	-- Mit true, weil die beiden Ansichten unterschiedliche Zeilenformen haben: ohne das Kennzeichen behält die Liste die bereits erzeugten Zeilen und befüllt nur deren Inhalt neu,
 	-- die neue Ansicht bekäme also die Felder der alten (siehe SmoothListElement:reloadData).
 	self.manageList:reloadData(true)
 	self:onListSelectionChanged(self.manageList, self.manageList.selectedSectionIndex, self.manageList.selectedIndex)
 end
 
----Schaltet zwischen der FillType- und der Produktionslinien-Ansicht um.
+---Schaltet der Reihe nach durch die Ansichten Waren, Produktionslinien und Verteilen.
 function RevampManageDialog:onClickToggleView()
 	if self.viewMode == RevampManageDialog.VIEW.FILLTYPES then
 		self.viewMode = RevampManageDialog.VIEW.PRODUCTIONS
+	elseif self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
+		self.viewMode = RevampManageDialog.VIEW.DISTRIBUTION
 	else
 		self.viewMode = RevampManageDialog.VIEW.FILLTYPES
 	end
@@ -131,6 +137,9 @@ end
 function RevampManageDialog:getCellTypeForItemInSection(list, section, index) ---@diagnostic disable-line: unused-local
 	if self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
 		return "productionRow"
+	end
+	if self.viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
+		return "distributionRow"
 	end
 	return "fillTypeRow"
 end
@@ -153,6 +162,19 @@ function RevampManageDialog:onListSelectionChanged(list, section, index)
 		self.sellButton:setVisible(false)
 		self.mixModeButton:setVisible(production ~= nil and production.hasMixChoice)
 		self.boostModeButton:setVisible(production ~= nil and production.hasBoostChoice)
+		self.levelButton:setVisible(false)
+		self.limitButton:setVisible(false)
+		self.viewButton:setText(g_i18n:getText("revamp_manageViewDistribution"))
+	elseif self.viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
+		local target = self:getDistributionTargetAt(section, index)
+		self.yesButton:setVisible(false)
+		self.buyButton:setVisible(false)
+		self.sellButton:setVisible(false)
+		self.mixModeButton:setVisible(false)
+		self.boostModeButton:setVisible(false)
+		self.levelButton:setVisible(target ~= nil)
+		-- Eine Obergrenze für ein Ziel, das ohnehin nie beliefert wird, hätte keine Wirkung.
+		self.limitButton:setVisible(target ~= nil and target.level ~= "NEVER")
 		self.viewButton:setText(g_i18n:getText("revamp_manageViewFillTypes"))
 	else
 		local fillTypes, hasInputRole, hasOutputRole = self:getSectionFillTypes(section)
@@ -164,6 +186,8 @@ function RevampManageDialog:onListSelectionChanged(list, section, index)
 		self.sellButton:setVisible(hasOutputRole and hasRow and Revamp.isSellingAllowed(self.productionPoint, fillType) and self.productionPoint:getFillLevel(fillType) >= 1)
 		self.mixModeButton:setVisible(false)
 		self.boostModeButton:setVisible(false)
+		self.levelButton:setVisible(false)
+		self.limitButton:setVisible(false)
 		self.viewButton:setText(g_i18n:getText("revamp_manageViewProductions"))
 	end
 
@@ -197,6 +221,10 @@ function RevampManageDialog:getNumberOfSections(list)
 	if self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
 		return 1
 	end
+	if self.viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
+		-- Ohne einen einzigen Abnehmer bleibt eine Sektion übrig, deren Überschrift genau das sagt - eine komplett leere Liste sähe nach einem Fehler aus.
+		return math.max(#self.distributionSections, 1)
+	end
 	return #self.dual > 0 and 3 or 2
 end
 
@@ -210,6 +238,13 @@ function RevampManageDialog:getTitleForSectionHeader(list, section)
 	end
 	if self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
 		return g_i18n:getText("revamp_manageSectionProductions")
+	end
+	if self.viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
+		local sectionData = self.distributionSections[section]
+		if sectionData == nil then
+			return g_i18n:getText("revamp_distributionNoTargets")
+		end
+		return g_fillTypeManager:getFillTypeByIndex(sectionData.fillTypeIndex).title
 	end
 	if section == 1 then
 		return g_i18n:getText("ui_productions_incomingMaterials")
@@ -231,6 +266,10 @@ function RevampManageDialog:getNumberOfItemsInSection(list, section)
 	if self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
 		return #self.productions
 	end
+	if self.viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
+		local sectionData = self.distributionSections[section]
+		return sectionData ~= nil and #sectionData.targets or 0
+	end
 	return #self:getSectionFillTypes(section)
 end
 
@@ -246,6 +285,11 @@ function RevampManageDialog:populateCellForItemInSection(list, section, index, c
 
 	if self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
 		self:populateProductionCell(index, cell)
+		return
+	end
+
+	if self.viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
+		self:populateDistributionCell(section, index, cell)
 		return
 	end
 
@@ -289,6 +333,86 @@ function RevampManageDialog:populateProductionCell(index, cell)
 		table.insert(modes, string.format("%s: %s", g_i18n:getText("revamp_boostModeLabel"), Revamp.getSelectionModeText(production.boostMode, true)))
 	end
 	cell:getAttribute("modes"):setText(table.concat(modes, "   "))
+end
+
+---Liefert das Verteilziel einer Zeile der Verteilen-Ansicht.
+---@param section number Sektionsindex (ein Erzeugnis je Sektion)
+---@param index number Zeilenindex innerhalb der Sektion
+---@return table|nil target Ziel-Eintrag aus Revamp.getDistributionSections, nil wenn es die Zeile nicht gibt
+---@return table|nil sectionData Sektion, zu der die Zeile gehört
+function RevampManageDialog:getDistributionTargetAt(section, index)
+	local sectionData = self.distributionSections[section]
+	if sectionData == nil then
+		return nil, nil
+	end
+	return sectionData.targets[index], sectionData
+end
+
+---Befüllt eine Zeile der Verteilen-Ansicht mit Ziel, Obergrenze, Kostenvorschau und Verteilstufe.
+---@param section number Sektionsindex
+---@param index number Zeilenindex innerhalb der Sektion
+---@param cell table Zu befüllende Zelle
+function RevampManageDialog:populateDistributionCell(section, index, cell)
+	local target = self:getDistributionTargetAt(section, index)
+	if target == nil then
+		return
+	end
+
+	cell:getAttribute("icon"):setImageFilename(target.productionPoint.owningPlaceable:getImageFilename())
+	cell:getAttribute("name"):setText(target.productionPoint:getName())
+
+	if target.limit ~= nil then
+		cell:getAttribute("limit"):setText(string.format(g_i18n:getText("revamp_distributionLimitValue"), g_i18n:formatVolume(target.limit, 0)))
+	else
+		cell:getAttribute("limit"):setText(g_i18n:getText("revamp_distributionNoLimit"))
+	end
+
+	if target.costsPerHour ~= nil then
+		-- Zwei Nachkommastellen, weil ein einzelnes nahes Ziel durchaus unter einem Euro je Stunde kostet und dort sonst nur "0" stünde.
+		cell:getAttribute("costs"):setText(string.format(g_i18n:getText("revamp_distributionCostsPerHour"), g_i18n:formatMoney(target.costsPerHour, 2)))
+	else
+		-- Ein Ziel, das bei der aktuellen Einstellung gar nicht an der Reihe ist, zeigt einen Strich statt eines Betrags, den es nie zahlt.
+		cell:getAttribute("costs"):setText("-")
+	end
+	cell:getAttribute("level"):setText(Revamp.getDistributionLevelText(target.level))
+end
+
+---Schaltet die Verteilstufe des gewählten Ziels eine Stufe weiter.
+---Gleiches Bedienmuster wie beim Ausgangsmodus und den Auswahlmodi: bei vier Möglichkeiten ist ein eigener Auswahl-Dialog mehr Weg als Nutzen.
+function RevampManageDialog:onClickChangeLevel()
+	if self.viewMode ~= RevampManageDialog.VIEW.DISTRIBUTION then
+		return
+	end
+
+	local target, sectionData = self:getDistributionTargetAt(self.manageList.selectedSectionIndex, self.manageList.selectedIndex)
+	if target == nil then
+		return
+	end
+
+	self.productionPoint:setDistributionTarget(sectionData.fillTypeIndex, target.uniqueId, Revamp.getNextDistributionLevel(target.level), target.limit)
+	self:updateDistributionRows()
+end
+
+---Öffnet den Mengen-Dialog für die Obergrenze des gewählten Ziels.
+function RevampManageDialog:onClickChangeLimit()
+	if self.viewMode ~= RevampManageDialog.VIEW.DISTRIBUTION then
+		return
+	end
+
+	local target, sectionData = self:getDistributionTargetAt(self.manageList.selectedSectionIndex, self.manageList.selectedIndex)
+	if target == nil or target.level == "NEVER" then
+		return
+	end
+
+	RevampDistributionLimitDialog.show(self.productionPoint, sectionData.fillTypeIndex, target)
+end
+
+---Rechnet die Verteilziele neu durch und lädt die Liste neu - nach jeder Änderung nötig, weil sich mit der Stufe eines Ziels
+---auch die Kostenvorschau aller übrigen Ziele derselben Stufe ändert.
+function RevampManageDialog:updateDistributionRows()
+	self.distributionSections = Revamp.getDistributionSections(self.productionPoint)
+	self.manageList:reloadData()
+	self:onListSelectionChanged(self.manageList, self.manageList.selectedSectionIndex, self.manageList.selectedIndex)
 end
 
 ---Schaltet den Mix- oder Booster-Modus der aktuell gewählten Rezeptlinie eine Stufe weiter.

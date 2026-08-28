@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUI onOpen="onOpen" onClose="onClose" onCreate="onCreate">
+    <GuiElement profile="newLayer"/>
+    <Bitmap profile="dialogFullscreenBg" id="dialogBg"/>
+    <GuiElement profile="revamp_limitDialogBg" id="dialogElement">
+        <ThreePartBitmap profile="fs25_dialogBgMiddleSmall"/>
+        <ThreePartBitmap profile="fs25_dialogBgTopSmall"/>
+        <ThreePartBitmap profile="fs25_dialogBgBottom"/>
+        <GuiElement profile="fs25_dialogContentContainer">
+            <Text profile="fs25_dialogTitle" id="dialogTitleElement" position="0px -35px"/>
+            <Text profile="fs25_dialogText"  id="dialogTextElement"  position="0px -85px"/>
+
+            <Bitmap profile="revamp_limitFillTypeIcon" name="fillTypeIcon" id="fillTypeIcon"/>
+            <Text profile="fs25_dialogText" id="fillTypeText"       position="0px -230px"/>
+            <Text profile="fs25_dialogText" id="targetCapacityText" position="0px -260px"/>
+
+            <!-- Pfeil-Reihe und die beiden Einzeltasten darunter sind Geometrie und Bedienung des Kaufen-Dialogs (revamp_buyGoodsDialog.xml):
+                 dieselbe Aufgabe, deshalb bewusst dasselbe Bild. Die Profile stehen hier trotzdem noch einmal, weil ein Dialog, der die
+                 Profile eines anderen mitbenutzt, nur so lange funktioniert wie dessen Datei vor ihm geladen wird. -->
+            <ThreePartBitmap profile="revamp_limitMinusGroupBg"/>
+            <Bitmap profile="revamp_limitGroupDivider" position="-300px 52px"/>
+            <ThreePartBitmap profile="revamp_limitPlusGroupBg"/>
+            <Bitmap profile="revamp_limitGroupDivider" position="300px 52px"/>
+            <GuiElement onCreate="onCreateButten">
+                <Button profile="revamp_limitLeft1000"  name="left1000"  text="-1000" onClick="onClickLeft1000"/>
+                <Button profile="revamp_limitLeft100"   name="left100"   text="-100"  onClick="onClickLeft100"/>
+            </GuiElement>
+            <GuiElement onCreate="onCreateButten">
+                <Button profile="revamp_limitRight100"  name="right100"  text="+100"  onClick="onClickRight100"/>
+                <Button profile="revamp_limitRight1000" name="right1000" text="+1000" onClick="onClickRight1000"/>
+            </GuiElement>
+
+            <ThreePartBitmap profile="revamp_limitNullBg"/>
+            <ThreePartBitmap profile="revamp_limitFullBg"/>
+            <GuiElement onCreate="onCreateButten">
+                <Button profile="revamp_limitNull" name="null" text="$l10n_revamp_storageNone"           onClick="onClickNull"/>
+                <Button profile="revamp_limitFull" name="full" text="$l10n_revamp_distributionLimitFull" onClick="onClickFull"/>
+            </GuiElement>
+
+            <OptionSlider profile="revamp_limitOptionSlider" onClick="onClickAmount" id="amountElement" position="0px 45px">
+                <Text profile="fs25_optionSliderText" id="itemTextAmount" name="text"/>
+            </OptionSlider>
+        </GuiElement>
+
+        <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
+            <Button profile="buttonOK" text="$l10n_button_select" onClick="onClickOk" id="yesButton"/>
+            <Bitmap profile="fs25_dialogButtonBoxSeparator"/>
+            <Button profile="buttonBack" text="$l10n_button_back" onClick="onClickBack" id="noButton"/>
+        </BoxLayout>
+    </GuiElement>
+    <GUIProfiles>
+        <Profile name="revamp_limitDialogBg" extends="fs25_dialogBg">
+            <size value="820px 460px"/>
+        </Profile>
+        <Profile name="revamp_limitFillTypeIcon" extends="baseReference" with="anchorTopCenter">
+            <size value="66px 66px"/>
+            <position value="0px -140px"/>
+            <imageSliceId value="noSlice"/>
+        </Profile>
+        <Profile name="revamp_limitOptionSlider" extends="fs25_multiTextOption" with="anchorBottomCenter">
+            <width value="440px"/>
+            <sliderOffset value="5px"/>
+            <useFillingBar value="true"/>
+            <updateTextPosition value="false"/>
+            <hideLeftRightButtons value="true"/>
+            <defaultProfileBgThreePart value="fs25_optionSliderBg"/>
+            <defaultProfileText value="fs25_optionSliderText"/>
+            <defaultProfileSlider value="fs25_optionSliderIcon"/>
+            <defaultProfileFillingBarThreePart value="fs25_optionSliderFillingBar"/>
+        </Profile>
+        <!-- Die Tasten selbst sind unsichtbar (nur Klickfläche und Text), die sichtbaren Hintergründe liegen als eigene Elemente darunter. -->
+        <Profile name="revamp_limitGroupedButton" extends="fs25_multiTextOptionLeft" with="anchorBottomCenter">
+            <size value="70px 24px"/>
+            <iconSliceId value="noSlice"/>
+            <imageInvertX value="false"/>
+            <imageFocusedInvertX value="false"/>
+            <imageSliceId value="noSlice"/>
+            <imageFocusedSliceId value="noSlice"/>
+            <imageColor value="$preset_colorTransparent"/>
+            <imageFocusedColor value="$preset_colorTransparent"/>
+            <textSize value="16px"/>
+            <textOffset value="-7px 1px"/>
+            <clickSound value="CLICK"/>
+        </Profile>
+        <Profile name="revamp_limitGroupBg" extends="baseReference" with="anchorBottomCenter">
+            <size value="140px 24px"/>
+            <imageSliceId value="gui.3dShop_button_middle"/>
+            <startImageSize value="12px 0"/>
+            <startImageSliceId value="gui.3dShop_button_left"/>
+            <endImageSize value="12px 0"/>
+            <endImageSliceId value="gui.3dShop_button_right"/>
+            <imageColor value="$preset_fs25_colorGrey"/>
+            <startImageColor value="$preset_fs25_colorGrey"/>
+            <endImageColor value="$preset_fs25_colorGrey"/>
+        </Profile>
+        <Profile name="revamp_limitMinusGroupBg" extends="revamp_limitGroupBg" with="anchorBottomCenter">
+            <position value="-300px 52px"/>
+        </Profile>
+        <Profile name="revamp_limitPlusGroupBg" extends="revamp_limitGroupBg" with="anchorBottomCenter">
+            <position value="300px 52px"/>
+        </Profile>
+        <Profile name="revamp_limitNullBg" extends="revamp_limitGroupBg" with="anchorBottomCenter">
+            <size value="70px 24px"/>
+            <position value="-300px 20px"/>
+        </Profile>
+        <Profile name="revamp_limitFullBg" extends="revamp_limitGroupBg" with="anchorBottomCenter">
+            <size value="70px 24px"/>
+            <position value="300px 20px"/>
+        </Profile>
+        <!-- Dünne Trennlinie zwischen zwei Klickzonen auf einem gemeinsamen Hintergrund, damit erkennbar bleibt dass es zwei Tasten sind und nicht eine. -->
+        <Profile name="revamp_limitGroupDivider" extends="fs25_dialogButtonBoxSeparator" with="anchorBottomCenter">
+            <size value="2dp 20px"/>
+        </Profile>
+        <Profile name="revamp_limitLeft1000" extends="revamp_limitGroupedButton" with="anchorBottomCenter">
+            <position value="-335px 52px"/>
+        </Profile>
+        <Profile name="revamp_limitLeft100" extends="revamp_limitGroupedButton" with="anchorBottomCenter">
+            <position value="-265px 52px"/>
+        </Profile>
+        <Profile name="revamp_limitRight100" extends="revamp_limitGroupedButton" with="anchorBottomCenter">
+            <position value="265px 52px"/>
+        </Profile>
+        <Profile name="revamp_limitRight1000" extends="revamp_limitGroupedButton" with="anchorBottomCenter">
+            <position value="335px 52px"/>
+        </Profile>
+        <Profile name="revamp_limitNull" extends="revamp_limitGroupedButton" with="anchorBottomCenter">
+            <position value="-300px 20px"/>
+        </Profile>
+        <Profile name="revamp_limitFull" extends="revamp_limitGroupedButton" with="anchorBottomCenter">
+            <position value="300px 20px"/>
+        </Profile>
+    </GUIProfiles>
+</GUI>

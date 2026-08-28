@@ -22,6 +22,14 @@
                         <Text profile="revamp_manageListItemProductionName"    name="name"/>
                         <Text profile="revamp_manageListItemProductionModes"   name="modes"/>
                     </ListItem>
+                    <!-- Dritte Zeilenform für die Verteilen-Ansicht: statt eines Fülltyps steht hier eine Zielproduktion mit ihrem Vorschaubild, der eingestellten Obergrenze, den laufenden Lieferkosten und der Verteilstufe -->
+                    <ListItem profile="revamp_manageListItem" name="distributionRow">
+                        <Bitmap profile="revamp_manageListItemIcon" name="icon"/>
+                        <Text profile="revamp_manageListItemTargetName" name="name"/>
+                        <Text profile="revamp_manageListItemLimit"      name="limit"/>
+                        <Text profile="revamp_manageListItemCosts"      name="costs"/>
+                        <Text profile="revamp_manageListItemLevel"      name="level"/>
+                    </ListItem>
                     <ListItem profile="fs25_productionDetailsListSection" name="section">
                         <Text profile="fs25_productionDetailsListSectionTitle" name="title"/>
                     </ListItem>
@@ -36,13 +44,15 @@
 
         <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
             <!-- Jede gleichzeitig sichtbare Aktion braucht eine eigene Taste: mit dem Standardprofil buttonOK lägen alle auf Enter und nur der Mausklick würde sie noch auseinanderhalten.
-                 Die beiden Zusatztasten werden von beiden Ansichten benutzt, sichtbar ist immer nur das Paar der aktuellen Ansicht -->
-            <Button profile="revamp_buttonExtra1" text="$l10n_revamp_buyButton"               onClick="onClickBuy"           id="buyButton"/>
-            <Button profile="revamp_buttonExtra2" text="$l10n_revamp_sellButton"              onClick="onClickSell"          id="sellButton"/>
-            <Button profile="buttonActivate"      text="$l10n_ui_production_changeOutputMode" onClick="onClickChangeMode"    id="yesButton"/>
-            <Button profile="revamp_buttonExtra1" text="$l10n_revamp_changeMixMode"           onClick="onClickChangeMixMode" id="mixModeButton"/>
+                 Dieselben Tasten werden von mehreren Ansichten benutzt, sichtbar ist immer nur der Satz Knöpfe der aktuellen Ansicht -->
+            <Button profile="revamp_buttonExtra1" text="$l10n_revamp_buyButton"               onClick="onClickBuy"             id="buyButton"/>
+            <Button profile="revamp_buttonExtra2" text="$l10n_revamp_sellButton"              onClick="onClickSell"            id="sellButton"/>
+            <Button profile="buttonActivate"      text="$l10n_ui_production_changeOutputMode" onClick="onClickChangeMode"      id="yesButton"/>
+            <Button profile="revamp_buttonExtra1" text="$l10n_revamp_changeMixMode"           onClick="onClickChangeMixMode"   id="mixModeButton"/>
             <Button profile="revamp_buttonExtra2" text="$l10n_revamp_changeBoostMode"         onClick="onClickChangeBoostMode" id="boostModeButton"/>
-            <Button profile="buttonOK"            text="$l10n_revamp_manageViewProductions"   onClick="onClickToggleView"    id="viewButton"/>
+            <Button profile="buttonActivate"      text="$l10n_revamp_changeDistributionLevel" onClick="onClickChangeLevel"     id="levelButton"/>
+            <Button profile="revamp_buttonExtra1" text="$l10n_revamp_changeDistributionLimit" onClick="onClickChangeLimit"     id="limitButton"/>
+            <Button profile="buttonOK"            text="$l10n_revamp_manageViewProductions"   onClick="onClickToggleView"      id="viewButton"/>
             <Bitmap profile="fs25_dialogButtonBoxSeparator"/>
             <Button profile="buttonBack" text="$l10n_button_back" onClick="onClickBack" id="noButton"/>
         </BoxLayout>
@@ -102,6 +112,25 @@
         <Profile name="revamp_manageListItemProductionModes" extends="revamp_manageListItemMode">
             <position value="450px 0px"/>
             <width value="540px"/>
+        </Profile>
+        <!-- Spalten der Verteilen-Ansicht. Der Name ist etwas schmaler als in der Waren-Ansicht, weil dahinter drei statt zwei Angaben stehen;
+             Obergrenze und Kosten rechtsbündig, damit die Zahlen untereinander vergleichbar bleiben -->
+        <Profile name="revamp_manageListItemTargetName" extends="revamp_manageListItemName">
+            <width value="320px"/>
+        </Profile>
+        <Profile name="revamp_manageListItemLimit" extends="fs25_textDarkHighlight" with="anchorMiddleLeft">
+            <position value="390px 0px"/>
+            <width value="200px"/>
+            <textAlignment value="right"/>
+        </Profile>
+        <Profile name="revamp_manageListItemCosts" extends="fs25_textDarkHighlight" with="anchorMiddleLeft">
+            <position value="610px 0px"/>
+            <width value="190px"/>
+            <textAlignment value="right"/>
+        </Profile>
+        <Profile name="revamp_manageListItemLevel" extends="revamp_manageListItemMode">
+            <position value="830px 0px"/>
+            <width value="180px"/>
         </Profile>
     </GUIProfiles>
 </GUI>

@@ -170,6 +170,50 @@ function Revamp.expandFillTypeCategoryInputs(xmlFile, key)
 	return categoryFillTypes
 end
 
+-- Pfade, unter denen die Rezepte einer Placeable-XML stehen können: einmal direkt und einmal in der ersten Ausbaustufe einer konfigurierbaren Produktionsstätte.
+-- Zweiteres liest auch Vanilla nur für die Ladenansicht aus, weil dort noch keine Ausbaustufe gewählt ist.
+Revamp.PRODUCTION_STORE_SPEC_PATHS = {
+	"placeable.productionPoint.productions.production",
+	"placeable.productionPoint.productionPointConfigurations.productionPointConfiguration(0).productionPoint.productions.production"
+}
+
+---Sammelt für die Ladenansicht die Zutaten aller Rezepte einer Placeable-XML, inklusive der Fülltypen, die im Rezept nur über eine Kategorie stehen.
+---Vanillas eigene Fassung liest die Rezepte dafür direkt aus der XML statt über ProductionPoint:load und kennt #fillTypeCategory an dieser Stelle nicht:
+---eine Zutat ohne #fillType wird dort ungeprüft als Tabellenschlüssel gesetzt, was beim Aufschlagen der Produktionen im Baumenü mit "table index is nil" abbricht und das Menü unbedienbar zurücklässt.
+---Vollständig ersetzt statt umschlossen, weil die Kategorie mitten in der Schleife aufgelöst werden muss - das Ergebnis der ursprünglichen Fassung ließe sich nachträglich nicht mehr ergänzen.
+---@param xmlFile table XMLFile der Placeable
+---@param customEnvironment string Mod-Umgebung der Placeable
+---@param baseDirectory string Verzeichnis der Placeable
+---@return table|nil fillTypeNames Menge der Zutaten-Namen, nil wenn die Placeable gar keine Zutaten hat
+function Revamp.loadSpecValueInputFillTypes(xmlFile, customEnvironment, baseDirectory) ---@diagnostic disable-line: unused-local
+	local fillTypeNames = nil
+
+	for _, productionsPath in ipairs(Revamp.PRODUCTION_STORE_SPEC_PATHS) do
+		xmlFile:iterate(productionsPath, function(_, productionKey)
+			xmlFile:iterate(productionKey .. ".inputs.input", function(_, inputKey)
+				local fillTypeName = xmlFile:getValue(inputKey .. "#fillType")
+				if fillTypeName ~= nil then
+					fillTypeNames = fillTypeNames or {}
+					fillTypeNames[fillTypeName] = true
+					return
+				end
+
+				-- Bewusst ohne den warning-Parameter: eine unbekannte Kategorie liefert dann einfach nichts, gemeldet wird sie ohnehin beim Laden der Produktionsstätte selbst.
+				-- Vanillas Warnung an dieser Stelle würde ihren eigenen Platzhalter mit dem gescheiterten Suchergebnis füllen und damit über einen Tippfehler im Rezept stolpern.
+				for _, fillType in ipairs(g_fillTypeManager:getFillTypesByCategoryNames(xmlFile:getValue(inputKey .. "#fillTypeCategory"))) do
+					fillTypeNames = fillTypeNames or {}
+					fillTypeNames[g_fillTypeManager:getFillTypeNameByIndex(fillType)] = true
+				end
+			end)
+		end)
+	end
+
+	return fillTypeNames
+end
+
+-- Die Ladenansicht merkt sich diese Funktion beim Registrieren ihrer Spalten (PlaceableProductionPoint.initSpecialization), das Ersetzen muss also vorher passieren - Mod-Skripte laufen früh genug dafür.
+ProductionPoint.loadSpecValueInputFillTypes = Revamp.loadSpecValueInputFillTypes
+
 ---Gibt jedem aus einer Kategorie aufgelösten Fülltyp eine eigene Lagerkapazität, sofern das Lager ihm nicht ohnehin schon eine per <capacity>-Zeile zuweist.
 ---Umgeht damit einen Widerspruch in Vanillas Lagerkapazität, es ist ausdrücklich keine saubere Lösung: Storage:load rechnet den belegten Anteil des gemeinsamen Topfes aus <storage>#capacity nur über die Fülltypen ohne eigene <capacity>-Zeile aus, Storage:getFreeCapacity dagegen über sämtliche Fülltypen.
 ---Ein Fülltyp, den erst die Kategorie ins Rezept geholt hat, hat naturgemäß keine eigene <capacity>-Zeile und hätte deshalb null freie Kapazität, sobald die einzeln aufgeführten Fülltypen den gemeinsamen Topf rechnerisch ausschöpfen - er wäre dann weder befüllbar noch kaufbar.
