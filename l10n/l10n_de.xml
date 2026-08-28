@@ -85,5 +85,35 @@
         <text name="revamp_distributionTargetCapacity"           text="Lagerkapazität: %s"/>
         <text name="revamp_descDistributionLimit"                text="Bis zu welchem Lagerstand soll dieses Ziel beliefert werden?"/>
         <text name="finance_productionDeliveryCosts"             text="Lieferkosten"/>
+
+        <text name="revamp_settings_title"                           text="Production Revamp"/>
+        <text name="revamp_setting_distributionActive"               text="Verteilen"/>
+        <text name="revamp_setting_distributionActive_tooltip"       text="Schaltet das Verteilen zwischen Produktionsstätten ein oder aus. Abgeschaltet verteilt das Spiel wieder von sich aus, die eingestellten Ziele bleiben dabei erhalten."/>
+        <text name="revamp_setting_distributionCostFactor"           text="Kosten fürs Verteilen"/>
+        <text name="revamp_setting_distributionCostFactor_tooltip"   text="Legt fest, wie teuer das Verteilen zwischen Produktionsstätten ist. Bei 0 % wird kostenlos geliefert, bei 200 % kostet jede Lieferung doppelt so viel."/>
+        <text name="revamp_setting_storageActive"                    text="Lager-Erweiterung"/>
+        <text name="revamp_setting_storageActive_tooltip"            text="Schaltet den Ausgangsmodus „Einlagern“ und das gezielte Auslagern als Paletten oder Ballen ein oder aus. Abgeschaltet verhalten sich eingelagerte Waren wie „Behalten“, die Einstellung selbst bleibt erhalten."/>
+        <text name="revamp_setting_buyingActive"                     text="Zutaten kaufen"/>
+        <text name="revamp_setting_buyingActive_tooltip"             text="Erlaubt es, Zutaten direkt an der Produktionsstätte zu kaufen."/>
+        <text name="revamp_setting_sellingActive"                    text="Erzeugnisse verkaufen"/>
+        <text name="revamp_setting_sellingActive_tooltip"            text="Erlaubt es, Erzeugnisse direkt an der Produktionsstätte zu verkaufen."/>
+        <text name="revamp_setting_tradeRestriction"                 text="Kaufen und Verkaufen erlaubt für"/>
+        <text name="revamp_setting_tradeRestriction_tooltip"         text="Legt fest, wer an einer Produktionsstätte Zutaten kaufen und Erzeugnisse verkaufen darf. „Produktionsverwalter“ meint jeden, der die Berechtigung „Produktionsstätten verwalten“ hat."/>
+        <text name="revamp_setting_tradeRestriction_everyone"        text="Jeder"/>
+        <text name="revamp_setting_tradeRestriction_farmManager"     text="Betriebsleiter"/>
+        <text name="revamp_setting_tradeRestriction_productionAgent" text="Produktionsverwalter"/>
+        <text name="revamp_setting_directSellingPriceFactor"         text="Preis beim Direktverkauf"/>
+        <text name="revamp_setting_directSellingPriceFactor_tooltip" text="Legt fest, wie viel es beim Verkauf direkt an der Produktionsstätte gibt. 100 % entspricht dem vollen Marktpreis."/>
+        <text name="revamp_setting_weatherModesActive"               text="Wetter und Uhrzeit"/>
+        <text name="revamp_setting_weatherModesActive_tooltip"       text="Legt fest, ob Rezepte vom Wetter, von der Jahreszeit und von der Uhrzeit abhängen dürfen. Abgeschaltet läuft jede Produktionslinie rund um die Uhr mit voller Leistung."/>
+        <text name="revamp_setting_recipeSettingsActive"             text="Zutatenwahl durch Spieler"/>
+        <text name="revamp_setting_recipeSettingsActive_tooltip"     text="Legt fest, ob Spieler pro Produktionslinie selbst wählen dürfen, welche Zutat und welcher Booster verwendet wird. Abgeschaltet gilt immer die Vorgabe der Produktion."/>
+        <text name="revamp_settings_displayTitle"                    text="Production Revamp: Anzeige"/>
+        <text name="revamp_setting_showSharedIcon"                   text="Symbol für parallele Produktion"/>
+        <text name="revamp_setting_showSharedIcon_tooltip"           text="Zeigt im Produktionsmenü an, ob eine Produktionsstätte alle Linien gleichzeitig oder nacheinander abarbeitet."/>
+        <text name="revamp_setting_showBuildingCosts"                text="Gebäudekosten anzeigen"/>
+        <text name="revamp_setting_showBuildingCosts_tooltip"        text="Zeigt im Produktionsmenü die monatlichen Unterhaltskosten jeder Produktionsstätte an."/>
+        <text name="revamp_setting_showDistributionTargets"          text="Verteil-Ziele anzeigen"/>
+        <text name="revamp_setting_showDistributionTargets_tooltip"  text="Zeigt in der Liste der Erzeugnisse hinter jeder Ware, wohin sie vorrangig geliefert wird."/>
     </texts>
 </l10n>

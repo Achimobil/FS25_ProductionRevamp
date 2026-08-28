@@ -50,9 +50,8 @@ end
 
 ---Führt den eigentlichen Kauf/Verkauf serverseitig aus.
 ---@param connection table Netzwerkverbindung
----@diagnostic disable-line: unused-local
 function Revamp_EventBuySell:run(connection)
-	self.productionPoint:ReceiveBuySellEvent(self.fillTypeIndex, self.amount, self.buySell)
+	self.productionPoint:ReceiveBuySellEvent(self.fillTypeIndex, self.amount, self.buySell, connection)
 end
 
 ---Baut ein Kauf/Verkauf-Event und schickt es an den Server.

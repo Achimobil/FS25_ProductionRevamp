@@ -85,5 +85,35 @@
         <text name="revamp_distributionTargetCapacity"           text="Storage capacity: %s"/>
         <text name="revamp_descDistributionLimit"                text="Up to which stock level should this target be supplied?"/>
         <text name="finance_productionDeliveryCosts"             text="Delivery costs"/>
+
+        <text name="revamp_settings_title"                           text="Production Revamp"/>
+        <text name="revamp_setting_distributionActive"               text="Distribution"/>
+        <text name="revamp_setting_distributionActive_tooltip"       text="Turns distribution between production points on or off. When off the game distributes on its own again, the configured targets are kept."/>
+        <text name="revamp_setting_distributionCostFactor"           text="Distribution costs"/>
+        <text name="revamp_setting_distributionCostFactor_tooltip"   text="Defines how expensive distributing goods between production points is. At 0 % delivery is free, at 200 % every delivery costs twice as much."/>
+        <text name="revamp_setting_storageActive"                    text="Storage extension"/>
+        <text name="revamp_setting_storageActive_tooltip"            text="Turns the “Store” output mode and the manual unloading as pallets or bales on or off. When off, stored goods behave like “Keep”, the setting itself is kept."/>
+        <text name="revamp_setting_buyingActive"                     text="Buy ingredients"/>
+        <text name="revamp_setting_buyingActive_tooltip"             text="Allows buying ingredients directly at the production point."/>
+        <text name="revamp_setting_sellingActive"                    text="Sell products"/>
+        <text name="revamp_setting_sellingActive_tooltip"            text="Allows selling products directly at the production point."/>
+        <text name="revamp_setting_tradeRestriction"                 text="Buying and selling allowed for"/>
+        <text name="revamp_setting_tradeRestriction_tooltip"         text="Defines who may buy ingredients and sell products at a production point. “Production manager” means anyone holding the “Manage productions” permission."/>
+        <text name="revamp_setting_tradeRestriction_everyone"        text="Everyone"/>
+        <text name="revamp_setting_tradeRestriction_farmManager"     text="Farm manager"/>
+        <text name="revamp_setting_tradeRestriction_productionAgent" text="Production manager"/>
+        <text name="revamp_setting_directSellingPriceFactor"         text="Direct selling price"/>
+        <text name="revamp_setting_directSellingPriceFactor_tooltip" text="Defines how much selling directly at the production point pays. 100 % equals the full market price."/>
+        <text name="revamp_setting_weatherModesActive"               text="Weather and time"/>
+        <text name="revamp_setting_weatherModesActive_tooltip"       text="Defines whether recipes may depend on weather, season and time of day. When off, every production line runs at full rate around the clock."/>
+        <text name="revamp_setting_recipeSettingsActive"             text="Ingredient choice by players"/>
+        <text name="revamp_setting_recipeSettingsActive_tooltip"     text="Defines whether players may choose which ingredient and booster a production line uses. When off, the production's own setting always applies."/>
+        <text name="revamp_settings_displayTitle"                    text="Production Revamp: display"/>
+        <text name="revamp_setting_showSharedIcon"                   text="Parallel production icon"/>
+        <text name="revamp_setting_showSharedIcon_tooltip"           text="Shows in the production menu whether a production point runs all its lines at once or one after another."/>
+        <text name="revamp_setting_showBuildingCosts"                text="Show building costs"/>
+        <text name="revamp_setting_showBuildingCosts_tooltip"        text="Shows the monthly upkeep of every production point in the production menu."/>
+        <text name="revamp_setting_showDistributionTargets"          text="Show distribution targets"/>
+        <text name="revamp_setting_showDistributionTargets_tooltip"  text="Shows behind every product in the output list where it is delivered to first."/>
     </texts>
 </l10n>

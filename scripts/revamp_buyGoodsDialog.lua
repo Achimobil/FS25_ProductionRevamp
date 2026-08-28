@@ -32,7 +32,7 @@ function RevampBuyGoodsDialog.show(productionPoint, title, fillType, buySell)
 		else
 			dialog.mode = false
 			dialog:setText(g_i18n:getText("revamp_descSell"))
-			dialog.pricePerLiter = fillTypeDesc.pricePerLiter * EconomyManager.getPriceMultiplier() * ProductionPoint.DIRECT_SELL_PRICE_FACTOR
+			dialog.pricePerLiter = fillTypeDesc.pricePerLiter * EconomyManager.getPriceMultiplier() * Revamp.settings.directSellingPriceFactor
 			dialog.max = productionPoint.storage:getFillLevel(dialog.fillTypeIndex)
 		end
 		dialog:setTitle(title)

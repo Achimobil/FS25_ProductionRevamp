@@ -129,6 +129,11 @@ ProductionPoint.loadFromXMLFile = Utils.overwrittenFunction(ProductionPoint.load
 ---@param outputFillTypeId number FillType-Index
 ---@return number mode Einer der ProductionPoint.OUTPUT_MODE-Werte
 function Revamp.getOutputDistributionMode(self, superFunc, outputFillTypeId)
+	-- Ohne die Lager-Erweiterung gilt wieder Vanillas Modus, die auf Einlagern gestellten Fülltypen bleiben dabei gespeichert und gelten beim Wiedereinschalten weiter.
+	if not Revamp.settings.storageActive then
+		return superFunc(self, outputFillTypeId)
+	end
+
 	if self.outputFillTypeIdsStorage ~= nil and self.outputFillTypeIdsStorage[outputFillTypeId] ~= nil then
 		return ProductionPoint.OUTPUT_MODE.STORE
 	end
@@ -137,6 +142,22 @@ function Revamp.getOutputDistributionMode(self, superFunc, outputFillTypeId)
 end
 
 ProductionPoint.getOutputDistributionMode = Utils.overwrittenFunction(ProductionPoint.getOutputDistributionMode, Revamp.getOutputDistributionMode)
+
+---Überspringt "Einlagern" beim Weiterschalten des Ausgangsmodus, solange die Lager-Erweiterung abgeschaltet ist.
+---Nötig, weil Vanillas Weiterschaltung einfach den nächsthöheren Modus nimmt und Einlagern in dieser Reihe hinter "Verteilen" steht.
+---@param self table ProductionPoint-Instanz
+---@param superFunc function Ursprüngliche ProductionPoint.toggleOutputDistributionMode
+---@param outputFillTypeId number FillType-Index
+function Revamp.toggleOutputDistributionMode(self, superFunc, outputFillTypeId)
+	if not Revamp.settings.storageActive and self:getOutputDistributionMode(outputFillTypeId) == ProductionPoint.OUTPUT_MODE.AUTO_DELIVER then
+		self:setOutputDistributionMode(outputFillTypeId, ProductionPoint.OUTPUT_MODE.KEEP)
+		return
+	end
+
+	superFunc(self, outputFillTypeId)
+end
+
+ProductionPoint.toggleOutputDistributionMode = Utils.overwrittenFunction(ProductionPoint.toggleOutputDistributionMode, Revamp.toggleOutputDistributionMode)
 
 ---Schaltet den Ausgangsmodus eines FillTypes um - bei STORE wird nur der eigene Zustand gesetzt und per Event synchronisiert, alle anderen Modi laufen weiter über Vanillas eigene Umschaltlogik.
 ---@param self table ProductionPoint-Instanz

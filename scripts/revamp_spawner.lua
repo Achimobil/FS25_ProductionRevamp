@@ -91,6 +91,11 @@ end
 ---@param menue? boolean true, wenn über den Menü-Button statt den physischen Trigger ausgelöst (unterdrückt den "Produktion verwalten"-Menüpunkt, der dort schon als eigener Button existiert)
 ---@diagnostic disable-line: unused-local
 function Revamp.spawnerRun(self, superFunc, menue)
+	-- Ohne die Lager-Erweiterung öffnet der Trigger am Gebäude wieder Vanillas eigenes Produktionsmenü statt des Auslagern-Dialogs.
+	if not Revamp.settings.storageActive then
+		return superFunc(self, menue)
+	end
+
 	local ownerFarmId = self.productionPoint:getOwnerFarmId()
 	if ownerFarmId == AccessHandler.EVERYONE and self.productionPoint.useInteractionTriggerForBuying then
 		self.productionPoint:buyRequest()
@@ -516,6 +521,10 @@ PalletSpawner.getSupportedFillTypes = Utils.overwrittenFunction(PalletSpawner.ge
 ---eigene InputAction (MENU_EXTRA_2), löst dieselbe run(true)-Logik wie der physische Trigger aus.
 ---@param self table InGameMenuProductionFrame-Instanz
 function Revamp.addSpawnButton(self)
+	if not Revamp.settings.storageActive then
+		return
+	end
+
 	if self.pointsSelector:getState() == InGameMenuProductionFrame.POINTS_OWNED and g_currentMission:getHasPlayerPermission("manageProductions") then
 		local _, productionPoint = self:getSelectedProduction()
 		if productionPoint ~= nil and productionPoint.palletSpawner ~= nil then

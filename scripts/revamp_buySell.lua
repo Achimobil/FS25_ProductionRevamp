@@ -78,12 +78,16 @@ end
 ---@param fillTypeIndex number FillType-Index
 ---@param amount number Angeforderte Menge in Litern
 ---@param buySell boolean true = kaufen, false = verkaufen
-function ProductionPoint:ReceiveBuySellEvent(fillTypeIndex, amount, buySell)
+---@param connection? table Netzwerkverbindung des auslösenden Spielers, nil wenn der Handel vom eigenen Rechner kommt
+function ProductionPoint:ReceiveBuySellEvent(fillTypeIndex, amount, buySell, connection)
 	-- Die eigentliche Sperre, nicht nur das Ausblenden der Buttons im Dialog: das Event kommt im Mehrspieler vom Client, geprüft wird deshalb hier auf dem Server.
-	if buySell == true and not Revamp.isBuyingAllowed(self, fillTypeIndex) then
+	if not Revamp.isTradeAllowedForUser(self, connection) then
 		return
 	end
-	if buySell ~= true and not Revamp.isSellingAllowed(self, fillTypeIndex) then
+	if buySell == true and (not Revamp.settings.buyingActive or not Revamp.isBuyingAllowed(self, fillTypeIndex)) then
+		return
+	end
+	if buySell ~= true and (not Revamp.settings.sellingActive or not Revamp.isSellingAllowed(self, fillTypeIndex)) then
 		return
 	end
 
@@ -107,7 +111,7 @@ function ProductionPoint:ReceiveBuySellEvent(fillTypeIndex, amount, buySell)
 		g_currentMission:addMoney(-(amount * pricePerLiter), self.ownerFarmId, MoneyType.PURCHASE_PALLETS, true)
 	else
 		local maxStorage = self.storage:getFillLevel(fillTypeIndex)
-		local pricePerLiter = fillType.pricePerLiter * EconomyManager.getPriceMultiplier() * ProductionPoint.DIRECT_SELL_PRICE_FACTOR
+		local pricePerLiter = fillType.pricePerLiter * EconomyManager.getPriceMultiplier() * Revamp.settings.directSellingPriceFactor
 
 		if maxStorage < amount then
 			amount = maxStorage

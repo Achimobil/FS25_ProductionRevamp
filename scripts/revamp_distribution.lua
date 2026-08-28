@@ -245,7 +245,7 @@ function Revamp.getDistributionCostsPerHour(distributingPoint, receivingPoint, a
 	end
 
 	local distance = calcDistanceFrom(distributingPoint.owningPlaceable.rootNode, receivingPoint.owningPlaceable.rootNode)
-	return amountPerHour / targetCount * distance * ProductionPoint.DIRECT_DELIVERY_PRICE
+	return amountPerHour / targetCount * distance * ProductionPoint.DIRECT_DELIVERY_PRICE * Revamp.settings.distributionCostFactor
 end
 
 ---Liefert die Namen aller Primär-Ziele eines Erzeugnisses als eine Zeile.
@@ -254,6 +254,11 @@ end
 ---@param fillTypeIndex number FillType-Index des Erzeugnisses
 ---@return string text Namen der Primär-Ziele, leer wenn keines eingestellt ist
 function Revamp.getPrimaryTargetsText(productionPoint, fillTypeIndex)
+	-- Ohne das Verteil-Modul gibt es keine Ziele anzuzeigen, und wer die Anzeige für sich abgeschaltet hat, will sie auch nicht sehen.
+	if not Revamp.settings.distributionActive or not Revamp.displaySettings.showDistributionTargets then
+		return ""
+	end
+
 	-- Auch hier, nicht nur im Verwalten-Dialog: die Materialienliste ist für einen frisch verbundenen Spieler oft das Erste, was er von den Verteilzielen zu sehen bekommt.
 	Revamp.resolvePendingDistributionTargets(productionPoint)
 
@@ -404,7 +409,7 @@ end
 ---@param amount number Zu liefernde Menge in Litern
 function Revamp.transferGoods(distributingPoint, receivingPoint, fillTypeIndex, amount)
 	local distance = calcDistanceFrom(distributingPoint.owningPlaceable.rootNode, receivingPoint.owningPlaceable.rootNode)
-	local costs = amount * distance * ProductionPoint.DIRECT_DELIVERY_PRICE
+	local costs = amount * distance * ProductionPoint.DIRECT_DELIVERY_PRICE * Revamp.settings.distributionCostFactor
 
 	g_currentMission:addMoney(-costs, receivingPoint.ownerFarmId, MoneyType.PRODUCTION_DELIVERY_COSTS, true)
 	receivingPoint.storage:setFillLevel(receivingPoint.storage:getFillLevel(fillTypeIndex) + amount, fillTypeIndex)
@@ -656,7 +661,12 @@ end
 ---Ersetzt Vanillas eigene Verteilung vollständig, deren Aufteilung nach freiem Lagerplatz es hier nicht mehr gibt.
 ---@param self table ProductionChainManager-Instanz
 ---@param superFunc function Ursprüngliche ProductionChainManager.distributeGoods
-function Revamp.distributeGoods(self, superFunc) ---@diagnostic disable-line: unused-local
+function Revamp.distributeGoods(self, superFunc)
+	-- Ohne das Verteil-Modul bleibt es bei Vanillas eigener Verteilung, die eingestellten Ziele bleiben dabei unangetastet gespeichert.
+	if not Revamp.settings.distributionActive then
+		return superFunc(self)
+	end
+
 	if not self.isServer then
 		return
 	end

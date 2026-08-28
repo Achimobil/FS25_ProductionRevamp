@@ -325,6 +325,11 @@ end
 function Revamp.processProductionModes(production)
 	production.weatherFactorCurrent = nil
 
+	-- Abgeschaltet läuft jede Linie mit voller Leistung, egal was ihr Rezept an Wetter und Uhrzeit vorgibt.
+	if not Revamp.settings.weatherModesActive then
+		return nil
+	end
+
 	if production.modes == nil or #production.modes == 0 then
 		return nil
 	end
@@ -429,7 +434,8 @@ end
 ---@return table texts Liste der Beschreibungen, leer wenn die Linie keine wirksamen Modi hat
 function Revamp.getProductionModeTexts(production)
 	local texts = {}
-	if production.modes == nil then
+	-- Abgeschaltet wirken die Modi nicht mehr, dann sollen sie auch nicht mehr im Rezept stehen.
+	if production.modes == nil or not Revamp.settings.weatherModesActive then
 		return texts
 	end
 

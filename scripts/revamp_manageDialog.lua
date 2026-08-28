@@ -25,6 +25,14 @@ RevampManageDialog.VIEW = {
 	PRODUCTIONS = 2,
 	DISTRIBUTION = 3
 }
+RevampManageDialog.VIEW_COUNT = 3
+
+-- Beschriftung des Umschalt-Buttons, benannt ist darauf immer die Ansicht, in die er führt.
+RevampManageDialog.VIEW_TEXTS = {
+	[RevampManageDialog.VIEW.FILLTYPES] = "revamp_manageViewFillTypes",
+	[RevampManageDialog.VIEW.PRODUCTIONS] = "revamp_manageViewProductions",
+	[RevampManageDialog.VIEW.DISTRIBUTION] = "revamp_manageViewDistribution"
+}
 
 ---Lädt die Dialog-XML und registriert die Dialoginstanz beim GUI-System.
 function RevampManageDialog.register()
@@ -114,15 +122,38 @@ function RevampManageDialog:updateRows()
 	self:onListSelectionChanged(self.manageList, self.manageList.selectedSectionIndex, self.manageList.selectedIndex)
 end
 
+---Prüft, ob eine Ansicht gerade zur Verfügung steht - ein abgeschaltetes Modul soll nicht nur wirkungslos, sondern gar nicht mehr erreichbar sein.
+---@param viewMode number Eine der RevampManageDialog.VIEW-Konstanten
+---@return boolean available true, wenn die Ansicht benutzbar ist
+function RevampManageDialog.isViewAvailable(viewMode)
+	if viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
+		return Revamp.settings.recipeSettingsActive
+	end
+	if viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
+		return Revamp.settings.distributionActive
+	end
+	-- Die Waren-Ansicht zeigt die Bestände und bleibt deshalb immer erreichbar.
+	return true
+end
+
+---Liefert die nächste verfügbare Ansicht, abgeschaltete werden dabei übersprungen.
+---Sind alle übrigen abgeschaltet, kommt die aktuelle Ansicht selbst zurück.
+---@param viewMode number Ansicht, von der aus weitergeschaltet wird
+---@return number nextViewMode Nächste verfügbare Ansicht
+function RevampManageDialog.getNextView(viewMode)
+	for _ = 1, RevampManageDialog.VIEW_COUNT do
+		viewMode = viewMode % RevampManageDialog.VIEW_COUNT + 1
+		if RevampManageDialog.isViewAvailable(viewMode) then
+			break
+		end
+	end
+
+	return viewMode
+end
+
 ---Schaltet der Reihe nach durch die Ansichten Waren, Produktionslinien und Verteilen.
 function RevampManageDialog:onClickToggleView()
-	if self.viewMode == RevampManageDialog.VIEW.FILLTYPES then
-		self.viewMode = RevampManageDialog.VIEW.PRODUCTIONS
-	elseif self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
-		self.viewMode = RevampManageDialog.VIEW.DISTRIBUTION
-	else
-		self.viewMode = RevampManageDialog.VIEW.FILLTYPES
-	end
+	self.viewMode = RevampManageDialog.getNextView(self.viewMode)
 
 	self:updateRows()
 	-- Erst nach dem Neuaufbau, weil setSelectedItem gegen die Sektionen der jeweils geladenen Liste prüft.
@@ -164,7 +195,6 @@ function RevampManageDialog:onListSelectionChanged(list, section, index)
 		self.boostModeButton:setVisible(production ~= nil and production.hasBoostChoice)
 		self.levelButton:setVisible(false)
 		self.limitButton:setVisible(false)
-		self.viewButton:setText(g_i18n:getText("revamp_manageViewDistribution"))
 	elseif self.viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
 		local target = self:getDistributionTargetAt(section, index)
 		self.yesButton:setVisible(false)
@@ -175,21 +205,26 @@ function RevampManageDialog:onListSelectionChanged(list, section, index)
 		self.levelButton:setVisible(target ~= nil)
 		-- Eine Obergrenze für ein Ziel, das ohnehin nie beliefert wird, hätte keine Wirkung.
 		self.limitButton:setVisible(target ~= nil and target.level ~= "NEVER")
-		self.viewButton:setText(g_i18n:getText("revamp_manageViewFillTypes"))
 	else
 		local fillTypes, hasInputRole, hasOutputRole = self:getSectionFillTypes(section)
 		local fillType = fillTypes[index]
 		local hasRow = fillType ~= nil
 		self.yesButton:setVisible(hasOutputRole and hasRow)
-		self.buyButton:setVisible(hasInputRole and hasRow and Revamp.isBuyingAllowed(self.productionPoint, fillType))
+		-- Wer an dieser Produktionsstätte gar nicht handeln darf, bekommt beide Knöpfe nicht zu sehen.
+		local mayTrade = Revamp.isTradeAllowedForUser(self.productionPoint)
+		self.buyButton:setVisible(mayTrade and Revamp.settings.buyingActive and hasInputRole and hasRow and Revamp.isBuyingAllowed(self.productionPoint, fillType))
 		-- Verkaufen nur anbieten, wenn tatsächlich etwas im Lager ist - unter 1 Liter Restbestand (z.B. durch Rundung) gäbe es sonst einen klickbaren Button ohne Wirkung.
-		self.sellButton:setVisible(hasOutputRole and hasRow and Revamp.isSellingAllowed(self.productionPoint, fillType) and self.productionPoint:getFillLevel(fillType) >= 1)
+		self.sellButton:setVisible(mayTrade and Revamp.settings.sellingActive and hasOutputRole and hasRow and Revamp.isSellingAllowed(self.productionPoint, fillType) and self.productionPoint:getFillLevel(fillType) >= 1)
 		self.mixModeButton:setVisible(false)
 		self.boostModeButton:setVisible(false)
 		self.levelButton:setVisible(false)
 		self.limitButton:setVisible(false)
-		self.viewButton:setText(g_i18n:getText("revamp_manageViewProductions"))
 	end
+
+	-- Bleibt nur die Waren-Ansicht übrig, führt der Knopf nirgendwo mehr hin und verschwindet.
+	local nextView = RevampManageDialog.getNextView(self.viewMode)
+	self.viewButton:setVisible(nextView ~= self.viewMode)
+	self.viewButton:setText(g_i18n:getText(RevampManageDialog.VIEW_TEXTS[nextView]))
 
 	-- Ohne das behält die Button-Leiste die Breiten der vorherigen Ansicht und lässt Lücken, wo gerade ein Knopf ausgeblendet wurde.
 	self.buttonsPC:invalidateLayout()

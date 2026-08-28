@@ -33,38 +33,43 @@ function Revamp.updatePointsListRow(self, cell, index)
 		nameText:setPosition(namePos[1], namePos[2])
 	end
 
-	local icon = BitmapElement.new()
-	cell:addElement(icon)
-	icon:applyProfile("Revamp_pointsListSharedIcon")
-	icon.revampLine = true
-	icon:setVisible(true)
-	if productionPoint.sharedThroughputCapacity then
-		icon:setImageFilename(Revamp.icons.sharedThroughputCapacityTrue)
-	else
-		icon:setImageFilename(Revamp.icons.sharedThroughputCapacityFalse)
-	end
-	icon:updateAnchorDeltas()
-	icon:updateAbsolutePosition()
-	icon.getIsSelected = function()
-		-- upvalues: (copy) cell
-		return cell:getIsSelected()
-	end
-
-	local buildingCosts = 0
-	if productionPoint.owningPlaceable ~= nil then
-		buildingCosts = productionPoint.owningPlaceable:getDailyUpkeep()
+	-- Beide Anzeigen sind unabhängig voneinander abschaltbar, deshalb je ein eigener Block statt eines gemeinsamen Abbruchs.
+	if Revamp.displaySettings.showSharedIcon then
+		local icon = BitmapElement.new()
+		cell:addElement(icon)
+		icon:applyProfile("Revamp_pointsListSharedIcon")
+		icon.revampLine = true
+		icon:setVisible(true)
+		if productionPoint.sharedThroughputCapacity then
+			icon:setImageFilename(Revamp.icons.sharedThroughputCapacityTrue)
+		else
+			icon:setImageFilename(Revamp.icons.sharedThroughputCapacityFalse)
+		end
+		icon:updateAnchorDeltas()
+		icon:updateAbsolutePosition()
+		icon.getIsSelected = function()
+			-- upvalues: (copy) cell
+			return cell:getIsSelected()
+		end
 	end
 
-	Revamp.DebugText("updatePointsListRow(): buildingCosts=%s", tostring(buildingCosts))
+	if Revamp.displaySettings.showBuildingCosts then
+		local buildingCosts = 0
+		if productionPoint.owningPlaceable ~= nil then
+			buildingCosts = productionPoint.owningPlaceable:getDailyUpkeep()
+		end
 
-	local costsText = TextElement.new()
-	cell:addElement(costsText)
-	costsText:applyProfile("Revamp_pointsListBuildingCosts")
-	costsText.revampLine = true
-	costsText:setVisible(true)
-	costsText:setText(g_i18n:getText("revamp_ui_production_buildingCostsPerMonth") .. ": " .. g_i18n:formatMoney(buildingCosts, 0, true))
-	costsText:updateAnchorDeltas()
-	costsText:updateAbsolutePosition()
+		Revamp.DebugText("updatePointsListRow(): buildingCosts=%s", tostring(buildingCosts))
+
+		local costsText = TextElement.new()
+		cell:addElement(costsText)
+		costsText:applyProfile("Revamp_pointsListBuildingCosts")
+		costsText.revampLine = true
+		costsText:setVisible(true)
+		costsText:setText(g_i18n:getText("revamp_ui_production_buildingCostsPerMonth") .. ": " .. g_i18n:formatMoney(buildingCosts, 0, true))
+		costsText:updateAnchorDeltas()
+		costsText:updateAbsolutePosition()
+	end
 end
 
 function Revamp.populateCellForItemInSection(self, superFunc, list, section, index, cell)
