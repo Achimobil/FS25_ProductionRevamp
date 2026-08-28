@@ -84,5 +84,6 @@
         <text name="revamp_distributionNoTargets"                text="Keine Abnehmer vorhanden"/>
         <text name="revamp_distributionTargetCapacity"           text="Lagerkapazität: %s"/>
         <text name="revamp_descDistributionLimit"                text="Bis zu welchem Lagerstand soll dieses Ziel beliefert werden?"/>
+        <text name="finance_productionDeliveryCosts"             text="Lieferkosten"/>
     </texts>
 </l10n>

@@ -84,5 +84,6 @@
         <text name="revamp_distributionNoTargets"                text="No consumers available"/>
         <text name="revamp_distributionTargetCapacity"           text="Storage capacity: %s"/>
         <text name="revamp_descDistributionLimit"                text="Up to which stock level should this target be supplied?"/>
+        <text name="finance_productionDeliveryCosts"             text="Delivery costs"/>
     </texts>
 </l10n>

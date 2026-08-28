@@ -16,6 +16,29 @@
 -- Server und Client führen dasselbe Gebäude also unter verschiedenen Ids. Für das Savegame ist die Id trotzdem der richtige Schlüssel, weil sie dort mitgespeichert und beim Laden wieder gesetzt wird.
 -- Alles, was über die Leitung geht, überträgt das Ziel deshalb als Objekt (NetworkUtil.writeNodeObject) und der Empfänger übersetzt es in seine eigene Id zurück - eine Id als Zeichenkette zu verschicken zeigt beim Empfänger ins Leere.
 
+-- Eigene Statistik-Kategorie für die Lieferkosten, damit sie in der Finanzübersicht nicht in den allgemeinen Produktionskosten untergehen.
+-- Die Einblendung im HUD findet ihren Text über den Titel samt customEnv in der Mod-eigenen Textliste, die Finanzübersicht braucht dagegen den Umweg über Revamp.newFinanceStats weiter unten.
+Revamp.DISTRIBUTION_COSTS_STAT = "productionDeliveryCosts"
+MoneyType.PRODUCTION_DELIVERY_COSTS = MoneyType.register(Revamp.DISTRIBUTION_COSTS_STAT, "finance_" .. Revamp.DISTRIBUTION_COSTS_STAT, g_currentModName)
+table.insert(FinanceStats.statNames, Revamp.DISTRIBUTION_COSTS_STAT)
+-- Vanilla baut diese Zuordnung einmalig beim Laden über seine eigene Namensliste auf und weiß von späteren Ergänzungen nichts.
+FinanceStats.statNameToIndex[Revamp.DISTRIBUTION_COSTS_STAT] = #FinanceStats.statNames
+
+---Trägt die Beschriftung der Lieferkosten-Kategorie in der Finanzübersicht nach.
+---FinanceStats.new baut diese Liste bei jedem Aufruf neu auf - auch beim monatlichen Archivieren - und holt die Texte dabei aus der globalen Textliste, in der die Texte eines Mods nicht stehen.
+---In der Übersicht stünde sonst "Missing 'finance_productionDeliveryCosts' in l10n_de.xml".
+---Ein global hinterlegter Text hilft an dieser Stelle nicht: g_i18n:setGlobalText legt ihn unter dem Mod-Namen als Präfix ab, während FinanceStats seinen Schlüssel selbst aus "finance_" und dem Namen der Kategorie zusammensetzt.
+---@param customMt table Metatable, die an die ursprüngliche Funktion durchgereicht wird
+---@param superFunc function Ursprüngliches FinanceStats.new
+---@return table stats Neue FinanceStats-Instanz
+function Revamp.newFinanceStats(customMt, superFunc)
+	local stats = superFunc(customMt)
+	FinanceStats.statNamesI18n[Revamp.DISTRIBUTION_COSTS_STAT] = g_i18n:getText("finance_" .. Revamp.DISTRIBUTION_COSTS_STAT)
+	return stats
+end
+
+FinanceStats.new = Utils.overwrittenFunction(FinanceStats.new, Revamp.newFinanceStats)
+
 -- Alle Stufen, in der Reihenfolge, in der die Bedienoberfläche sie durchschaltet.
 Revamp.DISTRIBUTION_LEVELS = {"PRIMARY", "SECONDARY", "REST", "NEVER"}
 
@@ -383,7 +406,7 @@ function Revamp.transferGoods(distributingPoint, receivingPoint, fillTypeIndex, 
 	local distance = calcDistanceFrom(distributingPoint.owningPlaceable.rootNode, receivingPoint.owningPlaceable.rootNode)
 	local costs = amount * distance * ProductionPoint.DIRECT_DELIVERY_PRICE
 
-	g_currentMission:addMoney(-costs, receivingPoint.ownerFarmId, MoneyType.PRODUCTION_COSTS, true)
+	g_currentMission:addMoney(-costs, receivingPoint.ownerFarmId, MoneyType.PRODUCTION_DELIVERY_COSTS, true)
 	receivingPoint.storage:setFillLevel(receivingPoint.storage:getFillLevel(fillTypeIndex) + amount, fillTypeIndex)
 	distributingPoint.storage:setFillLevel(distributingPoint.storage:getFillLevel(fillTypeIndex) - amount, fillTypeIndex)
 

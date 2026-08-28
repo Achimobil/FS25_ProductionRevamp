@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.17</version>
+    <version>0.0.0.18</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.18 - Die Kosten fürs Verteilen stehen in der Finanzübersicht jetzt als eigener Posten
 0.0.0.17 - Verteil-Ziele werden im Mehrspieler jetzt zwischen allen Spielern abgeglichen
 0.0.0.16 - Die eingestellten Verteil-Ziele bleiben jetzt im Spielstand erhalten
 0.0.0.15
