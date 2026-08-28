@@ -86,17 +86,6 @@ function Revamp.getProductionBoostInputs(production, mix)
 	return result
 end
 
-function Revamp.getMixModeL10nKey(mixMode)
-	if mixMode == "DESC" then
-		return "revamp_ui_production_mixModeDesc"
-	elseif mixMode == "MOST" then
-		return "revamp_ui_production_mixModeMost"
-	elseif mixMode == "LEAST" then
-		return "revamp_ui_production_mixModeLeast"
-	end
-	return "revamp_ui_production_mixModeAsc"
-end
-
 Revamp.RECIPE_TITLE_PREFIX = nil
 
 function Revamp.getTitleForSectionHeader(self, superFunc, list, section)
@@ -108,7 +97,8 @@ function Revamp.getTitleForSectionHeader(self, superFunc, list, section)
 			if production ~= nil then
 				local _, order = Revamp.getProductionMixGroups(production)
 				if #order > 0 then
-					title = title .. " (" .. g_i18n:getText(Revamp.getMixModeL10nKey(production.mixMode)) .. ")"
+					-- Dieselben Texte wie im Verwalten-Dialog, wo der Spieler den Modus umstellt - zwei Bezeichnungen für denselben Wert liest sich sonst wie zwei verschiedene Einstellungen.
+					title = title .. " (" .. Revamp.getSelectionModeText(production.mixMode, false) .. ")"
 				end
 			end
 		end

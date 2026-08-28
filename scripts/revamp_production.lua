@@ -332,6 +332,9 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 				output.hideFromMenu = false
 			end
 		end
+
+		-- Erst hier, weil die Flags die fertigen Zutaten der Linie brauchen (Mix-Gruppen, Booster, Master-Booster).
+		Revamp.updateRecipeChoiceFlags(production)
 	end)
 
 	return true

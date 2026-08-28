@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.13</version>
+    <version>0.0.0.14</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.14 - Im Verwalten-Dialog lässt sich jetzt zwischen Waren und Produktionslinien umschalten, dort kann pro Rezept eingestellt werden, welche Zutat und welcher Booster verwendet wird
 0.0.0.13 - Kaufen und Verkaufen kann jetzt für einzelne Waren einer Produktionsstätte gesperrt sein
 0.0.0.12 - Rezepte über Fülltyp-Kategorien, benannte Zutatengruppen und mitgelieferter Kategorie-Katalog
 0.0.0.11 - Wetter- und zeitabhängige Produktion mit Statusanzeige, wetterabhängige Lager und Einzel-Booster-Modus

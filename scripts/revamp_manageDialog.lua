@@ -8,9 +8,20 @@
 -- Kaufen/Verkaufen-Buttons öffnen RevampBuyGoodsDialog für die aktuell gewählte Zeile (siehe revamp_buyGoodsDialog.lua) -
 -- Kaufen nur bei Input-Rolle, Verkaufen nur bei Output-Rolle, analog zu PSTs eigener Aufteilung (inputFillTypeIdsArray/outputFillTypeIdsArray).
 -- Verteil-Priorität-Button kommt erst mit seinem Modul (Distribution).
+--
+-- Über die zweite Ansicht (Produktionslinien) sind zusätzlich die Einstellungen erreichbar, die nicht pro Ware, sondern pro Rezeptlinie gelten -
+-- aktuell die Auswahlmodi für Zutaten und Booster (siehe revamp_recipeSettings.lua). Der Dialog ist damit der gemeinsame Ort für alles, was der Spieler
+-- an einer eigenen Produktionsstätte einstellen kann, statt für jede weitere Einstellung einen eigenen Menü-Button zu brauchen (die Leiste hat nur sechs Plätze).
 
 RevampManageDialog = {}
 local RevampManageDialog_mt = Class(RevampManageDialog, YesNoDialog)
+
+-- Der Dialog hat zwei Ansichten: die FillType-Ansicht zeigt, was pro Ware gilt (Bestand, Ausgangsmodus, Kaufen/Verkaufen),
+-- die Produktionslinien-Ansicht das, was pro Rezeptlinie gilt (aktuell die Auswahlmodi, siehe revamp_recipeSettings.lua).
+RevampManageDialog.VIEW = {
+	FILLTYPES = 1,
+	PRODUCTIONS = 2
+}
 
 ---Lädt die Dialog-XML und registriert die Dialoginstanz beim GUI-System.
 function RevampManageDialog.register()
@@ -26,6 +37,7 @@ function RevampManageDialog.show(productionPoint)
 	if RevampManageDialog.INSTANCE ~= nil then
 		local dialog = RevampManageDialog.INSTANCE
 		dialog.productionPoint = productionPoint
+		dialog.viewMode = RevampManageDialog.VIEW.FILLTYPES
 		dialog:setTitle(g_i18n:getText("revamp_manageDialogTitle"))
 		dialog:updateRows()
 		g_gui:showDialog("RevampManageDialog")
@@ -74,11 +86,53 @@ function Revamp.splitFillTypesByRole(productionPoint)
 	return pureInputs, dual, pureOutputs
 end
 
----Berechnet die Sektionsaufteilung neu und lädt die Liste + Auswahlzustand neu - wird beim Öffnen und nach jedem Moduswechsel aufgerufen.
+---Sammelt die Rezeptlinien eines Produktionspunkts für die Produktionslinien-Ansicht.
+---Vom Modder versteckte Linien bleiben draußen, genau wie im Vanilla-Produktionsmenü - sie sollen für den Spieler gar nicht existieren.
+---@param productionPoint table ProductionPoint-Instanz
+---@return table productions Sichtbare Rezeptlinien in der Reihenfolge der Placeable-XML
+function Revamp.getVisibleProductions(productionPoint)
+	local productions = {}
+	for _, production in ipairs(productionPoint.productions) do
+		if not production.hideFromMenu then
+			table.insert(productions, production)
+		end
+	end
+	return productions
+end
+
+---Berechnet die Sektionsaufteilung neu und lädt die Liste + Auswahlzustand neu - wird beim Öffnen, nach jedem Moduswechsel und nach jedem Ansichtswechsel aufgerufen.
 function RevampManageDialog:updateRows()
 	self.pureInputs, self.dual, self.pureOutputs = Revamp.splitFillTypesByRole(self.productionPoint)
-	self.manageList:reloadData()
+	self.productions = Revamp.getVisibleProductions(self.productionPoint)
+	-- Mit true, weil die beiden Ansichten unterschiedliche Zeilenformen haben: ohne das Kennzeichen behält die Liste die bereits erzeugten Zeilen und befüllt nur deren Inhalt neu,
+	-- die neue Ansicht bekäme also die Felder der alten (siehe SmoothListElement:reloadData).
+	self.manageList:reloadData(true)
 	self:onListSelectionChanged(self.manageList, self.manageList.selectedSectionIndex, self.manageList.selectedIndex)
+end
+
+---Schaltet zwischen der FillType- und der Produktionslinien-Ansicht um.
+function RevampManageDialog:onClickToggleView()
+	if self.viewMode == RevampManageDialog.VIEW.FILLTYPES then
+		self.viewMode = RevampManageDialog.VIEW.PRODUCTIONS
+	else
+		self.viewMode = RevampManageDialog.VIEW.FILLTYPES
+	end
+
+	self:updateRows()
+	-- Erst nach dem Neuaufbau, weil setSelectedItem gegen die Sektionen der jeweils geladenen Liste prüft.
+	-- Ohne das Zurücksetzen stünde der Auswahlbalken nach dem Umschalten auf der Zeilennummer der vorherigen Ansicht.
+	self.manageList:setSelectedItem(1, 1, true)
+end
+
+---Liefert die Zeilenform der aktuellen Ansicht - die Liste hat zwei davon (FillType-Zeile mit Icon und Menge, Produktionslinien-Zeile mit Auswahlmodi).
+---@param list table Liste, die die Zeile aufbauen will
+---@param section number Sektionsindex
+---@param index number Zeilenindex innerhalb der Sektion
+function RevampManageDialog:getCellTypeForItemInSection(list, section, index) ---@diagnostic disable-line: unused-local
+	if self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
+		return "productionRow"
+	end
+	return "fillTypeRow"
 end
 
 ---Blendet "Ausgangsmodus ändern"/"Kaufen"/"Verkaufen" pro Zeilenrolle ein/aus - eine reine Input-Zeile hat z.B. keinen Ausgangsmodus, der Button bliebe sonst klickbar,
@@ -92,13 +146,29 @@ function RevampManageDialog:onListSelectionChanged(list, section, index)
 		return
 	end
 
-	local fillTypes, hasInputRole, hasOutputRole = self:getSectionFillTypes(section)
-	local fillType = fillTypes[index]
-	local hasRow = fillType ~= nil
-	self.yesButton:setVisible(hasOutputRole and hasRow)
-	self.buyButton:setVisible(hasInputRole and hasRow and Revamp.isBuyingAllowed(self.productionPoint, fillType))
-	-- Verkaufen nur anbieten, wenn tatsächlich etwas im Lager ist - unter 1 Liter Restbestand (z.B. durch Rundung) gäbe es sonst einen klickbaren Button ohne Wirkung.
-	self.sellButton:setVisible(hasOutputRole and hasRow and Revamp.isSellingAllowed(self.productionPoint, fillType) and self.productionPoint:getFillLevel(fillType) >= 1)
+	if self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
+		local production = self.productions[index]
+		self.yesButton:setVisible(false)
+		self.buyButton:setVisible(false)
+		self.sellButton:setVisible(false)
+		self.mixModeButton:setVisible(production ~= nil and production.hasMixChoice)
+		self.boostModeButton:setVisible(production ~= nil and production.hasBoostChoice)
+		self.viewButton:setText(g_i18n:getText("revamp_manageViewFillTypes"))
+	else
+		local fillTypes, hasInputRole, hasOutputRole = self:getSectionFillTypes(section)
+		local fillType = fillTypes[index]
+		local hasRow = fillType ~= nil
+		self.yesButton:setVisible(hasOutputRole and hasRow)
+		self.buyButton:setVisible(hasInputRole and hasRow and Revamp.isBuyingAllowed(self.productionPoint, fillType))
+		-- Verkaufen nur anbieten, wenn tatsächlich etwas im Lager ist - unter 1 Liter Restbestand (z.B. durch Rundung) gäbe es sonst einen klickbaren Button ohne Wirkung.
+		self.sellButton:setVisible(hasOutputRole and hasRow and Revamp.isSellingAllowed(self.productionPoint, fillType) and self.productionPoint:getFillLevel(fillType) >= 1)
+		self.mixModeButton:setVisible(false)
+		self.boostModeButton:setVisible(false)
+		self.viewButton:setText(g_i18n:getText("revamp_manageViewProductions"))
+	end
+
+	-- Ohne das behält die Button-Leiste die Breiten der vorherigen Ansicht und lässt Lücken, wo gerade ein Knopf ausgeblendet wurde.
+	self.buttonsPC:invalidateLayout()
 end
 
 ---Bildet section (2 oder 3 Abschnitte, je nachdem ob es überhaupt Input+Output-FillTypes gibt) auf die passende FillType-Liste ab, plus ob die Zeile eine Input-
@@ -124,6 +194,9 @@ function RevampManageDialog:getNumberOfSections(list)
 	if list ~= self.manageList then
 		return 1
 	end
+	if self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
+		return 1
+	end
 	return #self.dual > 0 and 3 or 2
 end
 
@@ -134,6 +207,9 @@ end
 function RevampManageDialog:getTitleForSectionHeader(list, section)
 	if list ~= self.manageList then
 		return nil
+	end
+	if self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
+		return g_i18n:getText("revamp_manageSectionProductions")
 	end
 	if section == 1 then
 		return g_i18n:getText("ui_productions_incomingMaterials")
@@ -152,6 +228,9 @@ function RevampManageDialog:getNumberOfItemsInSection(list, section)
 	if list ~= self.manageList then
 		return 0
 	end
+	if self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
+		return #self.productions
+	end
 	return #self:getSectionFillTypes(section)
 end
 
@@ -162,6 +241,11 @@ end
 ---@param cell table Zu befüllende Zelle
 function RevampManageDialog:populateCellForItemInSection(list, section, index, cell)
 	if list ~= self.manageList then
+		return
+	end
+
+	if self.viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
+		self:populateProductionCell(index, cell)
 		return
 	end
 
@@ -182,6 +266,67 @@ function RevampManageDialog:populateCellForItemInSection(list, section, index, c
 	else
 		modeText:setText("")
 	end
+end
+
+---Befüllt eine Zeile der Produktionslinien-Ansicht mit Name und den aktuell eingestellten Auswahlmodi.
+---Eine Linie ohne jede Wahlmöglichkeit bleibt in der Modus-Spalte leer, statt einen Modus anzuzeigen, der bei ihr nichts bewirkt.
+---@param index number Zeilenindex
+---@param cell table Zu befüllende Zelle
+function RevampManageDialog:populateProductionCell(index, cell)
+	local production = self.productions[index]
+	if production == nil then
+		return
+	end
+
+	-- Ein Name ist in der Placeable-XML optional, die id dagegen Pflicht - ohne diesen Rückfall stünde die Zeile im Extremfall ganz ohne Beschriftung da.
+	cell:getAttribute("name"):setText(production.name or production.id)
+
+	local modes = {}
+	if production.hasMixChoice then
+		table.insert(modes, string.format("%s: %s", g_i18n:getText("revamp_mixModeLabel"), Revamp.getSelectionModeText(production.mixMode, false)))
+	end
+	if production.hasBoostChoice then
+		table.insert(modes, string.format("%s: %s", g_i18n:getText("revamp_boostModeLabel"), Revamp.getSelectionModeText(production.boostMode, true)))
+	end
+	cell:getAttribute("modes"):setText(table.concat(modes, "   "))
+end
+
+---Schaltet den Mix- oder Booster-Modus der aktuell gewählten Rezeptlinie eine Stufe weiter.
+---Zyklisch weiterschalten statt Auswahl-Dialog: dasselbe Bedienmuster wie beim Ausgangsmodus eine Ansicht weiter, und bei vier Möglichkeiten ist ein eigener Dialog mehr Weg als Nutzen.
+---@param isMix boolean true für den Mix-Modus, false für den Booster-Modus
+function RevampManageDialog:changeSelectionMode(isMix)
+	if self.viewMode ~= RevampManageDialog.VIEW.PRODUCTIONS then
+		return
+	end
+
+	local production = self.productions[self.manageList.selectedIndex]
+	if production == nil then
+		return
+	end
+
+	if isMix then
+		if not production.hasMixChoice then
+			return
+		end
+		self.productionPoint:setRecipeSelectionModes(production.id, Revamp.getNextSelectionMode(production.mixMode), nil)
+	else
+		if not production.hasBoostChoice then
+			return
+		end
+		self.productionPoint:setRecipeSelectionModes(production.id, nil, Revamp.getNextSelectionMode(production.boostMode))
+	end
+
+	self.manageList:reloadData()
+end
+
+---Schaltet den Mix-Modus der gewählten Rezeptlinie weiter.
+function RevampManageDialog:onClickChangeMixMode()
+	self:changeSelectionMode(true)
+end
+
+---Schaltet den Booster-Modus der gewählten Rezeptlinie weiter.
+function RevampManageDialog:onClickChangeBoostMode()
+	self:changeSelectionMode(false)
 end
 
 ---Schaltet den Ausgangsmodus der aktuell gewählten Zeile weiter (Klick auf "Ausgangsmodus ändern").

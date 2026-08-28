@@ -12,6 +12,8 @@ source(g_currentModDirectory .. "scripts/revamp_spawner.lua")
 source(g_currentModDirectory .. "scripts/revamp_buySell.lua")
 source(g_currentModDirectory .. "scripts/events/revamp_eventBuySell.lua")
 source(g_currentModDirectory .. "scripts/revamp_buyGoodsDialog.lua")
+source(g_currentModDirectory .. "scripts/revamp_recipeSettings.lua")
+source(g_currentModDirectory .. "scripts/events/revamp_eventRecipeSettings.lua")
 
 RevampManageDialog.register()
 RevampStorageDialog.register()

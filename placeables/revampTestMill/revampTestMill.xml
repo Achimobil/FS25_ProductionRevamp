@@ -130,6 +130,22 @@
                     <output fillType="FLOUR" amount="5" boost="true"/>
                 </outputs>
             </production>
+            <!-- Testfall für eine Linie, die beide Auswahlmodi gleichzeitig hat: Mix-Gruppe 1 (WHEAT/BARLEY)
+                 UND zwei konkurrierende Master-Booster. Im Verwalten-Dialog stehen bei dieser Linie damit
+                 beide Angaben in der Modus-Spalte und beide Umschalt-Knöpfe zur Verfügung. Die Startwerte sind
+                 bewusst LEAST, während die anderen Linien MOST oder gar nichts vorgeben - so ist sichtbar,
+                 dass jede Linie ihren eigenen Wert mitbringt -->
+            <production id="mixedBoostedFlour" name="$l10n_revamp_recipe_mixedBoostedFlour" mixMode="LEAST" boostMode="LEAST" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="WHEAT"   amount="6" mix="1"/>
+                    <input fillType="BARLEY"  amount="6" mix="1"/>
+                    <input fillType="WATER"   amount="1" mix="master" boostFactor="1.5"/>
+                    <input fillType="SORGHUM" amount="1" mix="master" boostFactor="2"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FLOUR" amount="5" boost="true"/>
+                </outputs>
+            </production>
             <!-- Testfälle für die Wetter-Modi. sunFlour steht nachts komplett still (Status "Wetter reicht
                  nicht"), rainFlour läuft dank minPower auch bei trockenem Wetter mit 5% weiter und
                  windTempFlour zeigt, dass sich zwei Wetter-Modi miteinander multiplizieren.

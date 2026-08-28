@@ -3,10 +3,6 @@
     <texts>
         <text name="revamp_ui_production_buildingCostsPerMonth"  text="Building costs"/>
         <text name="revamp_station_testMill"                     text="Revamp Test Mill"/>
-        <text name="revamp_ui_production_mixModeAsc"             text="ascending"/>
-        <text name="revamp_ui_production_mixModeDesc"            text="descending"/>
-        <text name="revamp_ui_production_mixModeMost"            text="larger stock"/>
-        <text name="revamp_ui_production_mixModeLeast"           text="smaller stock"/>
         <text name="revamp_ui_production_mixGroup"               text="Mix group %d"/>
         <text name="revamp_ui_production_converterGroup"         text="Alternative ingredients"/>
         <text name="revamp_ui_production_booster"                text="Booster"/>
@@ -19,6 +15,7 @@
         <text name="revamp_recipe_openingHoursFlour"             text="Shift Flour"/>
         <text name="revamp_recipe_seasonalFlour"                 text="Summer Flour"/>
         <text name="revamp_recipe_limitBoostedFlour"             text="Single Booster Flour"/>
+        <text name="revamp_recipe_mixedBoostedFlour"             text="Mixed Boosted Flour"/>
         <text name="revamp_recipe_grainFertilizer"               text="Grain Fertilizer"/>
         <text name="revamp_category_grain"                       text="Grain"/>
         <text name="revamp_ui_production_totalBoost"             text="Total boost"/>
@@ -58,5 +55,20 @@
         <text name="revamp_descBuy"                              text="Buy goods from the retailer and have them delivered. Note: The retailer charges more if they deliver themselves."/>
         <text name="revamp_descSell"                             text="Sell goods to a dealer. Note: The dealer pays less if they have to pick up the goods themselves."/>
         <text name="revamp_buyMax"                               text="maximum"/>
+        <text name="revamp_manageViewProductions"                text="Production lines"/>
+        <text name="revamp_manageViewFillTypes"                  text="Goods"/>
+        <text name="revamp_manageSectionProductions"             text="Production lines"/>
+        <text name="revamp_changeMixMode"                        text="Change ingredient choice"/>
+        <text name="revamp_changeBoostMode"                      text="Change booster choice"/>
+        <text name="revamp_mixModeLabel"                         text="Ingredient"/>
+        <text name="revamp_boostModeLabel"                       text="Booster"/>
+        <text name="revamp_mixMode_ASC"                          text="First in recipe"/>
+        <text name="revamp_mixMode_DESC"                         text="Last in recipe"/>
+        <text name="revamp_mixMode_MOST"                         text="Largest amount"/>
+        <text name="revamp_mixMode_LEAST"                        text="Smallest amount"/>
+        <text name="revamp_boostMode_ASC"                        text="First in recipe"/>
+        <text name="revamp_boostMode_DESC"                       text="Last in recipe"/>
+        <text name="revamp_boostMode_MOST"                       text="Strongest booster"/>
+        <text name="revamp_boostMode_LEAST"                      text="Weakest booster"/>
     </texts>
 </l10n>

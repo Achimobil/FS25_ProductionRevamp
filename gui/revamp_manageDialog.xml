@@ -17,6 +17,11 @@
                         <Text profile="revamp_manageListItemAmount"            name="amount"/>
                         <Text profile="revamp_manageListItemMode"              name="mode"/>
                     </ListItem>
+                    <!-- Zweite Zeilenform für die Produktionslinien-Ansicht: kein Fülltyp-Icon und keine Mengenspalte, dafür mehr Platz für Name und Auswahlmodi -->
+                    <ListItem profile="revamp_manageListItem" name="productionRow">
+                        <Text profile="revamp_manageListItemProductionName"    name="name"/>
+                        <Text profile="revamp_manageListItemProductionModes"   name="modes"/>
+                    </ListItem>
                     <ListItem profile="fs25_productionDetailsListSection" name="section">
                         <Text profile="fs25_productionDetailsListSectionTitle" name="title"/>
                     </ListItem>
@@ -30,22 +35,26 @@
         </GuiElement>
 
         <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
-            <!-- Jede der drei Aktionen braucht eine eigene Taste: mit dem Standardprofil buttonOK lägen alle drei auf Enter und nur der Mausklick würde sie noch auseinanderhalten -->
-            <Button profile="revamp_buttonBuy"  text="$l10n_revamp_buyButton"               onClick="onClickBuy"        id="buyButton"/>
-            <Button profile="revamp_buttonSell" text="$l10n_revamp_sellButton"              onClick="onClickSell"       id="sellButton"/>
-            <Button profile="buttonActivate"    text="$l10n_ui_production_changeOutputMode" onClick="onClickChangeMode" id="yesButton"/>
+            <!-- Jede gleichzeitig sichtbare Aktion braucht eine eigene Taste: mit dem Standardprofil buttonOK lägen alle auf Enter und nur der Mausklick würde sie noch auseinanderhalten.
+                 Die beiden Zusatztasten werden von beiden Ansichten benutzt, sichtbar ist immer nur das Paar der aktuellen Ansicht -->
+            <Button profile="revamp_buttonExtra1" text="$l10n_revamp_buyButton"               onClick="onClickBuy"           id="buyButton"/>
+            <Button profile="revamp_buttonExtra2" text="$l10n_revamp_sellButton"              onClick="onClickSell"          id="sellButton"/>
+            <Button profile="buttonActivate"      text="$l10n_ui_production_changeOutputMode" onClick="onClickChangeMode"    id="yesButton"/>
+            <Button profile="revamp_buttonExtra1" text="$l10n_revamp_changeMixMode"           onClick="onClickChangeMixMode" id="mixModeButton"/>
+            <Button profile="revamp_buttonExtra2" text="$l10n_revamp_changeBoostMode"         onClick="onClickChangeBoostMode" id="boostModeButton"/>
+            <Button profile="buttonOK"            text="$l10n_revamp_manageViewProductions"   onClick="onClickToggleView"    id="viewButton"/>
             <Bitmap profile="fs25_dialogButtonBoxSeparator"/>
             <Button profile="buttonBack" text="$l10n_button_back" onClick="onClickBack" id="noButton"/>
         </BoxLayout>
     </GuiElement>
     <GUIProfiles>
-        <!-- Kaufen und Verkaufen bekommen die beiden freien Menü-Zusatztasten (Standard X und C), der Ausgangsmodus die Aktivieren-Taste (Leertaste) -
-             das ist dieselbe Aufteilung, die Vanilla in seinen mehrknöpfigen Dialogen nutzt (z.B. FieldStateDialog mit buttonActivate neben buttonOK).
-             Enter bleibt bewusst unbelegt, sonst reagiert der Dialog auf eine Taste, ohne dass eindeutig ist welche der drei Aktionen gemeint war -->
-        <Profile name="revamp_buttonBuy" extends="buttonOK">
+        <!-- Die beiden Aktionen der jeweiligen Ansicht liegen auf den Menü-Zusatztasten (Standard X und C), der Ausgangsmodus auf der Aktivieren-Taste (Leertaste)
+             und der Ansichtswechsel auf der Bestätigen-Taste (Enter) - das ist dieselbe Aufteilung, die Vanilla in seinen mehrknöpfigen Dialogen nutzt
+             (z.B. FieldStateDialog mit buttonActivate neben buttonOK). Ohne eigene Tasten lägen alle Knöpfe auf Enter und nur der Mausklick könnte sie noch auseinanderhalten -->
+        <Profile name="revamp_buttonExtra1" extends="buttonOK">
             <inputAction value="MENU_EXTRA_1"/>
         </Profile>
-        <Profile name="revamp_buttonSell" extends="buttonOK">
+        <Profile name="revamp_buttonExtra2" extends="buttonOK">
             <inputAction value="MENU_EXTRA_2"/>
         </Profile>
         <Profile name="revamp_manageDialogBg" extends="fs25_dialogBg">
@@ -85,6 +94,14 @@
             <position value="730px 0px"/>
             <width value="260px"/>
             <textColor value="$preset_fs25_colorMainHighlight"/>
+        </Profile>
+        <Profile name="revamp_manageListItemProductionName" extends="revamp_manageListItemName">
+            <position value="20px 0px"/>
+            <width value="420px"/>
+        </Profile>
+        <Profile name="revamp_manageListItemProductionModes" extends="revamp_manageListItemMode">
+            <position value="450px 0px"/>
+            <width value="540px"/>
         </Profile>
     </GUIProfiles>
 </GUI>
