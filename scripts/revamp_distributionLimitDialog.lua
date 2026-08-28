@@ -33,7 +33,7 @@ function RevampDistributionLimitDialog.show(productionPoint, fillTypeIndex, targ
 	local dialog = RevampDistributionLimitDialog.INSTANCE
 	dialog.productionPoint = productionPoint
 	dialog.fillTypeIndex = fillTypeIndex
-	dialog.uniqueId = target.uniqueId
+	dialog.targetPoint = target.productionPoint
 	dialog.level = target.level
 	dialog.maxLimit = target.productionPoint:getCapacity(fillTypeIndex)
 
@@ -151,7 +151,7 @@ function RevampDistributionLimitDialog:onClickOk()
 		limit = (state - 1) * RevampDistributionLimitDialog.STEP_SIZE
 	end
 
-	self.productionPoint:setDistributionTarget(self.fillTypeIndex, self.uniqueId, self.level, limit)
+	self.productionPoint:setDistributionTarget(self.fillTypeIndex, self.targetPoint, self.level, limit)
 	self:close()
 
 	-- Der Verwalten-Dialog bleibt im Hintergrund offen und zeigte sonst weiter die Obergrenze von vorher.

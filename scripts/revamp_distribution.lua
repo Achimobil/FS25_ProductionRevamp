@@ -14,7 +14,7 @@
 -- Ein Ziel wird über die uniqueId seines Placeables angesprochen. Diese Id ist ausdrücklich nur auf dem eigenen Rechner gültig:
 -- Placeable:writeStream überträgt sie nicht, ein Client vergibt beim Empfangen über Utils.getUniqueId eine eigene aus Zeitstempel und Speicheradresse.
 -- Server und Client führen dasselbe Gebäude also unter verschiedenen Ids. Für das Savegame ist die Id trotzdem der richtige Schlüssel, weil sie dort mitgespeichert und beim Laden wieder gesetzt wird.
--- Wer später Netzwerk-Events dafür baut, muss deshalb das Ziel als Objekt übertragen (NetworkUtil.writeNodeObject) und auf der Gegenseite dessen dortige uniqueId als Schlüssel nehmen - eine Id als Zeichenkette zu verschicken zeigt beim Empfänger ins Leere.
+-- Alles, was über die Leitung geht, überträgt das Ziel deshalb als Objekt (NetworkUtil.writeNodeObject) und der Empfänger übersetzt es in seine eigene Id zurück - eine Id als Zeichenkette zu verschicken zeigt beim Empfänger ins Leere.
 
 -- Alle Stufen, in der Reihenfolge, in der die Bedienoberfläche sie durchschaltet.
 Revamp.DISTRIBUTION_LEVELS = {"PRIMARY", "SECONDARY", "REST", "NEVER"}
@@ -53,6 +53,19 @@ function Revamp.getNextDistributionLevel(level)
 	return Revamp.DISTRIBUTION_LEVELS[1]
 end
 
+---Liefert die Nummer einer Verteilstufe für den Netzwerk-Stream.
+---@param level string Verteilstufe
+---@return number index Nummer der Stufe, die des Normalfalls bei einem unbekannten Wert
+function Revamp.getDistributionLevelIndex(level)
+	for index, name in ipairs(Revamp.DISTRIBUTION_LEVELS) do
+		if name == level then
+			return index
+		end
+	end
+	-- Der Normalfall steht an dritter Stelle in Revamp.DISTRIBUTION_LEVELS.
+	return 3
+end
+
 ---Liefert den lokalisierten Namen einer Verteilstufe.
 ---@param level string Verteilstufe
 ---@return string text Lokalisierter Name
@@ -80,17 +93,20 @@ function Revamp.getDistributionTarget(productionPoint, fillTypeIndex, uniqueId)
 	return entry.level, entry.limit
 end
 
----Setzt Verteilstufe und Obergrenze eines Ziels.
+---Legt Verteilstufe und Obergrenze eines Ziels in der Tabelle ab, ohne etwas zu verschicken.
 ---Ein Ziel auf "Rest" ohne Obergrenze verhält sich wie ein Ziel ohne jede Einstellung und wird deshalb ganz entfernt, statt den Normalfall in jedem Spielstand mitzuschleppen.
+---Getrennt von ProductionPoint:setDistributionTarget, weil es zwei Fälle ohne Netzwerkverkehr gibt: das Laden aus dem Spielstand (dort gibt es das Ziel-Placeable noch gar nicht) und das Anwenden einer bereits empfangenen Änderung.
+---@param productionPoint table Verteilende ProductionPoint-Instanz
 ---@param fillTypeIndex number FillType-Index des Erzeugnisses
----@param uniqueId string uniqueId des Ziel-Placeables
+---@param uniqueId string uniqueId des Ziel-Placeables, auf diesem Rechner
 ---@param level string Verteilstufe aus Revamp.DISTRIBUTION_LEVELS
 ---@param limit? number Obergrenze in Litern, nil für unbegrenzt
----@param noEventSend? boolean true, wenn die Änderung selbst schon aus einem Event stammt und nicht erneut verschickt werden darf
-function ProductionPoint:setDistributionTarget(fillTypeIndex, uniqueId, level, limit, noEventSend) ---@diagnostic disable-line: unused-local
+---@return string level Tatsächlich übernommene Verteilstufe
+---@return number|nil limit Tatsächlich übernommene Obergrenze
+function Revamp.storeDistributionTarget(productionPoint, fillTypeIndex, uniqueId, level, limit)
 	-- Beides kann aus einem von Hand bearbeiteten Spielstand als nil hereinkommen, und ein nil-Schlüssel bricht das Setzen unten mit "table index is nil" ab.
 	if fillTypeIndex == nil or uniqueId == nil then
-		return
+		return Revamp.DISTRIBUTION_LEVEL_DEFAULT, nil
 	end
 
 	-- Unbekannte Stufen werden auf den Normalfall zurückgesetzt statt übernommen: sie können aus einem von Hand bearbeiteten Spielstand kommen und würden sich später als stillschweigend anderes Verteilverhalten zeigen.
@@ -103,20 +119,40 @@ function ProductionPoint:setDistributionTarget(fillTypeIndex, uniqueId, level, l
 		limit = math.floor(math.max(limit, 0))
 	end
 
-	if self.distributionTargets == nil then
-		self.distributionTargets = {}
+	if productionPoint.distributionTargets == nil then
+		productionPoint.distributionTargets = {}
 	end
-	if self.distributionTargets[fillTypeIndex] == nil then
-		self.distributionTargets[fillTypeIndex] = {}
+	if productionPoint.distributionTargets[fillTypeIndex] == nil then
+		productionPoint.distributionTargets[fillTypeIndex] = {}
 	end
 
 	if level == Revamp.DISTRIBUTION_LEVEL_DEFAULT and limit == nil then
-		self.distributionTargets[fillTypeIndex][uniqueId] = nil
+		productionPoint.distributionTargets[fillTypeIndex][uniqueId] = nil
 	else
-		self.distributionTargets[fillTypeIndex][uniqueId] = {level = level, limit = limit}
+		productionPoint.distributionTargets[fillTypeIndex][uniqueId] = {level = level, limit = limit}
 	end
 
-	Revamp.DebugText("setDistributionTarget(): %s -> %s level=%s limit=%s", g_fillTypeManager:getFillTypeNameByIndex(fillTypeIndex), uniqueId, level, tostring(limit))
+	Revamp.DebugText("storeDistributionTarget(): %s -> %s level=%s limit=%s", g_fillTypeManager:getFillTypeNameByIndex(fillTypeIndex), uniqueId, level, tostring(limit))
+
+	return level, limit
+end
+
+---Setzt Verteilstufe und Obergrenze eines Ziels und verteilt die Änderung im Mehrspieler.
+---Das Ziel kommt als Objekt herein und nicht als uniqueId: die Id gilt nur auf dem eigenen Rechner (siehe Kopf dieser Datei), das Objekt dagegen lässt sich übertragen und auf der Gegenseite wieder in deren eigene Id übersetzen.
+---@param fillTypeIndex number FillType-Index des Erzeugnisses
+---@param targetPoint table ProductionPoint-Instanz, die beliefert werden soll
+---@param level string Verteilstufe aus Revamp.DISTRIBUTION_LEVELS
+---@param limit? number Obergrenze in Litern, nil für unbegrenzt
+---@param noEventSend? boolean true, wenn die Änderung selbst schon aus einem Event stammt und nicht erneut verschickt werden darf
+function ProductionPoint:setDistributionTarget(fillTypeIndex, targetPoint, level, limit, noEventSend)
+	if targetPoint == nil or targetPoint.owningPlaceable == nil then
+		return
+	end
+
+	-- Verschickt wird, was tatsächlich übernommen wurde, nicht was hereingereicht wurde: sonst stünde nach einem verworfenen Wert auf jedem Rechner etwas anderes.
+	local storedLevel, storedLimit = Revamp.storeDistributionTarget(self, fillTypeIndex, targetPoint.owningPlaceable:getUniqueId(), level, limit)
+
+	Revamp_EventDistribution.sendEvent(self, fillTypeIndex, targetPoint.owningPlaceable, storedLevel, storedLimit, noEventSend)
 end
 
 ---Liefert alle Produktionsstätten der Farm, die einen Fülltyp als Zutat verarbeiten und deshalb als Verteilziel in Frage kommen.
@@ -195,6 +231,9 @@ end
 ---@param fillTypeIndex number FillType-Index des Erzeugnisses
 ---@return string text Namen der Primär-Ziele, leer wenn keines eingestellt ist
 function Revamp.getPrimaryTargetsText(productionPoint, fillTypeIndex)
+	-- Auch hier, nicht nur im Verwalten-Dialog: die Materialienliste ist für einen frisch verbundenen Spieler oft das Erste, was er von den Verteilzielen zu sehen bekommt.
+	Revamp.resolvePendingDistributionTargets(productionPoint)
+
 	local targets = productionPoint.distributionTargets
 	if targets == nil or targets[fillTypeIndex] == nil then
 		return ""
@@ -217,9 +256,9 @@ end
 
 ---Stellt für den Verwalten-Dialog je Erzeugnis die Liste seiner möglichen Verteilziele samt Stufe, Obergrenze und Kostenvorschau zusammen.
 ---@param productionPoint table Verteilende ProductionPoint-Instanz
----@return table sections Liste aus {fillTypeIndex = ..., targets = {{productionPoint, uniqueId, level, limit, costsPerHour}, ...}}, costsPerHour nil bei Zielen, die gerade nichts bekommen
+---@return table sections Liste aus {fillTypeIndex = ..., targets = {{productionPoint, level, limit, costsPerHour}, ...}}, costsPerHour nil bei Zielen, die gerade nichts bekommen
 function Revamp.getDistributionSections(productionPoint)
-	Revamp.removeInvalidDistributionTargets(productionPoint)
+	Revamp.refreshDistributionTargets(productionPoint)
 
 	local sections = {}
 
@@ -234,7 +273,7 @@ function Revamp.getDistributionSections(productionPoint)
 				local uniqueId = prodPoint.owningPlaceable:getUniqueId()
 				local level, limit = Revamp.getDistributionTarget(productionPoint, fillTypeIndex, uniqueId)
 				levelCounts[level] = (levelCounts[level] or 0) + 1
-				table.insert(targets, {productionPoint = prodPoint, uniqueId = uniqueId, level = level, limit = limit})
+				table.insert(targets, {productionPoint = prodPoint, level = level, limit = limit})
 			end
 
 			-- Kosten bekommt nur die Stufe, die gerade tatsächlich an der Reihe ist: solange es Primär-Ziele gibt, geht die ganze Stundenmenge dorthin und alle übrigen zahlen nichts.
@@ -482,13 +521,113 @@ function Revamp.loadDistributionFromXMLFile(self, superFunc, xmlFile, key)
 			return
 		end
 
-		self:setDistributionTarget(fillTypeIndex, xmlFile:getValue(targetKey .. "#targetId"), xmlFile:getValue(targetKey .. "#level"), xmlFile:getValue(targetKey .. "#limit"), true)
+		Revamp.storeDistributionTarget(self, fillTypeIndex, xmlFile:getValue(targetKey .. "#targetId"), xmlFile:getValue(targetKey .. "#level"), xmlFile:getValue(targetKey .. "#limit"))
 	end)
 
 	return success
 end
 
 ProductionPoint.loadFromXMLFile = Utils.overwrittenFunction(ProductionPoint.loadFromXMLFile, Revamp.loadDistributionFromXMLFile)
+
+---Schickt die Verteilziele beim Erstverbinden an einen Client (MP-Sync).
+---Ohne das sähe ein beitretender Spieler jedes Ziel auf "Rest", obwohl der Server längst etwas anderes verteilt.
+---Übertragen wird die Objekt-Id des Ziel-Placeables, nicht dessen uniqueId - die gilt nur auf dem Rechner, der sie vergeben hat (siehe Kopf dieser Datei).
+---@param self table ProductionPoint-Instanz
+---@param streamId number Stream-Handle
+---@param connection table Netzwerkverbindung
+function Revamp.writeDistributionStream(self, streamId, connection)
+	if connection:getIsServer() then
+		return
+	end
+
+	-- Erst sammeln, dann schreiben: die Anzahl muss vor den Einträgen im Stream stehen, und über eine verschachtelte Tabelle lässt sie sich nicht vorab abzählen.
+	local entries = {}
+	if self.distributionTargets ~= nil then
+		for fillTypeIndex, fillTypeTargets in pairs(self.distributionTargets) do
+			for uniqueId, entry in pairs(fillTypeTargets) do
+				local placeable = g_currentMission.placeableSystem:getPlaceableByUniqueId(uniqueId)
+				if placeable ~= nil then
+					table.insert(entries, {fillTypeIndex = fillTypeIndex, placeable = placeable, level = entry.level, limit = entry.limit})
+				end
+			end
+		end
+	end
+
+	streamWriteUInt16(streamId, #entries)
+	for _, entry in ipairs(entries) do
+		streamWriteUIntN(streamId, entry.fillTypeIndex, FillTypeManager.SEND_NUM_BITS)
+		NetworkUtil.writeNodeObject(streamId, entry.placeable)
+		streamWriteUInt8(streamId, Revamp.getDistributionLevelIndex(entry.level))
+		if streamWriteBool(streamId, entry.limit ~= nil) then
+			streamWriteInt32(streamId, entry.limit)
+		end
+	end
+end
+
+ProductionPoint.writeStream = Utils.prependedFunction(ProductionPoint.writeStream, Revamp.writeDistributionStream)
+
+---Nimmt die Verteilziele vom Server entgegen (MP-Sync).
+---Die Ziele werden hier bewusst noch nicht aufgelöst: während dieser Funktion läuft, ist die Welt erst teilweise aufgebaut und ein Ziel, das später im Stream kommt, existiert noch gar nicht.
+---Aufgelöst wird deshalb erst beim ersten Zugriff, siehe Revamp.resolvePendingDistributionTargets.
+---@param self table ProductionPoint-Instanz
+---@param streamId number Stream-Handle
+---@param connection table Netzwerkverbindung
+function Revamp.readDistributionStream(self, streamId, connection)
+	if not connection:getIsServer() then
+		return
+	end
+
+	local numEntries = streamReadUInt16(streamId)
+	if numEntries == 0 then
+		return
+	end
+
+	self.pendingDistributionTargets = {}
+	for _ = 1, numEntries do
+		local entry = {}
+		entry.fillTypeIndex = streamReadUIntN(streamId, FillTypeManager.SEND_NUM_BITS)
+		entry.objectId = NetworkUtil.readNodeObjectId(streamId)
+		entry.level = Revamp.DISTRIBUTION_LEVELS[streamReadUInt8(streamId)]
+		if streamReadBool(streamId) then
+			entry.limit = streamReadInt32(streamId)
+		end
+		table.insert(self.pendingDistributionTargets, entry)
+	end
+
+	Revamp.DebugText("readDistributionStream(): %d Verteilziele empfangen, Aufloesung folgt beim ersten Zugriff", numEntries)
+end
+
+ProductionPoint.readStream = Utils.prependedFunction(ProductionPoint.readStream, Revamp.readDistributionStream)
+
+---Löst die beim Verbinden empfangenen Verteilziele in echte Einträge auf.
+---Passiert beim ersten Zugriff statt direkt beim Empfangen, weil die Ziel-Placeables zum Zeitpunkt von readStream noch nicht alle existieren.
+---Der erste Zugriff kommt frühestens, wenn jemand ein Menü öffnet - dann ist die Welt längst vollständig.
+---@param productionPoint table ProductionPoint-Instanz
+function Revamp.resolvePendingDistributionTargets(productionPoint)
+	local pending = productionPoint.pendingDistributionTargets
+	if pending == nil then
+		return
+	end
+
+	-- Vor dem Auflösen leeren, damit ein Ziel, das sich nicht mehr auflösen lässt, nicht bei jedem Zugriff erneut versucht wird.
+	productionPoint.pendingDistributionTargets = nil
+
+	for _, entry in ipairs(pending) do
+		local placeable = NetworkUtil.getObject(entry.objectId)
+		if placeable ~= nil and placeable.getUniqueId ~= nil then
+			Revamp.storeDistributionTarget(productionPoint, entry.fillTypeIndex, placeable:getUniqueId(), entry.level, entry.limit)
+		else
+			Revamp.DebugText("resolvePendingDistributionTargets(): Ziel mit der Objekt-Id %s ist nicht auffindbar", tostring(entry.objectId))
+		end
+	end
+end
+
+---Bringt die Zielliste auf einen benutzbaren Stand: erst die vom Server empfangenen Ziele auflösen, dann abgerissene Gebäude entfernen.
+---@param productionPoint table ProductionPoint-Instanz
+function Revamp.refreshDistributionTargets(productionPoint)
+	Revamp.resolvePendingDistributionTargets(productionPoint)
+	Revamp.removeInvalidDistributionTargets(productionPoint)
+end
 
 ---Verteilt einmal je Spielstunde die Erzeugnisse aller Produktionsstätten, die auf "Verteilen" stehen.
 ---Ersetzt Vanillas eigene Verteilung vollständig, deren Aufteilung nach freiem Lagerplatz es hier nicht mehr gibt.
@@ -504,7 +643,7 @@ function Revamp.distributeGoods(self, superFunc) ---@diagnostic disable-line: un
 	for _, farmTable in pairs(self.farmIds) do
 		if farmTable.productionPoints ~= nil then
 			for _, distributingPoint in ipairs(farmTable.productionPoints) do
-				Revamp.removeInvalidDistributionTargets(distributingPoint)
+				Revamp.refreshDistributionTargets(distributingPoint)
 
 				-- Ein wegen seiner Öffnungszeiten geschlossener Betrieb verschickt auch nichts, genauso wie er keine Paletten mehr rausstellt.
 				if distributingPoint.openingHoursTable == nil or distributingPoint.openingHoursTable[currentHour] then

@@ -389,7 +389,7 @@ function RevampManageDialog:onClickChangeLevel()
 		return
 	end
 
-	self.productionPoint:setDistributionTarget(sectionData.fillTypeIndex, target.uniqueId, Revamp.getNextDistributionLevel(target.level), target.limit)
+	self.productionPoint:setDistributionTarget(sectionData.fillTypeIndex, target.productionPoint, Revamp.getNextDistributionLevel(target.level), target.limit)
 	self:updateDistributionRows()
 end
 
