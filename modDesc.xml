@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.20</version>
+    <version>0.0.0.21</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.21 - Produktionsstätten, Silos und Gewächshäuser können ihren Bestand jetzt am Gebäude zeigen: als mitwachsenden Stapel und als Ziffernanzeige
 0.0.0.20 - Waren, die sich einen Lagerplatz teilen, blockieren sich nicht mehr gegenseitig und sind mit einem * gekennzeichnet
 0.0.0.19
 - Neuer Einstellungsbereich "Production Revamp" im Spielmenü: wer an einer Produktion kaufen und verkaufen darf, wie teuer das Verteilen ist und was der Direktverkauf einbringt
@@ -70,33 +71,25 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
 
     <fillTypes filename="revamp_fillTypes.xml"/>
 
-    <!--
-  Auskommentiert, bis die jeweilige Datei tatsächlich existiert (siehe GitHub-Tickets).
-  Die geteilte ModTest-Umgebung wird für alle Projekte genutzt und muss immer log-fehlerfrei starten.
-  Beim Fertigstellen des jeweiligen Tickets hier wieder einkommentieren.
+    <placeableSpecializations>
+        <specialization name="revampObjectFillLevel" className="RevampObjectFillLevelSpecialization" filename="scripts/specializations/revampObjectFillLevelSpecialization.lua"/>
+        <specialization name="revampDisplay"         className="RevampDisplaySpecialization"         filename="scripts/specializations/revampDisplaySpecialization.lua"/>
+    </placeableSpecializations>
 
-  <placeableSpecializations>
-    <specialization name="siloObjectFillLevel" className="SiloObjectFillLevelSpecialization" filename="scripts/specializations/siloObjectFillLevelSpecialization.lua"/>
-    <specialization name="siloDisplay" className="SiloDisplaySpecialization" filename="scripts/specializations/siloDisplaySpecialization.lua"/>
-    <specialization name="productionObjectFillLevel" className="ProductionObjectFillLevelSpecialization" filename="scripts/specializations/productionObjectFillLevelSpecialization.lua"/>
-    <specialization name="productionDisplay" className="ProductionDisplaySpecialization" filename="scripts/specializations/productionDisplaySpecialization.lua"/>
-    <specialization name="siloPalletSpawner" className="SiloPalletSpawnerSpecialization" filename="scripts/specializations/siloPalletSpawnerSpecialization.lua"/>
-  </placeableSpecializations>
-
-  <placeableTypes>
-    <type name="RevampSilo" parent="silo" filename="$dataS/scripts/placeables/Placeable.lua">
-      <specialization name="siloObjectFillLevel"/>
-      <specialization name="siloDisplay"/>
-      <specialization name="siloPalletSpawner"/>
-    </type>
-    <type name="RevampProductionPoint" parent="productionPoint" filename="$dataS/scripts/placeables/Placeable.lua">
-      <specialization name="productionObjectFillLevel"/>
-      <specialization name="productionDisplay"/>
-    </type>
-    <type name="RevampGreenhouse" parent="greenhouse" filename="$dataS/scripts/placeables/Placeable.lua">
-      <specialization name="productionObjectFillLevel"/>
-      <specialization name="productionDisplay"/>
-    </type>
-  </placeableTypes>
-  -->
+    <!-- Eigene Typen statt einer Erweiterung der Vanilla-Typen: ein Modder entscheidet damit pro Placeable, ob sie die Zusatzanzeigen bekommt.
+         Das Gewächshaus braucht keinen eigenen Eintrag in den Spezialisierungen, weil der Vanilla-Typ die productionPoint-Spezialisierung selbst mitbringt. -->
+    <placeableTypes>
+        <type name="RevampSilo"           parent="silo"           filename="$dataS/scripts/placeables/Placeable.lua">
+            <specialization name="revampObjectFillLevel"/>
+            <specialization name="revampDisplay"/>
+        </type>
+        <type name="RevampProductionPoint" parent="productionPoint" filename="$dataS/scripts/placeables/Placeable.lua">
+            <specialization name="revampObjectFillLevel"/>
+            <specialization name="revampDisplay"/>
+        </type>
+        <type name="RevampGreenhouse"     parent="greenhouse"     filename="$dataS/scripts/placeables/Placeable.lua">
+            <specialization name="revampObjectFillLevel"/>
+            <specialization name="revampDisplay"/>
+        </type>
+    </placeableTypes>
 </modDesc>

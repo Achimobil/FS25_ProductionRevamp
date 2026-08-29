@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8" standalone="no" ?>
-<placeable type="productionPoint" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://validation.gdn.giants-software.com/xml/fs25/placeable.xsd">
+<placeable type="RevampProductionPoint" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://validation.gdn.giants-software.com/xml/fs25/placeable.xsd">
     <storeData>
         <name>$l10n_revamp_station_testMill</name>
         <functions>
@@ -22,7 +22,7 @@
     </storeData>
 
     <base>
-        <filename>$data/placeables/brandless/productionPointsGeneric/grainMill/grainMill.i3d</filename>
+        <filename>placeables/revampTestMill/revampTestMill.i3d</filename>
     </base>
 
     <placement useRandomYRotation="false" useManualYRotation="true">
@@ -243,13 +243,13 @@
              ausschließlich über die Kategorie im Lager sind (hier RICE und RICELONGGRAIN) - WHEAT, OAT und
              SORGHUM haben eine eigene Zeile und bleiben deshalb kaufbar -->
         <storage isExtension="false" fillLevelSyncThreshold="50" capacity="60000" fillTypeCategories="REVAMP_GRAIN" allowBuyingForCategories="false">
-            <capacity fillType="WHEAT"      capacity="126000"/>
-            <capacity fillType="BARLEY"     capacity="144000" allowBuying="false"/>
-            <capacity fillType="OAT"        capacity="60000"/>
-            <capacity fillType="SORGHUM"    capacity="60000"/>
-            <capacity fillType="WATER"      capacity="60000"  weatherModes="rain" weatherAmount="2000"/>
-            <capacity fillType="FLOUR"      capacity="60000"/>
-            <capacity fillType="STRAW"      capacity="60000"  allowSelling="false"/>
+            <capacity fillType="WHEAT"   capacity="126000"/>
+            <capacity fillType="BARLEY"  capacity="144000" allowBuying="false"/>
+            <capacity fillType="OAT"     capacity="60000"/>
+            <capacity fillType="SORGHUM" capacity="60000"/>
+            <capacity fillType="WATER" capacity="60000" weatherModes="rain" weatherAmount="2000"/>
+            <capacity fillType="FLOUR" capacity="60000"/>
+            <capacity fillType="STRAW"      capacity="60000" allowSelling="false"/>
             <capacity fillType="FERTILIZER" capacity="60000"/>
         </storage>
 
@@ -279,6 +279,15 @@
             <active template="grainMillWork" linkNode="0>" pitchScale="1.0" volumeScale="0.3"/>
         </sounds>
     </productionPoint>
+
+    <!-- Die Palettenwand an der Gebäudeseite wächst mit dem Mehlbestand mit: 48 Paletten, die erste ab einem Achtundvierzigstel der Lagergröße -->
+    <revampObjectFillLevels>
+        <revampObjectFillLevel rootNode="revampFillLevelObjects" fillType="FLOUR" maxAtFillLevel="60000"/>
+    </revampObjectFillLevels>
+
+    <revampDisplays>
+        <revampDisplay node="playerTriggerMarker" fillType="FLOUR" mask="000000" size="0.25"/>
+    </revampDisplays>
 
     <i3dMappings>
         <i3dMapping id="clearAreaStart01" node="0>0|0" />
@@ -317,5 +326,6 @@
         <i3dMapping id="palletAreaStart03" node="0>11|2" />
         <i3dMapping id="palletAreaEnd03" node="0>11|2|0" />
         <i3dMapping id="props" node="0>12|1" />
+        <i3dMapping id="revampFillLevelObjects" node="0>14" />
     </i3dMappings>
 </placeable>
