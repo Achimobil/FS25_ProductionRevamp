@@ -19,6 +19,7 @@
         <text name="revamp_recipe_grainFertilizer"               text="Getreide-Dünger"/>
         <text name="revamp_category_grain"                       text="Getreide"/>
         <text name="revamp_ui_production_totalBoost"             text="Gesamt-Boost"/>
+        <text name="revamp_ui_production_sharedStorage"          text="Geteilter Lagerplatz"/>
         <text name="revamp_ui_production_weatherFactor"          text="Wetterfaktor"/>
         <text name="revamp_ui_production_modeSun"                text="Sonnenabhängig"/>
         <text name="revamp_ui_production_modeNight"              text="Nachtabhängig"/>
@@ -71,6 +72,7 @@
         <text name="revamp_boostMode_MOST"                       text="Größter Booster"/>
         <text name="revamp_boostMode_LEAST"                      text="Kleinster Booster"/>
         <text name="revamp_manageViewDistribution"               text="Verteilen"/>
+        <text name="revamp_manageSharedStorageHint"              text="Diese Waren teilen sich einen Lagerplatz von %s."/>
         <text name="revamp_changeDistributionLevel"              text="Verteilstufe ändern"/>
         <text name="revamp_changeDistributionLimit"              text="Obergrenze ändern"/>
         <text name="revamp_distributionLevel_PRIMARY"            text="Primär"/>

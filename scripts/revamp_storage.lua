@@ -1,3 +1,127 @@
+-- Vanilla widerspricht sich bei einem Lager, das den gemeinsamen Topf aus <storage>#capacity mit einzelnen <capacity fillType="..."/>-Zeilen mischt:
+-- Storage:load bildet den belegten Anteil des gemeinsamen Topfes ausdrücklich nur über die Fülltypen ohne eigene Zeile, Storage:getFreeCapacity dagegen über sämtliche Fülltypen des Lagers.
+-- Sobald die einzeln aufgeführten Fülltypen den Wert des Topfes rechnerisch ausschöpfen, meldet getFreeCapacity für jeden Fülltyp ohne eigene Zeile null freien Platz - er ließe sich dann weder abladen noch kaufen, obwohl der gemeinsame Topf tatsächlich leer ist.
+-- Richtig ist das Modell, dem Storage:load bereits folgt: ein Getreidelager über 60.000 Liter fasst 60.000 Liter, egal über wie viele Sorten sie sich verteilen. Was keine eigene Kapazität zugewiesen bekommt, teilt sich diesen Wert - und sonst nichts.
+-- Ersetzt wird deshalb ausschließlich dieser eine Zweig; die beiden übrigen Fälle (eigene Kapazität, Lager für nur einen Fülltyp gleichzeitig) rechnet Vanilla richtig und behält sie.
+-- Bewusst auf der Storage-Klasse statt nur an Produktionsstätten: derselbe Fehler trifft jedes gemischt aufgebaute Lager. Einschränken kann die Korrektur dabei nichts, sie gibt nur Platz frei, der rechnerisch ohnehin vorhanden ist.
+-- Die Klammer in Storage:setFillLevel bleibt dagegen unangetastet: sie würde einen bereits übervollen Topf beim Laden eines Spielstands stillschweigend kürzen, statt ihn durch die laufende Produktion abfließen zu lassen.
+
+-- Kennzeichen hinter der Mengenangabe eines Fülltyps, der sich seinen Lagerplatz mit anderen teilt. Erklärt wird es über eine Legende, einmal im Infokasten des Produktionsmenüs (revamp_recipeDisplay.lua) und einmal unter der Liste des Verwalten-Dialogs (revamp_manageDialog.lua).
+Revamp.SHARED_STORAGE_MARK = "*"
+
+---Prüft, ob ein Fülltyp aus dem gemeinsamen Topf eines Lagers lebt, statt eine eigene Kapazität zu haben.
+---@param storage table Storage-Instanz
+---@param fillType number FillType-Index
+---@return boolean isShared true, wenn der Fülltyp keine eigene Kapazität hat und sich den gemeinsamen Topf teilt
+function Revamp.getIsSharedStorageFillType(storage, fillType)
+	return storage ~= nil and storage.supportsMultipleFillTypes == true and storage.fillLevels[fillType] ~= nil and storage.capacities[fillType] == nil
+end
+
+---Freier Platz für einen Fülltyp ohne eigene Kapazität: der gemeinsame Topf abzüglich dessen, was die übrigen Fülltypen ohne eigene Kapazität darin belegen.
+---@param self table Storage-Instanz
+---@param superFunc function Ursprüngliche Storage.getFreeCapacity
+---@param fillType number FillType-Index
+---@return number freeCapacity Freier Platz in Litern
+function Revamp.getStorageFreeCapacity(self, superFunc, fillType)
+	if not Revamp.getIsSharedStorageFillType(self, fillType) then
+		return superFunc(self, fillType)
+	end
+
+	local usedCapacity = 0
+	for otherFillType, fillLevel in pairs(self.fillLevels) do
+		if self.capacities[otherFillType] == nil then
+			usedCapacity = usedCapacity + fillLevel
+		end
+	end
+
+	return math.max(self.capacity - usedCapacity, 0)
+end
+
+Storage.getFreeCapacity = Utils.overwrittenFunction(Storage.getFreeCapacity, Revamp.getStorageFreeCapacity)
+
+---Kapazität eines Fülltyps ohne eigene Kapazität: der eigene Bestand plus der Platz, der im gemeinsamen Topf noch frei ist.
+---Vanilla meldet hier für jede Sorte den vollen Topf, womit sich die Balken mehrerer Sorten auf mehr als den Topf aufaddieren und eine Sorte halb voll aussieht, obwohl nichts mehr hineinpasst.
+---So steht dagegen überall (Produktionsmenü, Verwalten-Dialog, Statistik) das, was für diese Sorte gerade tatsächlich erreichbar ist, und ein voller Balken bedeutet auch wirklich voll.
+---@param self table Storage-Instanz
+---@param superFunc function Ursprüngliche Storage.getCapacity
+---@param fillType number FillType-Index
+---@return number capacity Kapazität in Litern
+function Revamp.getStorageCapacity(self, superFunc, fillType)
+	if not Revamp.getIsSharedStorageFillType(self, fillType) then
+		return superFunc(self, fillType)
+	end
+
+	return self:getFillLevel(fillType) + self:getFreeCapacity(fillType)
+end
+
+Storage.getCapacity = Utils.overwrittenFunction(Storage.getCapacity, Revamp.getStorageCapacity)
+
+---Liefert den gemeinsamen Lagerplatz eines Produktionspunktes, sofern sich mindestens zwei Fülltypen darin teilen.
+---Bei nur einem Fülltyp ohne eigene Kapazität gehört der Topf faktisch ihm allein - seine Anzeige wandert dann nie, ein Hinweis darauf wäre nur Beiwerk.
+---@param productionPoint table ProductionPoint-Instanz
+---@return number|nil capacity Größe des gemeinsamen Topfes, nil wenn sich niemand einen Lagerplatz teilt
+function Revamp.getSharedStorageCapacity(productionPoint)
+	local storage = productionPoint ~= nil and productionPoint.storage or nil
+	if storage == nil then
+		return nil
+	end
+
+	local numShared = 0
+	for fillType in pairs(storage.fillLevels) do
+		if Revamp.getIsSharedStorageFillType(storage, fillType) then
+			numShared = numShared + 1
+			if numShared > 1 then
+				return storage.capacity
+			end
+		end
+	end
+
+	return nil
+end
+
+---Prüft, ob die Mengenangabe eines Fülltyps das Kennzeichen für geteilten Lagerplatz bekommt.
+---@param productionPoint table ProductionPoint-Instanz
+---@param fillType number FillType-Index
+---@return boolean isMarked true, wenn der Fülltyp sich seinen Lagerplatz mit mindestens einem weiteren teilt
+function Revamp.getIsSharedStorageMarked(productionPoint, fillType)
+	return Revamp.getSharedStorageCapacity(productionPoint) ~= nil and Revamp.getIsSharedStorageFillType(productionPoint.storage, fillType)
+end
+
+---Hängt das Kennzeichen für geteilten Lagerplatz an die Mengenangabe der Materialienliste - bei Zutaten wie bei Erzeugnissen.
+---Angehängt statt neu zusammengesetzt, damit Zahlenformat und Trennzeichen die von Vanilla bleiben.
+---@param self table InGameMenuProductionFrame-Instanz
+---@param list table Liste, deren Zelle gerade befüllt wird
+---@param section number Sektionsindex innerhalb der Liste
+---@param index number Zeilenindex innerhalb der Sektion
+---@param cell table Zu befüllende Zelle
+function Revamp.markSharedStorageFillLevel(self, list, section, index, cell)
+	if list ~= self.detailsList or cell.name ~= "fillTypeCell" then
+		return
+	end
+
+	local _, productionPoint = self:getSelectedProduction()
+	if productionPoint == nil then
+		return
+	end
+
+	-- Sektion 1 sind die Zutaten, jede weitere die Erzeugnisse - dieselbe Aufteilung nutzt Vanilla selbst beim Befüllen der Zelle.
+	local fillType
+	if section == 1 then
+		fillType = productionPoint.sortedInputFillTypes[index]
+	else
+		fillType = productionPoint.sortedOutputFillTypes[index]
+	end
+
+	if not Revamp.getIsSharedStorageMarked(productionPoint, fillType) then
+		return
+	end
+
+	local fillLevelText = cell:getAttribute("fillLevel")
+	fillLevelText:setText(fillLevelText.text .. Revamp.SHARED_STORAGE_MARK)
+end
+
+InGameMenuProductionFrame.populateCellForItemInSection = Utils.appendedFunction(InGameMenuProductionFrame.populateCellForItemInSection, Revamp.markSharedStorageFillLevel)
+
 -- STORE ist ein vierter Ausgangsmodus (neben Vanillas KEEP/DIRECT_SELL/AUTO_DELIVER), der den automatischen Paletten-/Ballenspawn für einen FillType komplett unterdrückt.
 -- Ohne ihn würde Revamp.updateProduction (revamp_production.lua) weiterhin sofort eine Palette spawnen, sobald die Kapazität erreicht ist -
 -- der manuelle Auslagern-Button wäre damit kaum nutzbar, weil der Bestand nie über eine Palette hinaus anwächst.

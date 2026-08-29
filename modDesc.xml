@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.19</version>
+    <version>0.0.0.20</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.20 - Waren, die sich einen Lagerplatz teilen, blockieren sich nicht mehr gegenseitig und sind mit einem * gekennzeichnet
 0.0.0.19
 - Neuer Einstellungsbereich "Production Revamp" im Spielmenü: wer an einer Produktion kaufen und verkaufen darf, wie teuer das Verteilen ist und was der Direktverkauf einbringt
 - Verteilen, Lager-Erweiterung, Kaufen, Verkaufen, Wetterabhängigkeit und Zutatenwahl lassen sich einzeln abschalten, jeder Spieler kann sich zusätzlich einzelne Anzeigen ausblenden

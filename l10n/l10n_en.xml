@@ -19,6 +19,7 @@
         <text name="revamp_recipe_grainFertilizer"               text="Grain Fertilizer"/>
         <text name="revamp_category_grain"                       text="Grain"/>
         <text name="revamp_ui_production_totalBoost"             text="Total boost"/>
+        <text name="revamp_ui_production_sharedStorage"          text="Shared storage"/>
         <text name="revamp_ui_production_weatherFactor"          text="Weather factor"/>
         <text name="revamp_ui_production_modeSun"                text="Depending on sunshine"/>
         <text name="revamp_ui_production_modeNight"              text="Depending on moonlight"/>
@@ -71,6 +72,7 @@
         <text name="revamp_boostMode_MOST"                       text="Strongest booster"/>
         <text name="revamp_boostMode_LEAST"                      text="Weakest booster"/>
         <text name="revamp_manageViewDistribution"               text="Distribution"/>
+        <text name="revamp_manageSharedStorageHint"              text="These goods share a storage capacity of %s."/>
         <text name="revamp_changeDistributionLevel"              text="Change distribution level"/>
         <text name="revamp_changeDistributionLimit"              text="Change limit"/>
         <text name="revamp_distributionLevel_PRIMARY"            text="Primary"/>

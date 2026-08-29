@@ -119,7 +119,22 @@ function RevampManageDialog:updateRows()
 	-- Mit true, weil die beiden Ansichten unterschiedliche Zeilenformen haben: ohne das Kennzeichen behält die Liste die bereits erzeugten Zeilen und befüllt nur deren Inhalt neu,
 	-- die neue Ansicht bekäme also die Felder der alten (siehe SmoothListElement:reloadData).
 	self.manageList:reloadData(true)
+	self:updateSharedStorageHint()
 	self:onListSelectionChanged(self.manageList, self.manageList.selectedSectionIndex, self.manageList.selectedIndex)
+end
+
+---Zeigt unter der Liste die Legende zum Kennzeichen für geteilten Lagerplatz (siehe Revamp.getSharedStorageCapacity in revamp_storage.lua).
+---Nur in der Waren-Ansicht, die anderen beiden Ansichten zeigen gar keine Mengen und damit auch kein Kennzeichen.
+function RevampManageDialog:updateSharedStorageHint()
+	local sharedCapacity = nil
+	if self.viewMode == RevampManageDialog.VIEW.FILLTYPES then
+		sharedCapacity = Revamp.getSharedStorageCapacity(self.productionPoint)
+	end
+
+	self.sharedStorageHint:setVisible(sharedCapacity ~= nil)
+	if sharedCapacity ~= nil then
+		self.sharedStorageHint:setText(Revamp.SHARED_STORAGE_MARK .. " " .. string.format(g_i18n:getText("revamp_manageSharedStorageHint"), g_i18n:formatVolume(sharedCapacity, 0)))
+	end
 end
 
 ---Prüft, ob eine Ansicht gerade zur Verfügung steht - ein abgeschaltetes Modul soll nicht nur wirkungslos, sondern gar nicht mehr erreichbar sein.
@@ -337,7 +352,12 @@ function RevampManageDialog:populateCellForItemInSection(list, section, index, c
 
 	local fillLevel = self.productionPoint:getFillLevel(fillType)
 	local capacity = self.productionPoint:getCapacity(fillType)
-	cell:getAttribute("amount"):setText(g_i18n:formatVolume(fillLevel, 0) .. " / " .. g_i18n:formatVolume(capacity, 0))
+	local amountText = g_i18n:formatVolume(fillLevel, 0) .. " / " .. g_i18n:formatVolume(capacity, 0)
+	-- Kennzeichen für Waren, die sich ihren Lagerplatz teilen und deren Kapazität sich deshalb mit dem Bestand der übrigen Waren ändert. Erklärt wird es in der Fußnote unter der Liste.
+	if Revamp.getIsSharedStorageMarked(self.productionPoint, fillType) then
+		amountText = amountText .. Revamp.SHARED_STORAGE_MARK
+	end
+	cell:getAttribute("amount"):setText(amountText)
 
 	local modeText = cell:getAttribute("mode")
 	if hasOutputRole then
@@ -420,7 +440,7 @@ function RevampManageDialog:onClickChangeLevel()
 	end
 
 	local target, sectionData = self:getDistributionTargetAt(self.manageList.selectedSectionIndex, self.manageList.selectedIndex)
-	if target == nil then
+	if target == nil or sectionData == nil then
 		return
 	end
 
@@ -435,7 +455,7 @@ function RevampManageDialog:onClickChangeLimit()
 	end
 
 	local target, sectionData = self:getDistributionTargetAt(self.manageList.selectedSectionIndex, self.manageList.selectedIndex)
-	if target == nil or target.level == "NEVER" then
+	if target == nil or sectionData == nil or target.level == "NEVER" then
 		return
 	end
 

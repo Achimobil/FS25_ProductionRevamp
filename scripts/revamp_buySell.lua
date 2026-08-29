@@ -34,7 +34,6 @@ function Revamp.loadBuySellPermissions(productionPoint, xmlFile, key)
 	if xmlFile:getValue(key .. ".storage#fillTypeCategories") ~= nil and xmlFile:getValue(key .. ".storage#fillTypes") == nil then
 		local allowBuying = xmlFile:getBool(key .. ".storage#allowBuyingForCategories", true)
 		local allowSelling = xmlFile:getBool(key .. ".storage#allowSellingForCategories", true)
-		-- Bewusst über die <capacity>-Zeilen der XML unterschieden statt über storage.capacities: Revamp.applyCategoryStorageCapacities trägt den Kategorie-Fülltypen selbst eine Kapazität nach, danach sind die beiden Herkünfte dort nicht mehr auseinanderzuhalten.
 		for fillType in pairs(storage.fillTypes) do
 			if not ownCapacityFillTypes[fillType] then
 				productionPoint.allowFillTypeIdsBuying[fillType] = allowBuying

@@ -88,10 +88,7 @@ end
 ---Danach sieht Vanilla nur noch gewöhnliche Zutaten und erledigt seine eigene Buchführung (inputFillTypeIds, Prüfung der Abladestelle) unverändert mit.
 ---@param xmlFile table XML-Datei der Placeable
 ---@param key string Basis-Pfad des productionPoint-Knotens
----@return table categoryFillTypes Menge aller aus einer Kategorie aufgelösten Fülltypen dieses Produktionspunktes
 function Revamp.expandFillTypeCategoryInputs(xmlFile, key)
-	local categoryFillTypes = {}
-
 	xmlFile:iterate(key .. ".productions.production", function(_, productionKey)
 		local inputsKey = productionKey .. ".inputs"
 		local usedFillTypes = {}
@@ -143,7 +140,6 @@ function Revamp.expandFillTypeCategoryInputs(xmlFile, key)
 							Revamp.copyProductionInputAttributes(xmlFile, inputKey, targetKey)
 						end
 						xmlFile:setString(targetKey .. "#fillType", g_fillTypeManager:getFillTypeNameByIndex(fillType))
-						categoryFillTypes[fillType] = true
 						numAdded = numAdded + 1
 					end
 				end
@@ -166,8 +162,6 @@ function Revamp.expandFillTypeCategoryInputs(xmlFile, key)
 			xmlFile:removeProperty(string.format("%s.input(%d)", inputsKey, emptyCategoryIndices[i]))
 		end
 	end)
-
-	return categoryFillTypes
 end
 
 -- Pfade, unter denen die Rezepte einer Placeable-XML stehen können: einmal direkt und einmal in der ersten Ausbaustufe einer konfigurierbaren Produktionsstätte.
@@ -214,35 +208,12 @@ end
 -- Die Ladenansicht merkt sich diese Funktion beim Registrieren ihrer Spalten (PlaceableProductionPoint.initSpecialization), das Ersetzen muss also vorher passieren - Mod-Skripte laufen früh genug dafür.
 ProductionPoint.loadSpecValueInputFillTypes = Revamp.loadSpecValueInputFillTypes
 
----Gibt jedem aus einer Kategorie aufgelösten Fülltyp eine eigene Lagerkapazität, sofern das Lager ihm nicht ohnehin schon eine per <capacity>-Zeile zuweist.
----Umgeht damit einen Widerspruch in Vanillas Lagerkapazität, es ist ausdrücklich keine saubere Lösung: Storage:load rechnet den belegten Anteil des gemeinsamen Topfes aus <storage>#capacity nur über die Fülltypen ohne eigene <capacity>-Zeile aus, Storage:getFreeCapacity dagegen über sämtliche Fülltypen.
----Ein Fülltyp, den erst die Kategorie ins Rezept geholt hat, hat naturgemäß keine eigene <capacity>-Zeile und hätte deshalb null freie Kapazität, sobald die einzeln aufgeführten Fülltypen den gemeinsamen Topf rechnerisch ausschöpfen - er wäre dann weder befüllbar noch kaufbar.
----Eine eigene Kapazität macht ihn wieder benutzbar, bläht aber die tatsächliche Gesamtkapazität des Produktionspunktes auf, weil danach kein Fülltyp mehr im gemeinsamen Topf liegt und dessen Obergrenze nie mehr greift.
----@param productionPoint table ProductionPoint-Instanz
----@param categoryFillTypes table Menge der aus einer Kategorie aufgelösten Fülltypen
-function Revamp.applyCategoryStorageCapacities(productionPoint, categoryFillTypes)
-	local storage = productionPoint.storage
-	if storage == nil then
-		return
-	end
-
-	for fillType in pairs(categoryFillTypes) do
-		-- fillLevels kennt genau die Fülltypen, die dieses Lager überhaupt führt - für alle anderen wäre eine Kapazität sinnlos, die warnt Vanilla ohnehin schon als von der Abladestelle nicht unterstützt an.
-		if storage.fillLevels[fillType] ~= nil and storage.capacities[fillType] == nil then
-			storage.capacities[fillType] = storage.capacity
-			Revamp.DebugText("applyCategoryStorageCapacities(): %s bekommt %d Liter eigene Lagerkapazitaet", g_fillTypeManager:getFillTypeNameByIndex(fillType), storage.capacity)
-		end
-	end
-end
-
 function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, customEnv, i3dMappings)
-	local categoryFillTypes = Revamp.expandFillTypeCategoryInputs(xmlFile, key)
+	Revamp.expandFillTypeCategoryInputs(xmlFile, key)
 
 	if not superFunc(self, components, xmlFile, key, customEnv, i3dMappings) then
 		return false
 	end
-
-	Revamp.applyCategoryStorageCapacities(self, categoryFillTypes)
 
 	local pointHideFromMenu = xmlFile:getBool(key .. ".productions#hideFromMenu", false)
 	local pointAutoStart = xmlFile:getBool(key .. ".productions#autoStart", false)

@@ -458,11 +458,25 @@ end
 -- Das ist einmal der Gesamt-Boost (Booster und Master-Booster multiplizieren sich) und einmal der aktuelle Wetterfaktor.
 -- Wie schon beim Gebäudekosten-Eintrag in der pointsList (siehe revamp_productionDialog.lua) wird dafür kein neues Element per .new() erzeugt (siehe Kommentar bei addRecipeRowBackground - applyProfile() auf frisch erzeugten Elementen rendert nicht zuverlässig).
 -- Stattdessen wird der bereits vorhandene "infoCosts"-Text zweimal geklont, einmal als Beschriftung mit umgehängtem Profil und einmal als Wert, und um die passende Anzahl Zeilen nach unten verschoben.
--- Bewusst ohne den Hintergrundbalken der anderen drei Zeilen (fs25_productionDetailsInfoBg) - der hat kein eigenes "name"-Attribut zum sicheren Klonen.
+-- Der Hintergrundbalken jeder zweiten Zeile wird genauso geklont: er trägt kein "name"-Attribut und ist deshalb nicht über cell:getAttribute() zu bekommen, wohl aber über seinen Elementtyp (siehe Revamp.getDetailsInfoBackground).
 
 -- Abstand der ersten zusätzlichen Zeile zur Kostenzeile und Höhe einer weiteren Zeile, beides in Pixeln des Vanilla-Rasters.
 Revamp.DETAILS_INFO_FIRST_ROW = -96
 Revamp.DETAILS_INFO_ROW_HEIGHT = -32
+
+---Sucht einen der Hintergrundbalken des Infokastens, um ihn als Vorlage zu klonen.
+---Die Balken tragen kein "name"-Attribut, sind aber die einzigen ThreePartBitmaps in diesem Container und damit über ihren Elementtyp eindeutig zu finden.
+---@param infoBox any Container, in dem die Zeilen hängen
+---@return any|nil background Vanillas Hintergrundbalken, nil wenn keiner gefunden wurde
+function Revamp.getDetailsInfoBackground(infoBox)
+	for _, element in ipairs(infoBox.elements) do
+		if not element.revampLine and element:isa(ThreePartBitmapElement) then
+			return element
+		end
+	end
+
+	return nil
+end
 
 ---Hängt eine weitere Beschriftung/Wert-Zeile unter den Infokasten.
 ---@param infoCosts any Vorhandene Kostenzeile, die als Vorlage geklont wird
@@ -472,6 +486,20 @@ Revamp.DETAILS_INFO_ROW_HEIGHT = -32
 ---@param valueText string Wert
 function Revamp.addDetailsInfoLine(infoCosts, infoBox, rowIndex, labelText, valueText)
 	local offset = Revamp.DETAILS_INFO_FIRST_ROW + rowIndex * Revamp.DETAILS_INFO_ROW_HEIGHT
+
+	-- Vanilla hinterlegt jede zweite Zeile mit einem Balken (Status und Kosten, nicht aber Zyklen). Die Kostenzeile darüber ist hinterlegt, der Wechsel setzt sich hier also mit der zweiten Zusatzzeile fort.
+	-- Der Balken wird vor Beschriftung und Wert eingehängt, sonst läge er als zuletzt gezeichnetes Element über deren Text.
+	if rowIndex % 2 == 1 then
+		local backgroundTemplate = Revamp.getDetailsInfoBackground(infoBox)
+		if backgroundTemplate ~= nil then
+			local background = backgroundTemplate:clone(infoBox)
+			background.revampLine = true
+			local backgroundPos = GuiUtils.getNormalizedScreenValues(string.format("0px %dpx", offset), "0px 0px")
+			background:setPosition(backgroundPos[1], backgroundPos[2])
+			background:updateAnchorDeltas()
+			background:updateAbsolutePosition()
+		end
+	end
 
 	local label = infoCosts:clone(infoBox)
 	label.revampLine = true
@@ -499,7 +527,7 @@ function Revamp.updateDetailsCellInfoLines(self, cell)
 	-- Aufräumen muss deshalb dort ansetzen, sonst bleiben sie bei jedem Produktionswechsel stehen.
 	Revamp.removeRevampElements(infoBox)
 
-	local production = self:getSelectedProduction()
+	local production, productionPoint = self:getSelectedProduction()
 	if production == nil then
 		return
 	end
@@ -516,6 +544,14 @@ function Revamp.updateDetailsCellInfoLines(self, cell)
 	if hasBoostInputs then
 		local combinedFactor = (production.boosterFactor or 1) * (production.masterFactor or 1)
 		Revamp.addDetailsInfoLine(infoCosts, infoBox, rowIndex, g_i18n:getText("revamp_ui_production_totalBoost"), "x" .. g_i18n:formatNumber(combinedFactor, 2))
+		rowIndex = rowIndex + 1
+	end
+
+	-- Legende für das Kennzeichen an den Mengenangaben der Materialienliste (siehe Revamp.markSharedStorageFillLevel in revamp_storage.lua).
+	-- Sie gilt für den ganzen Produktionspunkt und nicht für die gewählte Rezeptlinie, steht hier aber trotzdem richtig: der Infokasten zeigt mit Status und Gebäudekosten ohnehin schon beides gemischt.
+	local sharedCapacity = Revamp.getSharedStorageCapacity(productionPoint)
+	if sharedCapacity ~= nil then
+		Revamp.addDetailsInfoLine(infoCosts, infoBox, rowIndex, Revamp.SHARED_STORAGE_MARK .. " " .. g_i18n:getText("revamp_ui_production_sharedStorage"), g_i18n:formatVolume(sharedCapacity, 0))
 		rowIndex = rowIndex + 1
 	end
 end

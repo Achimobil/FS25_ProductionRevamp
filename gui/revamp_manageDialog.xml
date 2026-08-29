@@ -13,22 +13,22 @@
                 <SmoothList profile="revamp_manageList" id="manageList" listSectionHeader="section" startClipperElementName="startClipperManage" endClipperElementName="endClipperManage">
                     <ListItem profile="revamp_manageListItem" name="fillTypeRow">
                         <Bitmap profile="revamp_manageListItemIcon" name="icon"/>
-                        <Text profile="revamp_manageListItemName"              name="name"/>
-                        <Text profile="revamp_manageListItemAmount"            name="amount"/>
-                        <Text profile="revamp_manageListItemMode"              name="mode"/>
+                        <Text profile="revamp_manageListItemName"   name="name"/>
+                        <Text profile="revamp_manageListItemAmount" name="amount"/>
+                        <Text profile="revamp_manageListItemMode"   name="mode"/>
                     </ListItem>
                     <!-- Zweite Zeilenform für die Produktionslinien-Ansicht: kein Fülltyp-Icon und keine Mengenspalte, dafür mehr Platz für Name und Auswahlmodi -->
                     <ListItem profile="revamp_manageListItem" name="productionRow">
-                        <Text profile="revamp_manageListItemProductionName"    name="name"/>
-                        <Text profile="revamp_manageListItemProductionModes"   name="modes"/>
+                        <Text profile="revamp_manageListItemProductionName"  name="name"/>
+                        <Text profile="revamp_manageListItemProductionModes" name="modes"/>
                     </ListItem>
                     <!-- Dritte Zeilenform für die Verteilen-Ansicht: statt eines Fülltyps steht hier eine Zielproduktion mit ihrem Vorschaubild, der eingestellten Obergrenze, den laufenden Lieferkosten und der Verteilstufe -->
                     <ListItem profile="revamp_manageListItem" name="distributionRow">
                         <Bitmap profile="revamp_manageListItemIcon" name="icon"/>
-                        <Text profile="revamp_manageListItemTargetName" name="name"/>
-                        <Text profile="revamp_manageListItemLimit"      name="limit"/>
-                        <Text profile="revamp_manageListItemCosts"      name="costs"/>
-                        <Text profile="revamp_manageListItemLevel"      name="level"/>
+                        <Text profile="revamp_manageListItemTargetName"        name="name"/>
+                        <Text profile="revamp_manageListItemLimit"             name="limit"/>
+                        <Text profile="revamp_manageListItemCosts"             name="costs"/>
+                        <Text profile="revamp_manageListItemLevel"             name="level"/>
                     </ListItem>
                     <ListItem profile="fs25_productionDetailsListSection" name="section">
                         <Text profile="fs25_productionDetailsListSectionTitle" name="title"/>
@@ -40,6 +40,9 @@
                     <Slider profile="fs25_listSlider" dataElementId="manageList"/>
                 </ThreePartBitmap>
             </GuiElement>
+
+            <!-- Legende für das Kennzeichen an den Mengenangaben, sichtbar nur bei einer Produktionsstätte mit geteiltem Lagerplatz (siehe RevampManageDialog:updateSharedStorageHint) -->
+            <Text profile="revamp_manageDialogFootnote" id="sharedStorageHint"/>
         </GuiElement>
 
         <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
@@ -131,6 +134,13 @@
         <Profile name="revamp_manageListItemLevel" extends="revamp_manageListItemMode">
             <position value="830px 0px"/>
             <width value="180px"/>
+        </Profile>
+        <!-- Fußnote unter der Liste: grau und kleiner als die Zeilen selbst, damit sie als Erläuterung und nicht als weitere Zeile gelesen wird.
+             Die Liste endet 580px unter der oberen Kante des Inhaltsbereichs, die Knopfleiste beginnt 68px über der unteren Kante des Dialogs - dazwischen liegt genau diese eine Zeile -->
+        <Profile name="revamp_manageDialogFootnote" extends="fs25_textGrey" with="anchorTopLeft">
+            <position value="20px -588px"/>
+            <width value="1020px"/>
+            <textSize value="14px"/>
         </Profile>
     </GUIProfiles>
 </GUI>
