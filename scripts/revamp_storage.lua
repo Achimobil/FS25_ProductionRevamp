@@ -157,8 +157,7 @@ function Revamp.loadProductionStorage(self, superFunc, components, xmlFile, key,
 
 	self.outputFillTypeIdsStorage = {}
 	if self.palletSpawner ~= nil then
-		self.palletSpawner.pendingLiters = {}
-		self.palletSpawner.pendingItem = {}
+		Revamp.prepareSpawnBookkeeping(self.palletSpawner)
 	end
 
 	-- Standardmäßig alles auf STORE - Revamp.loadProductionStorageFromXMLFile schaltet die tatsächlich aktiven Modi direkt danach aus dem Savegame wieder um.

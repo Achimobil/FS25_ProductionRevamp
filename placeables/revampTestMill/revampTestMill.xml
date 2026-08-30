@@ -269,7 +269,7 @@
                  auch bei einem Wert ungleich 1 zu testen), landen also nie selbst im Lager. Der
                  wheatFlour-Zutat-Eintrag (mix=0, keine Mix-Gruppe/Booster) ist damit der
                  vorgesehene Testfall für die neue Converter-Gruppen-Anzeige -->
-            <unloadTrigger exactFillRootNode="exactFillNode" aiNode="unloadTriggerAINode" fillTypeCategories="REVAMP_GRAIN" fillTypes="SORGHUM CANOLA SOYBEAN WATER FLOUR">
+            <unloadTrigger exactFillRootNode="exactFillNode" aiNode="unloadTriggerAINode" fillTypeCategories="REVAMP_GRAIN" fillTypes="SORGHUM CANOLA SOYBEAN WATER FLOUR STRAW">
                 <fillTypeConversion incomingFillType="CANOLA"  outgoingFillType="WHEAT" ratio="1"/>
                 <fillTypeConversion incomingFillType="SOYBEAN" outgoingFillType="WHEAT" ratio="0.8"/>
             </unloadTrigger>

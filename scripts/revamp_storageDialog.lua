@@ -17,15 +17,15 @@ function RevampStorageDialog.register()
 	RevampStorageDialog.INSTANCE = dialog
 end
 
----Öffnet den Auslagern-Dialog mit den auslagerbaren FillTypes eines Produktionspunkts.
+---Öffnet den Auslagern-Dialog mit den auslagerbaren FillTypes einer Produktionsstätte oder eines Silos.
 ---@param farmList table Liste auswählbarer Farmen (Empfänger der gespawnten Objekte)
----@param title string Dialogtitel (Name des Produktionspunkts)
----@param options table Auswahlbare FillType-Einträge inkl. ihrer Verpackungsoptionen (siehe Revamp.spawnerRun)
----@param productionPoint table ProductionPoint-Instanz
-function RevampStorageDialog.show(farmList, title, options, productionPoint)
+---@param title string Dialogtitel (Name der Produktionsstätte bzw. des Silos)
+---@param options table Auswahlbare FillType-Einträge inkl. ihrer Verpackungsoptionen (siehe Revamp.buildSpawnOptions)
+---@param spawnTarget table Spawn-Ziel, aus dem ausgelagert wird
+function RevampStorageDialog.show(farmList, title, options, spawnTarget)
 	if RevampStorageDialog.INSTANCE ~= nil then
 		local dialog = RevampStorageDialog.INSTANCE
-		dialog.productionPoint = productionPoint
+		dialog.spawnTarget = spawnTarget
 		dialog:setTitle(title)
 		dialog:setFillTypes(options)
 		dialog:setFarmList(farmList)
@@ -59,7 +59,12 @@ end
 ---- das eigentliche Spawn-Event mit der gewählten Menge ausgelöst
 function RevampStorageDialog:onClickOk()
 	if self.selectedOption.openmenu ~= nil then
-		self.productionPoint:openMenu()
+		-- Ein Silo hat kein Produktionsmenü: dort ist der Pseudo-Eintrag nur die Zeile "Lager ist leer", und die schließt den Dialog einfach.
+		if self.spawnTarget.openMenu ~= nil then
+			self.spawnTarget:openMenu()
+		else
+			self:close()
+		end
 	else
 		local selectedPackage = self.selectedOption.packages[self.selectedPackage]
 		local state = self.amountElement:getState()
@@ -75,7 +80,7 @@ function RevampStorageDialog:onClickOk()
 			pendingLiters = selectedPackage.capacity * amount
 		end
 
-		Revamp_EventSpawn.sendEvent(self.productionPoint, self.farmList[self.selectedFarm].farmId, self.selectedFillType, pendingLiters, selectedPackage.width, selectedPackage.height, selectedPackage.length, selectedPackage.capacity, selectedPackage.type, selectedPackage.customEnvironment, selectedPackage.treeId, amount, self.selectedColor[1], self.selectedColor[2], self.selectedColor[3])
+		Revamp_EventSpawn.sendEvent(self.spawnTarget, self.farmList[self.selectedFarm].farmId, self.selectedFillType, pendingLiters, selectedPackage.width, selectedPackage.height, selectedPackage.length, selectedPackage.capacity, selectedPackage.type, selectedPackage.customEnvironment, selectedPackage.treeId, amount, self.selectedColor[1], self.selectedColor[2], self.selectedColor[3])
 		self:close()
 	end
 end
@@ -141,7 +146,7 @@ function RevampStorageDialog:onClickPackages(state)
 
 	-- selectedPackage.capacity ist 0 bei den Pseudo-Paketen ("Produktion verwalten"/"Lager ist leer") -
 	-- Division vermeiden, für die wird ohnehin keine Menge gebraucht (onClickOk geht dort direkt in
-	-- self.productionPoint:openMenu()).
+	-- self.spawnTarget:openMenu()).
 	local fullPalletCount = 0
 	local hasRemainder = false
 	if selectedPackage.capacity > 0 then

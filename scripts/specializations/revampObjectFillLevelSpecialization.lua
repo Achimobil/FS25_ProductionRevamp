@@ -57,28 +57,30 @@ function RevampObjectFillLevelSpecialization.registerXMLPaths(schema, basePath)
 	schema:setXMLSpecializationType()
 end
 
----Liefert die Lager, deren Bestandsänderungen die Anzeige auslösen sollen.
----Beim Silo bewusst über die Verladestation statt über spec_silo.storages: bei <storages perFarm="true"> legt Vanilla im Mehrspieler pro Lager-Eintrag eine eigene Kopie je Farm an, die Station liefert davon nur die tatsächlich zuständigen.
+---Liefert die Lager, aus denen sich der angezeigte Bestand ergibt.
+---Beim Silo bewusst über die Lager selbst und nicht über die Verladestation: die nimmt ein Lager nur auf, wenn dessen Fülltypen zu einem ihrer Ladepunkte passen -
+---ein Silo ohne Verladestelle hätte dort gar keine Lager stehen, obwohl welche da sind.
 ---@param placeable table Placeable-Instanz
 ---@return table storages Liste der Lager
 function RevampObjectFillLevelSpecialization.getStorages(placeable)
 	if placeable.spec_silo ~= nil then
-		return placeable.spec_silo.loadingStation:getSourceStorages()
+		return Revamp.getSiloStorages(placeable)
 	end
 
 	return {placeable.spec_productionPoint.productionPoint.storage}
 end
 
----Liefert den Bestand eines Fülltyps, unabhängig davon ob die Placeable ein Silo oder eine Produktionsstätte ist.
+---Liefert den Bestand eines Fülltyps über alle Lager der Placeable.
 ---@param placeable table Placeable-Instanz
 ---@param fillTypeIndex number FillType-Index
 ---@return number fillLevel Bestand in Litern
 function RevampObjectFillLevelSpecialization.getFillLevel(placeable, fillTypeIndex)
-	if placeable.spec_silo ~= nil then
-		return placeable.spec_silo.loadingStation:getFillLevel(fillTypeIndex, placeable:getOwnerFarmId())
+	local fillLevel = 0
+	for _, storage in ipairs(RevampObjectFillLevelSpecialization.getStorages(placeable)) do
+		fillLevel = fillLevel + storage:getFillLevel(fillTypeIndex)
 	end
 
-	return placeable.spec_productionPoint.productionPoint.storage:getFillLevel(fillTypeIndex)
+	return fillLevel
 end
 
 ---Sammelt die Fülltypen eines Eintrags aus #fillType, #fillTypes und #fillTypeCategories.

@@ -66,42 +66,47 @@ function RevampDisplaySpecialization.registerXMLPaths(schema, basePath)
 	schema:setXMLSpecializationType()
 end
 
----Liefert die Lager, deren Bestandsänderungen die Anzeige auslösen sollen.
----Beim Silo bewusst über die Verladestation statt über spec_silo.storages: bei <storages perFarm="true"> legt Vanilla im Mehrspieler pro Lager-Eintrag eine eigene Kopie je Farm an, die Station liefert davon nur die tatsächlich zuständigen.
+---Liefert die Lager, aus denen sich der angezeigte Bestand ergibt.
+---Beim Silo bewusst über die Lager selbst und nicht über die Verladestation: die nimmt ein Lager nur auf, wenn dessen Fülltypen zu einem ihrer Ladepunkte passen -
+---ein Silo ohne Verladestelle hätte dort gar keine Lager stehen, obwohl welche da sind.
 ---@param placeable table Placeable-Instanz
 ---@return table storages Liste der Lager
 function RevampDisplaySpecialization.getStorages(placeable)
 	if placeable.spec_silo ~= nil then
-		return placeable.spec_silo.loadingStation:getSourceStorages()
+		return Revamp.getSiloStorages(placeable)
 	end
 
 	return {placeable.spec_productionPoint.productionPoint.storage}
 end
 
----Liefert den Bestand eines Fülltyps, unabhängig davon ob die Placeable ein Silo oder eine Produktionsstätte ist.
+---Liefert den Bestand eines Fülltyps über alle Lager der Placeable.
 ---@param placeable table Placeable-Instanz
 ---@param fillTypeIndex number FillType-Index
 ---@return number fillLevel Bestand in Litern
 function RevampDisplaySpecialization.getFillLevel(placeable, fillTypeIndex)
-	if placeable.spec_silo ~= nil then
-		return placeable.spec_silo.loadingStation:getFillLevel(fillTypeIndex, placeable:getOwnerFarmId())
+	local fillLevel = 0
+	for _, storage in ipairs(RevampDisplaySpecialization.getStorages(placeable)) do
+		fillLevel = fillLevel + storage:getFillLevel(fillTypeIndex)
 	end
 
-	return placeable.spec_productionPoint.productionPoint.storage:getFillLevel(fillTypeIndex)
+	return fillLevel
 end
 
 ---Liefert die Kapazität eines Fülltyps über alle Lager der Placeable.
 ---Die LS22-Fassung überschrieb den Wert hier in jedem Schleifendurchlauf und behielt am Ende den des zuletzt durchlaufenen Lagers, auch wenn dieses den angezeigten Fülltyp gar nicht führt.
----Über die Abladestelle statt über die Lagerliste, weil sie im Mehrspieler bei <storages perFarm="true"> nur die Lager der eigenen Farm zusammenzählt - die Lagerliste enthält dort je Eintrag eine Kopie pro Farm.
 ---@param placeable table Placeable-Instanz
 ---@param fillTypeIndex number FillType-Index
 ---@return number capacity Kapazität in Litern
 function RevampDisplaySpecialization.getCapacity(placeable, fillTypeIndex)
-	if placeable.spec_silo ~= nil then
-		return placeable.spec_silo.unloadingStation:getCapacity(fillTypeIndex, placeable:getOwnerFarmId())
+	local capacity = 0
+	for _, storage in ipairs(RevampDisplaySpecialization.getStorages(placeable)) do
+		-- Nur Lager, die diesen Fülltyp überhaupt führen: getCapacity liefert sonst den gemeinsamen Topf eines Lagers, das damit gar nichts zu tun hat.
+		if storage:getIsFillTypeSupported(fillTypeIndex) then
+			capacity = capacity + storage:getCapacity(fillTypeIndex)
+		end
 	end
 
-	return placeable.spec_productionPoint.productionPoint.storage:getCapacity(fillTypeIndex)
+	return capacity
 end
 
 ---Liest die Farbumschlag-Grenzen einer Anzeige.

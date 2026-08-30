@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.23</version>
+    <version>0.0.0.24</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.24 - Silos können ihre Waren jetzt genauso als Palette, Ballen oder Stammholz auslagern wie Produktionsstätten
 0.0.0.23 - Beim Auslagern von Stammholz wird jetzt die Menge abgezogen, die im Stamm tatsächlich steckt
 0.0.0.22 - Erzeugnisse lassen sich jetzt auch als Stammholz auslagern, die Länge ist dabei wählbar
 0.0.0.21 - Produktionsstätten, Silos und Gewächshäuser können ihren Bestand jetzt am Gebäude zeigen: als mitwachsenden Stapel und als Ziffernanzeige
@@ -76,6 +77,7 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
     <placeableSpecializations>
         <specialization name="revampObjectFillLevel" className="RevampObjectFillLevelSpecialization" filename="scripts/specializations/revampObjectFillLevelSpecialization.lua"/>
         <specialization name="revampDisplay"         className="RevampDisplaySpecialization"         filename="scripts/specializations/revampDisplaySpecialization.lua"/>
+        <specialization name="revampSpawner"         className="RevampSpawnerSpecialization"         filename="scripts/specializations/revampSpawnerSpecialization.lua"/>
     </placeableSpecializations>
 
     <!-- Eigene Typen statt einer Erweiterung der Vanilla-Typen: ein Modder entscheidet damit pro Placeable, ob sie die Zusatzanzeigen bekommt.
@@ -84,6 +86,7 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
         <type name="RevampSilo"           parent="silo"           filename="$dataS/scripts/placeables/Placeable.lua">
             <specialization name="revampObjectFillLevel"/>
             <specialization name="revampDisplay"/>
+            <specialization name="revampSpawner"/>
         </type>
         <type name="RevampProductionPoint" parent="productionPoint" filename="$dataS/scripts/placeables/Placeable.lua">
             <specialization name="revampObjectFillLevel"/>

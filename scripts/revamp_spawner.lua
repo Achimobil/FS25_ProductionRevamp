@@ -85,14 +85,53 @@ function Revamp.getBaleTypesForSpawn(self)
 end
 
 
+---Legt die Buchführung an, die das Auslagern über den Palettenspawner braucht.
+---Vanilla kennt diese beiden Tabellen nicht: zwischen dem Anstoßen und dem tatsächlichen Platzieren eines Objekts liegen mehrere Frames, solange muss gemerkt werden,
+---wie viele Liter für einen Fülltyp noch aus dem Lager zu nehmen sind und welche Verpackung dafür gilt.
+---@param palletSpawner table Palettenspawner des Spawn-Ziels
+function Revamp.prepareSpawnBookkeeping(palletSpawner)
+	palletSpawner.pendingLiters = {}
+	palletSpawner.pendingItem = {}
+end
+
+---Liefert die Lager eines Silos, die zur Farm des Gebäudes gehören.
+---Bewusst nicht über die Verladestation, obwohl die eine fertige Zusammenfassung hätte: sie nimmt ein Lager nur auf, wenn dessen Fülltypen zu einem ihrer Ladepunkte passen.
+---Ein Silo, das seinen Inhalt ausschließlich über das Auslagern abgibt, braucht keine Verladestelle - dort stünde in der Station dann gar kein Lager, obwohl welche da sind.
+---@param placeable table Silo-Placeable
+---@return table storages Lager der eigenen Farm
+function Revamp.getSiloStorages(placeable)
+	local farmId = placeable:getOwnerFarmId()
+	local storages = {}
+
+	for _, storage in ipairs(placeable.spec_silo.storages) do
+		-- Bei <storages perFarm="true"> legt Vanilla im Mehrspieler je Lager-Eintrag eine Kopie pro Farm an; gemeint ist hier nur die des Gebäudes.
+		if storage:getOwnerFarmId() == farmId then
+			table.insert(storages, storage)
+		end
+	end
+
+	return storages
+end
+
 ---Zieht eine ausgelagerte Menge vom Bestand des Spawn-Ziels ab.
----Beim Silo über die Verladestation statt über die Lagerliste: sie kennt die Zuordnung von Farm zu Lager und verteilt den Abzug richtig, wenn ein Fülltyp in mehreren Lagern liegt.
 ---@param source table Spawn-Ziel, aus dem ausgelagert wird
 ---@param fillTypeIndex number FillType-Index
 ---@param delta number Abzuziehende Menge in Litern
 function Revamp.removeSpawnSourceFillLevel(source, fillTypeIndex, delta)
 	if source.spec_silo ~= nil then
-		source.spec_silo.loadingStation:removeFillLevel(fillTypeIndex, delta, source:getOwnerFarmId())
+		-- Ein Fülltyp kann in mehreren Lagern desselben Silos liegen, dann wird der Reihe nach abgeräumt.
+		for _, storage in ipairs(Revamp.getSiloStorages(source)) do
+			local available = storage:getFillLevel(fillTypeIndex)
+			if available > 0 then
+				local moved = math.min(delta, available)
+				storage:setFillLevel(available - moved, fillTypeIndex)
+				delta = delta - moved
+				if delta <= 0 then
+					return
+				end
+			end
+		end
+
 		return
 	end
 
@@ -137,6 +176,8 @@ function Revamp.registerSpawnerXMLPaths(schema)
 	end
 	Revamp.spawnerPathsRegistered = true
 
+	schema:register(XMLValueType.NODE_INDEX, "placeable.revampSpawner#triggerNode", "Trigger, an dem der Spieler das Auslagern auslöst - nur am Silo nötig, eine Produktionsstätte hat dafür ihren eigenen")
+	PalletSpawner.registerXMLPaths(schema, "placeable.revampSpawner.palletSpawner")
 	schema:register(XMLValueType.NODE_INDEX, "placeable.revampSpawner#woodSpawnNode", "Stelle, an der ausgelagerte Stämme abgelegt werden - der Platz dort wird nicht geprüft")
 	schema:register(XMLValueType.STRING, "placeable.revampSpawner#woodTreeType", "Baumart, aus der die Stämme entstehen", Revamp.WOOD_LOG_DEFAULT_TREE_TYPE)
 	schema:register(XMLValueType.INT, "placeable.revampSpawner#minWoodLogLength", "Kürzeste wählbare Stammlänge in Metern", 6)
@@ -509,6 +550,41 @@ function Revamp.buildSpawnOptions(self, source, outputFillTypes)
 		return options
 	end
 
+---Liefert die Farmen, denen das Ausgelagerte gehören kann.
+---@param playerFarm? table Eigene Farm, die nicht mit in der Liste stehen soll
+---@return table farmList Auswählbare Farmen
+function Revamp.getSpawnFarmList(playerFarm)
+	local farmList = {}
+	for _, farm in pairs(g_farmManager:getFarms()) do
+		if not farm.isSpectator and farm ~= playerFarm and farm.showInFarmScreen then
+			table.insert(farmList, farm)
+		end
+	end
+
+	return farmList
+end
+
+---Öffnet den Auslagern-Dialog für ein Silo.
+---Anders als bei der Produktionsstätte kommen die Waren nicht aus einer Erzeugnis-Liste, sondern aus den Lagern selbst - ein Silo hat keine Ausgänge, alles darin ist auslagerbar.
+---@param placeable table Silo-Placeable mit der Spawner-Spezialisierung
+function Revamp.showSiloSpawnDialog(placeable)
+	local fillLevels = {}
+	for _, storage in ipairs(Revamp.getSiloStorages(placeable)) do
+		for fillTypeIndex, fillLevel in pairs(storage:getFillLevels()) do
+			fillLevels[fillTypeIndex] = (fillLevels[fillTypeIndex] or 0) + fillLevel
+		end
+	end
+
+	local outputFillTypes = {}
+	for fillTypeIndex, fillLevel in pairs(fillLevels) do
+		table.insert(outputFillTypes, {fillTypeIndex = fillTypeIndex, fillLevel = fillLevel})
+	end
+
+	local options = Revamp.buildSpawnOptions(placeable.spec_revampSpawner, placeable, outputFillTypes)
+
+	RevampStorageDialog.show(Revamp.getSpawnFarmList(), placeable:getName(), options, placeable)
+end
+
 ---Ersetzt Vanillas ProductionPointActivatable.run: Kauf-Trigger unverändert wie Vanilla,
 ---beim Öffnen der eigenen Produktion aber (falls ein Palettenspawner existiert) statt direkt ins Menü zu springen erst den Auslagern-Dialog mit allen auslagerbaren Output-FillTypes aufbauen.
 ---@param self table ProductionPointActivatable-Instanz
@@ -549,14 +625,7 @@ function Revamp.spawnerRun(self, superFunc, menue)
 			})
 		end
 
-		local farmList = {}
-		for _, farm in pairs(g_farmManager:getFarms()) do
-			if not farm.isSpectator and farm ~= self.playerFarm and farm.showInFarmScreen then
-				table.insert(farmList, farm)
-			end
-		end
-
-		RevampStorageDialog.show(farmList, self.productionPoint:getName(), options, self.productionPoint)
+		RevampStorageDialog.show(Revamp.getSpawnFarmList(self.playerFarm), self.productionPoint:getName(), options, self.productionPoint)
 	end
 end
 
@@ -790,9 +859,12 @@ function Revamp.spawnerGetSupportedFillTypes(self, superFunc)
 		end
 	end
 
-	local treeSaplings = g_fillTypeManager:getFillTypeIndexByName("TREESAPLINGS")
-	if self.fillTypeIdToPallet[treeSaplings] == nil then
-		self.fillTypeIdToPallet[treeSaplings] = {filename = "nope"}
+	-- Baumsetzlinge und Holz genauso: die einen bekommen ihre Palette erst beim Spawnen zugeordnet, das andere wird als Stamm abgelegt statt platziert.
+	for _, fillTypeName in ipairs({"TREESAPLINGS", "WOOD"}) do
+		local fillTypeIndex = g_fillTypeManager:getFillTypeIndexByName(fillTypeName)
+		if fillTypeIndex ~= nil and self.fillTypeIdToPallet[fillTypeIndex] == nil then
+			self.fillTypeIdToPallet[fillTypeIndex] = {filename = "nope"}
+		end
 	end
 
 	return self.fillTypeIdToPallet
