@@ -110,9 +110,13 @@ end
 -- über die Placeable-XML kann der Modder eine andere wählen, etwa eine Art, die nur seine Karte mitbringt.
 Revamp.WOOD_LOG_DEFAULT_TREE_TYPE = "lodgepolePine"
 
--- Liter Holz je Meter Stammlänge. Die Werte stammen aus dem LS22 und sind dort an einer Fichte gemessen -
--- eine andere Baumart liefert bei gleicher Länge etwas andere Mengen, die Zahlen sind also eine Näherung und keine exakte Umrechnung.
-Revamp.WOOD_LITERS_PER_METER = {350, 697, 1023, 1304, 1585, 1861, 2121, 2365, 2579, 2787, 2985, 3182, 3373, 3552, 3711, 3863, 4004, 4130, 4236, 4326}
+-- Liter Holz je Stammlänge in Metern. Das Spiel rechnet die Menge aus dem Volumen des geschnittenen Stamms (Volumen mal volumeToLiter der Holzart),
+-- das steht aber erst zwei Frames nach dem Ablegen fest - der Dialog braucht die Zahl schon vorher, um Stückzahl und Preis anzuzeigen. Deshalb eine Tabelle.
+-- Die Werte für 6 bis 12 Meter sind an der Küstenkiefer im Spiel gemessen, indem Stämme an einem Sägewerk abgegeben und die Bestandsänderungen abgelesen wurden.
+-- Je Länge wurden zwei Stämme gemessen: die beiden Varianten derselben Wachstumsstufe sind unterschiedlich dick und liefern bis zu 6 Prozent auseinanderliegende Mengen, hier steht ihr Mittel.
+-- 9 und 11 Meter sind zwischen den Messwerten interpoliert, 1 bis 5 Meter aus dem Verhältnis der gemessenen Längen hochgerechnet.
+-- Über 12 Meter endet die Tabelle bewusst: dort fehlen Messwerte, und ein Baum ist irgendwann schlicht nicht mehr länger. Längere Angaben in der XML werden auf diesen Wert begrenzt.
+Revamp.WOOD_LITERS_PER_METER = {256, 509, 747, 952, 1157, 1366, 1558, 1711, 1926, 2141, 2387, 2632}
 
 -- Seitlicher Abstand zwischen zwei Stämmen desselben Auftrags. Ohne ihn entstünden alle an derselben Stelle und lägen ineinander.
 -- Gemessen entlang der lokalen X-Achse der Ablagestelle, die Stämme reihen sich also quer zu ihrer eigenen Länge auf.
@@ -136,7 +140,7 @@ function Revamp.registerSpawnerXMLPaths(schema)
 	schema:register(XMLValueType.NODE_INDEX, "placeable.revampSpawner#woodSpawnNode", "Stelle, an der ausgelagerte Stämme abgelegt werden - der Platz dort wird nicht geprüft")
 	schema:register(XMLValueType.STRING, "placeable.revampSpawner#woodTreeType", "Baumart, aus der die Stämme entstehen", Revamp.WOOD_LOG_DEFAULT_TREE_TYPE)
 	schema:register(XMLValueType.INT, "placeable.revampSpawner#minWoodLogLength", "Kürzeste wählbare Stammlänge in Metern", 6)
-	schema:register(XMLValueType.INT, "placeable.revampSpawner#maxWoodLogLength", "Längste wählbare Stammlänge in Metern", 6)
+	schema:register(XMLValueType.INT, "placeable.revampSpawner#maxWoodLogLength", "Längste wählbare Stammlänge in Metern, höchstens 12", 6)
 	schema:register(XMLValueType.INT, "placeable.revampSpawner#maxWoodLogs", "Höchstzahl der Stämme, die auf einmal ausgelagert werden dürfen", 15)
 end
 
