@@ -86,9 +86,167 @@ function Revamp.getProductionBoostInputs(production, mix)
 	return result
 end
 
+-- Ein Fülltyp, der an derselben Produktionsstätte Zutat und Erzeugnis zugleich ist, stand in der Materialienliste bisher zweimal: einmal unter den eingehenden, einmal unter den ausgehenden.
+-- Er bekommt jetzt eine eigene Sektion dazwischen - dieselbe Einteilung und dieselbe Überschrift, die der Verwalten-Dialog dafür schon benutzt.
+--
+-- Umgesetzt, ohne Vanillas Zellenlogik anzufassen: die Doppelrollen stehen am Anfang von sortedOutputFillTypes, denn ein Fülltyp mit Doppelrolle ist ja auch ein Erzeugnis.
+-- Die neue Sektion ist damit "die ersten N Einträge der Erzeugnisse" und die Erzeugnis-Sektion "der Rest, um N versetzt" - eine reine Umrechnung von Sektions- und Zeilennummer,
+-- die vor dem Aufruf der Vanilla-Funktionen passiert. Alles dahinter, auch unsere eigenen angehängten Funktionen, sieht weiterhin Vanillas Nummerierung und bleibt unverändert.
+
+---Sortierung der Fülltyp-Listen: nach dem angezeigten Namen, wie Vanilla es auch tut.
+---@param a number FillType-Index
+---@param b number FillType-Index
+---@return boolean isSmaller true, wenn a vor b einsortiert wird
+function Revamp.compareFillTypeTitles(a, b)
+	return g_fillTypeManager:getFillTypeTitleByIndex(a) < g_fillTypeManager:getFillTypeTitleByIndex(b)
+end
+
+---Baut die beiden Fülltyp-Listen eines Produktionspunktes neu auf: Zutaten ohne Doppelrolle, und die Doppelrollen vor den reinen Erzeugnissen.
+---@param productionPoint table ProductionPoint-Instanz
+function Revamp.splitDetailsFillTypes(productionPoint)
+	productionPoint.revampNumDualFillTypes = 0
+	productionPoint.revampSplitInputCount = #productionPoint.sortedInputFillTypes
+
+	-- Eine Fabrik zeigt in der Materialienliste nur eine einzige Fülltyp-Sektion. Eine zusätzliche Sektion hätte dort keinen Platz, die Doppelrollen würden aus der Liste verschwinden.
+	for _, production in ipairs(productionPoint.productions) do
+		if production.outputs[1] ~= nil and production.outputs[1].isFactory then
+			return
+		end
+	end
+
+	local pureInputs, dual, pureOutputs = Revamp.splitFillTypesByRole(productionPoint)
+	if #dual == 0 then
+		return
+	end
+
+	table.sort(pureInputs, Revamp.compareFillTypeTitles)
+	table.sort(dual, Revamp.compareFillTypeTitles)
+	table.sort(pureOutputs, Revamp.compareFillTypeTitles)
+
+	-- Die Anzahl muss vor dem Anhängen feststehen: die Doppelrollen-Liste wird gleich selbst zur Erzeugnis-Liste und wächst dabei mit.
+	local numDualFillTypes = #dual
+
+	productionPoint.sortedInputFillTypes = pureInputs
+	productionPoint.sortedOutputFillTypes = dual
+	for _, fillTypeIndex in ipairs(pureOutputs) do
+		table.insert(productionPoint.sortedOutputFillTypes, fillTypeIndex)
+	end
+
+	productionPoint.revampNumDualFillTypes = numDualFillTypes
+	productionPoint.revampSplitInputCount = #pureInputs
+end
+
+---Anzahl der Doppelrollen der gerade gewählten Produktionsstätte, 0 wenn die zusätzliche Sektion nicht gilt.
+---Stellt die Aufteilung dabei bei Bedarf her: Vanilla baut die beiden Listen bei jedem Aufbau des Menüs neu aus den Fülltyp-Arrays des Punktes auf und macht sie damit rückgängig.
+---Das passiert mitten in updateProductionLists, wo die Liste auch gleich aufgebaut wird - für etwas Angehängtes ist es da schon zu spät, deshalb hier zum Abfragezeitpunkt.
+---Ob die Aufteilung noch gilt, verrät die Länge der Zutatenliste: sie ist nach dem Aufteilen kürzer und wird von Vanilla wieder auf die volle Länge gebracht.
+---@param self table InGameMenuProductionFrame-Instanz
+---@return number numDualFillTypes Anzahl der Fülltypen mit Doppelrolle
+function Revamp.getNumDualFillTypes(self)
+	local productionPoint = self.selectedProductionPoint
+	if self.pointsSelector:getState() ~= InGameMenuProductionFrame.POINTS_OWNED or productionPoint == nil then
+		return 0
+	end
+
+	-- Eine Fabrik ist eine Placeable und kein Produktionspunkt, ihr fehlen die Listen, um die es hier geht.
+	if productionPoint.sortedInputFillTypes == nil or productionPoint.productions == nil then
+		return 0
+	end
+
+	if productionPoint.revampSplitInputCount ~= #productionPoint.sortedInputFillTypes then
+		Revamp.splitDetailsFillTypes(productionPoint)
+	end
+
+	return productionPoint.revampNumDualFillTypes
+end
+
+---Rechnet eine Sektionsnummer unserer Aufteilung auf Vanillas Schema zurück.
+---@param self table InGameMenuProductionFrame-Instanz
+---@param section number Sektionsnummer unserer Aufteilung
+---@return number section Sektionsnummer in Vanillas Schema
+---@return number indexOffset Wert, der auf die Zeilennummer zu addieren ist
+function Revamp.toVanillaDetailsSection(self, section)
+	local numDualFillTypes = Revamp.getNumDualFillTypes(self)
+	if numDualFillTypes == 0 or section <= 2 then
+		return section, 0
+	end
+
+	-- Die Erzeugnisse stehen bei Vanilla in derselben Sektion wie die Doppelrollen, nur hinter ihnen.
+	if section == 3 then
+		return 2, numDualFillTypes
+	end
+
+	return section - 1, 0
+end
+
+---@param self table InGameMenuProductionFrame-Instanz
+---@param superFunc function Ursprüngliches InGameMenuProductionFrame.getNumberOfSections
+---@param list table Liste, die gerade aufgebaut wird
+---@param section number Sektionsnummer
+---@return number numSections Anzahl der Sektionen
+function Revamp.getNumberOfSections(self, superFunc, list, section)
+	local numSections = superFunc(self, list, section)
+	if list == self.detailsList and Revamp.getNumDualFillTypes(self) > 0 then
+		numSections = numSections + 1
+	end
+
+	return numSections
+end
+
+InGameMenuProductionFrame.getNumberOfSections = Utils.overwrittenFunction(InGameMenuProductionFrame.getNumberOfSections, Revamp.getNumberOfSections)
+
+---@param self table InGameMenuProductionFrame-Instanz
+---@param superFunc function Ursprüngliches InGameMenuProductionFrame.getNumberOfItemsInSection
+---@param list table Liste, die gerade aufgebaut wird
+---@param section number Sektionsnummer unserer Aufteilung
+---@return number numItems Anzahl der Zeilen in dieser Sektion
+function Revamp.getNumberOfItemsInSection(self, superFunc, list, section)
+	local numDualFillTypes = list == self.detailsList and Revamp.getNumDualFillTypes(self) or 0
+	if numDualFillTypes == 0 then
+		return superFunc(self, list, section)
+	end
+
+	if section == 2 then
+		return numDualFillTypes
+	end
+	if section == 3 then
+		return #self.selectedProductionPoint.sortedOutputFillTypes - numDualFillTypes
+	end
+
+	return superFunc(self, list, (Revamp.toVanillaDetailsSection(self, section)))
+end
+
+InGameMenuProductionFrame.getNumberOfItemsInSection = Utils.overwrittenFunction(InGameMenuProductionFrame.getNumberOfItemsInSection, Revamp.getNumberOfItemsInSection)
+
+---@param self table InGameMenuProductionFrame-Instanz
+---@param superFunc function Ursprüngliches InGameMenuProductionFrame.getCellTypeForItemInSection
+---@param list table Liste, die gerade aufgebaut wird
+---@param section number Sektionsnummer unserer Aufteilung
+---@param index number Zeilennummer innerhalb der Sektion
+---@return string cellType Name der Zeilenform
+function Revamp.getCellTypeForItemInSection(self, superFunc, list, section, index)
+	if list ~= self.detailsList then
+		return superFunc(self, list, section, index)
+	end
+
+	local vanillaSection, indexOffset = Revamp.toVanillaDetailsSection(self, section)
+	return superFunc(self, list, vanillaSection, index + indexOffset)
+end
+
+InGameMenuProductionFrame.getCellTypeForItemInSection = Utils.overwrittenFunction(InGameMenuProductionFrame.getCellTypeForItemInSection, Revamp.getCellTypeForItemInSection)
+
 Revamp.RECIPE_TITLE_PREFIX = nil
 
 function Revamp.getTitleForSectionHeader(self, superFunc, list, section)
+	if list == self.detailsList and Revamp.getNumDualFillTypes(self) > 0 then
+		if section == 2 then
+			-- Derselbe Text wie im Verwalten-Dialog: zwei Bezeichnungen für dieselbe Einteilung lesen sich wie zwei verschiedene Dinge.
+			return g_i18n:getText("revamp_manageSectionBoth")
+		end
+
+		section = (Revamp.toVanillaDetailsSection(self, section))
+	end
+
 	local title = superFunc(self, list, section)
 	if list == self.detailsList then
 		Revamp.RECIPE_TITLE_PREFIX = Revamp.RECIPE_TITLE_PREFIX or (g_i18n:getText("ui_productions_recipe") .. ":")
@@ -569,6 +727,12 @@ function Revamp.populateRecipeCellForItemInSection(self, superFunc, list, sectio
 	if isRecipeCell then
 		viewOffset = self.detailsList.viewOffset
 		targetViewOffset = self.detailsList.targetViewOffset
+	end
+
+	-- Ab hier gilt wieder Vanillas Sektionsnummerierung, auch für alles, was sich an populateCellForItemInSection angehängt hat.
+	if list == self.detailsList then
+		local vanillaSection, indexOffset = Revamp.toVanillaDetailsSection(self, section)
+		section, index = vanillaSection, index + indexOffset
 	end
 
 	superFunc(self, list, section, index, cell)
