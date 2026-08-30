@@ -146,7 +146,10 @@ function RevampStorageDialog:onClickPackages(state)
 	local hasRemainder = false
 	if selectedPackage.capacity > 0 then
 		fullPalletCount = math.floor(self.selectedOption.fillLevel / selectedPackage.capacity)
-		hasRemainder = (self.selectedOption.fillLevel - fullPalletCount * selectedPackage.capacity) >= 1
+		-- Manche Verpackungen begrenzen zusätzlich, wie viele auf einmal herauskommen dürfen (Stammholz). Bei allen anderen entspricht max ohnehin dem Bestand.
+		fullPalletCount = math.min(fullPalletCount, selectedPackage.max)
+		-- Eine angefangene Palette ergibt Sinn, ein angefangener Stamm nicht - solche Verpackungen bekommen keinen "Alles"-Eintrag.
+		hasRemainder = not selectedPackage.noRemainder and (self.selectedOption.fillLevel - fullPalletCount * selectedPackage.capacity) >= 1
 	end
 
 	local amountTexts = {}

@@ -59,6 +59,8 @@ function Revamp.registerProductionXMLPaths(schema, basePath)
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).outputs.output(?)#boost", "Output ist von einem Booster betroffen", true)
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).outputs.output(?)#rngAffected", "Output ist von einem Zufallsfaktor betroffen", false)
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).outputs.output(?)#hideFromMenu", "Output ist standardmäßig im Menü versteckt", false)
+
+	Revamp.registerSpawnerXMLPaths(schema)
 end
 
 ProductionPoint.registerXMLPaths = Utils.prependedFunction(ProductionPoint.registerXMLPaths, Revamp.registerProductionXMLPaths)
@@ -214,6 +216,8 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 	if not superFunc(self, components, xmlFile, key, customEnv, i3dMappings) then
 		return false
 	end
+
+	Revamp.loadSpawnerConfig(self, xmlFile, components, i3dMappings)
 
 	local pointHideFromMenu = xmlFile:getBool(key .. ".productions#hideFromMenu", false)
 	local pointAutoStart = xmlFile:getBool(key .. ".productions#autoStart", false)

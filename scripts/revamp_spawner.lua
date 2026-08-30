@@ -84,6 +84,427 @@ function Revamp.getBaleTypesForSpawn(self)
 	return self.baleTypes
 end
 
+
+---Zieht eine ausgelagerte Menge vom Bestand des Spawn-Ziels ab.
+---Beim Silo über die Verladestation statt über die Lagerliste: sie kennt die Zuordnung von Farm zu Lager und verteilt den Abzug richtig, wenn ein Fülltyp in mehreren Lagern liegt.
+---@param source table Spawn-Ziel, aus dem ausgelagert wird
+---@param fillTypeIndex number FillType-Index
+---@param delta number Abzuziehende Menge in Litern
+function Revamp.removeSpawnSourceFillLevel(source, fillTypeIndex, delta)
+	if source.spec_silo ~= nil then
+		source.spec_silo.loadingStation:removeFillLevel(fillTypeIndex, delta, source:getOwnerFarmId())
+		return
+	end
+
+	local available = source.storage.fillLevels[fillTypeIndex]
+	if available ~= nil and available > 0 then
+		source.storage:setFillLevel(available - math.min(delta, available), fillTypeIndex)
+	end
+end
+
+-- Ab hier: Stammholz als weitere Verpackungsart neben Palette und Ballen.
+-- Ein Stamm wird nicht wie eine Palette gesucht und hingestellt - die Platzsuche der Engine kennt nur Fahrzeuge und Paletten.
+-- Stattdessen liegt in der Placeable-XML ein fester Knoten, an dem die Stämme erscheinen; um freien Platz muss sich der Modder mit der Wahl dieser Stelle selbst kümmern.
+
+-- Baumart, aus der ein Stamm entsteht. Die Fichte aus dem LS22 gibt es im LS25 nicht mehr, deshalb eine Kiefer als Vorgabe;
+-- über die Placeable-XML kann der Modder eine andere wählen, etwa eine Art, die nur seine Karte mitbringt.
+Revamp.WOOD_LOG_DEFAULT_TREE_TYPE = "lodgepolePine"
+
+-- Liter Holz je Meter Stammlänge. Die Werte stammen aus dem LS22 und sind dort an einer Fichte gemessen -
+-- eine andere Baumart liefert bei gleicher Länge etwas andere Mengen, die Zahlen sind also eine Näherung und keine exakte Umrechnung.
+Revamp.WOOD_LITERS_PER_METER = {350, 697, 1023, 1304, 1585, 1861, 2121, 2365, 2579, 2787, 2985, 3182, 3373, 3552, 3711, 3863, 4004, 4130, 4236, 4326}
+
+-- Seitlicher Abstand zwischen zwei Stämmen desselben Auftrags. Ohne ihn entstünden alle an derselben Stelle und lägen ineinander.
+-- Gemessen entlang der lokalen X-Achse der Ablagestelle, die Stämme reihen sich also quer zu ihrer eigenen Länge auf.
+Revamp.WOOD_LOG_SPACING = 1.2
+
+-- Abstand zwischen zwei Stämmen. Ein Stamm entsteht als Baum, der im übernächsten Frame auf Länge geschnitten wird -
+-- ohne Pause dazwischen lägen mehrere ungeschnittene Bäume gleichzeitig an derselben Stelle.
+Revamp.WOOD_LOG_SPAWN_DELAY = 400
+
+-- Die Angaben zum Stammholz hängen am Wurzelknoten der Placeable und nicht am productionPoint-Knoten, weil sie genauso für ein Silo gelten.
+-- Registriert wird der Pfad deshalb mit festem Namen statt über den übergebenen Basispfad, und nur einmal - er wird von mehreren Stellen aus angemeldet.
+Revamp.spawnerPathsRegistered = false
+
+---@param schema XMLSchema Schema der Placeable-XML
+function Revamp.registerSpawnerXMLPaths(schema)
+	if Revamp.spawnerPathsRegistered then
+		return
+	end
+	Revamp.spawnerPathsRegistered = true
+
+	schema:register(XMLValueType.NODE_INDEX, "placeable.revampSpawner#woodSpawnNode", "Stelle, an der ausgelagerte Stämme abgelegt werden - der Platz dort wird nicht geprüft")
+	schema:register(XMLValueType.STRING, "placeable.revampSpawner#woodTreeType", "Baumart, aus der die Stämme entstehen", Revamp.WOOD_LOG_DEFAULT_TREE_TYPE)
+	schema:register(XMLValueType.INT, "placeable.revampSpawner#minWoodLogLength", "Kürzeste wählbare Stammlänge in Metern", 6)
+	schema:register(XMLValueType.INT, "placeable.revampSpawner#maxWoodLogLength", "Längste wählbare Stammlänge in Metern", 6)
+	schema:register(XMLValueType.INT, "placeable.revampSpawner#maxWoodLogs", "Höchstzahl der Stämme, die auf einmal ausgelagert werden dürfen", 15)
+end
+
+---Liest die Angaben zum Ablegen von Stämmen aus der Placeable-XML.
+---Ohne Ablagestelle gibt es kein Stammholz zur Auswahl - ohne sie wüsste niemand, wo die Stämme landen sollen.
+---@param source table Spawn-Ziel, aus dem ausgelagert wird
+---@param xmlFile table XMLFile der Placeable
+---@param components table Komponenten der Placeable
+---@param i3dMappings table i3dMappings der Placeable
+function Revamp.loadSpawnerConfig(source, xmlFile, components, i3dMappings)
+	local node = xmlFile:getValue("placeable.revampSpawner#woodSpawnNode", nil, components, i3dMappings)
+	if node == nil then
+		return
+	end
+
+	-- Lieber hier einmal hart abbrechen als bei jedem Auslagern still nichts zu tun: eine unbekannte Baumart fiele sonst gar nicht auf.
+	local treeTypeName = xmlFile:getValue("placeable.revampSpawner#woodTreeType", Revamp.WOOD_LOG_DEFAULT_TREE_TYPE)
+	if g_treePlantManager:getTreeTypeDescFromName(treeTypeName) == nil then
+		Logging.xmlError(xmlFile, "Production Revamp: unknown woodTreeType '%s', no wood logs can be spawned here", treeTypeName)
+		return
+	end
+
+	local maxKnownLength = #Revamp.WOOD_LITERS_PER_METER
+	local minLength = math.clamp(xmlFile:getValue("placeable.revampSpawner#minWoodLogLength", 6), 1, maxKnownLength)
+	local maxLength = math.clamp(xmlFile:getValue("placeable.revampSpawner#maxWoodLogLength", 6), minLength, maxKnownLength)
+
+	source.revampWoodSpawn = {
+		node = node,
+		treeTypeName = treeTypeName,
+		minLength = minLength,
+		maxLength = maxLength,
+		maxLogs = math.max(xmlFile:getValue("placeable.revampSpawner#maxWoodLogs", 15), 1)
+	}
+end
+
+---Prüft, ob es für einen Fülltyp Stammholz zur Auswahl gibt.
+---@param source table Spawn-Ziel, aus dem ausgelagert wird
+---@param fillType table FillType-Beschreibung
+---@return boolean hasWoodLogs true, wenn der Fülltyp als Stammholz ausgelagert werden kann
+function Revamp.getHasWoodLogPackages(source, fillType)
+	return source.revampWoodSpawn ~= nil and fillType.name == "WOOD"
+end
+
+---Trägt die wählbaren Stammlängen als Verpackungen ein.
+---Nur für Holz und nur, wenn die Placeable eine Ablagestelle dafür mitbringt.
+---@param option table Auswahleintrag des Fülltyps, dessen Verpackungen ergänzt werden
+---@param source table Spawn-Ziel, aus dem ausgelagert wird
+---@param fillType table FillType-Beschreibung
+---@param fillLevel number Vorhandener Bestand in Litern
+function Revamp.addWoodLogPackages(option, source, fillType, fillLevel)
+	if not Revamp.getHasWoodLogPackages(source, fillType) then
+		return
+	end
+
+	local woodSpawn = source.revampWoodSpawn
+
+	for length = woodSpawn.minLength, woodSpawn.maxLength do
+		local capacity = Revamp.WOOD_LITERS_PER_METER[length]
+		-- Ein angefangener Stamm ergibt keinen Sinn, deshalb nur volle Stämme und keine Restmenge wie bei Paletten.
+		local max = math.min(math.floor(fillLevel / capacity), woodSpawn.maxLogs)
+		if max > 0 then
+			table.insert(option.packages, {
+				capacity = capacity,
+				max = max,
+				noRemainder = true,
+				width = 1,
+				height = 1,
+				length = length,
+				type = 7, -- Stammholz
+				modIcon = Revamp.emptyIcon,
+				title = string.format(g_i18n:getText("revamp_storageWoodLog"), length) .. " (" .. g_i18n:formatVolume(capacity, 0, fillType.unitShort) .. ")"
+			})
+		end
+	end
+end
+
+---Legt einen einzelnen Stamm an der Ablagestelle ab.
+---Bewusst nicht über TreePlantManager:loadTreeTrunk, obwohl es das im LS25 fertig gibt: die Vanilla-Fassung verteilt den Stamm nicht ins Netzwerk,
+---sie wird dort nur von Konsolenbefehlen benutzt. Im Mehrspieler stünde der Stamm sonst nur auf dem Server.
+---@param source table Spawn-Ziel, aus dem ausgelagert wird
+---@param length number Länge des Stamms in Metern
+---@param offsetX number Seitlicher Versatz zur Ablagestelle in Metern
+---@return boolean spawned true, wenn der Stamm tatsächlich entstanden ist
+function Revamp.spawnWoodLog(source, length, offsetX)
+	local woodSpawn = source.revampWoodSpawn
+	local treeTypeDesc = woodSpawn ~= nil and g_treePlantManager:getTreeTypeDescFromName(woodSpawn.treeTypeName) or nil
+	if woodSpawn == nil or woodSpawn.node == nil or treeTypeDesc == nil then
+		return false
+	end
+
+	local x, y, z = localToWorld(woodSpawn.node, offsetX, 0, 0)
+	local dirX, dirY, dirZ = localDirectionToWorld(woodSpawn.node, 0, 0, 1)
+
+	-- Letzte Wachstumsstufe, also der ausgewachsene Baum; die Variante darin ist reine Optik.
+	local growthStateI = #treeTypeDesc.stages
+	local variationIndex = math.random(1, #treeTypeDesc.stages[growthStateI])
+
+	local treeId, splitShapeFileId = g_treePlantManager:loadTreeNode(treeTypeDesc, x, y, z, 0, 0, 0, growthStateI, variationIndex)
+	if treeId == 0 then
+		return false
+	end
+
+	-- Ohne teilbare Form lässt sich der Baum nicht zum Stamm schneiden - dann lieber gar nichts hinstellen als einen ganzen Baum.
+	if not getFileIdHasSplitShapes(splitShapeFileId) then
+		delete(treeId)
+		return false
+	end
+
+	table.insert(g_treePlantManager.treesData.splitTrees, {
+		node = treeId,
+		growthStateI = growthStateI,
+		variationIndex = variationIndex,
+		x = x,
+		y = y,
+		z = z,
+		rx = 0,
+		ry = 0,
+		rz = 0,
+		treeType = treeTypeDesc.index,
+		splitShapeFileId = splitShapeFileId,
+		hasSplitShapes = true
+	})
+
+	g_server:broadcastEvent(TreePlantEvent.new(treeTypeDesc.index, x, y, z, 0, 0, 0, growthStateI, variationIndex, splitShapeFileId, false))
+
+	-- Das eigentliche Schneiden übernimmt der TreePlantManager in den nächsten Frames, deshalb nur der Auftrag statt eines direkten Aufrufs.
+	table.insert(g_treePlantManager.loadTreeTrunkDatas, {
+		framesLeft = 2,
+		shape = treeId + 2,
+		x = x,
+		y = y,
+		z = z,
+		length = length,
+		offset = 0.5,
+		dirX = dirX,
+		dirY = dirY,
+		dirZ = dirZ,
+		delimb = true,
+		useOnlyStump = false,
+		cutTreeTrunkCallback = TreePlantManager.cutTreeTrunkCallback
+	})
+
+	return true
+end
+
+---Legt den nächsten Stamm des laufenden Auftrags ab und zieht seine Menge vom Lager ab.
+---@param source table Spawn-Ziel, aus dem ausgelagert wird
+function Revamp.spawnNextWoodLog(source)
+	local job = source.revampWoodLogJob
+	if job == nil then
+		return
+	end
+
+	if Revamp.spawnWoodLog(source, job.length, job.spawned * Revamp.WOOD_LOG_SPACING) then
+		Revamp.removeSpawnSourceFillLevel(source, job.fillTypeIndex, job.capacity)
+		job.remaining = job.remaining - 1
+		job.spawned = job.spawned + 1
+	else
+		-- Ging einer nicht, gehen die folgenden auch nicht - abbrechen statt es im Sekundentakt weiter zu versuchen.
+		job.remaining = 0
+	end
+
+	if job.remaining <= 0 then
+		source.revampWoodLogJob = nil
+		return
+	end
+
+	local timer = Timer.new(Revamp.WOOD_LOG_SPAWN_DELAY)
+	timer:setFinishCallback(function()
+		Revamp.spawnNextWoodLog(source)
+	end)
+	timer:start(true)
+end
+
+---Startet das Ablegen mehrerer Stämme.
+---@param source table Spawn-Ziel, aus dem ausgelagert wird
+---@param fillTypeIndex number FillType-Index
+---@param capacity number Liter je Stamm
+---@param length number Länge der Stämme in Metern
+---@param amount number Anzahl der Stämme
+function Revamp.startWoodLogSpawn(source, fillTypeIndex, capacity, length, amount)
+	-- Ein zweiter Auftrag würde den ersten mittendrin überschreiben; der laufende wird deshalb zuerst zu Ende gebracht.
+	if source.revampWoodLogJob ~= nil then
+		return
+	end
+
+	source.revampWoodLogJob = {
+		fillTypeIndex = fillTypeIndex,
+		capacity = capacity,
+		length = length,
+		remaining = amount,
+		spawned = 0
+	}
+
+	Revamp.spawnNextWoodLog(source)
+end
+
+---Baut aus einer Liste von Fülltypen mit Bestand die Auswahleinträge des Auslagern-Dialogs: je Fülltyp ein Eintrag mit allen Verpackungen, die es dafür gibt.
+---Vom Spawn-Ziel losgelöst, damit Produktionsstätte und Silo dieselbe Liste bekommen - das Ziel liefert nur noch, was drin liegt.
+---@param self table Träger der zwischengespeicherten Ballen- und Baumlisten (Aktivierbares bzw. Spezialisierung)
+---@param source table Spawn-Ziel, aus dem ausgelagert wird
+---@param outputFillTypes table Liste aus {fillTypeIndex, fillLevel}, bereits nach Anzeigename sortiert
+---@return table options Einträge für RevampStorageDialog
+function Revamp.buildSpawnOptions(self, source, outputFillTypes)
+	if self.baleTypes == nil then
+		self.baleTypes = Revamp.getBaleTypesForSpawn(self)
+	end
+
+	-- Nur Fülltypen, von denen mehr als ein Liter da ist und für die es überhaupt eine Verpackung gibt.
+	local selectable = {}
+	for _, entry in ipairs(outputFillTypes) do
+		local fillType = g_fillTypeManager:getFillTypeByIndex(entry.fillTypeIndex)
+		if entry.fillLevel > 1 and (fillType.palletFilename ~= nil or self.baleTypes[entry.fillTypeIndex] ~= nil or fillType.name == "TREESAPLINGS" or Revamp.getHasWoodLogPackages(source, fillType)) then
+			entry.title = fillType.title
+			table.insert(selectable, entry)
+			-- Baumsetzlinge 2x eintragen, damit beide Paletten-Varianten (Typ 4+5) verfügbar sind
+			if fillType.name == "TREESAPLINGS" then
+				self.treeTypes = Revamp.getTreeTypesForSpawn(self)
+				table.insert(selectable, entry)
+			end
+		end
+	end
+
+	outputFillTypes = selectable
+	table.sort(outputFillTypes, function(w1, w2) return w1.title < w2.title end)
+
+	local options = {}
+
+	local treePallet = false
+	for i = 1, #outputFillTypes do
+		local fillTypeIndex = outputFillTypes[i].fillTypeIndex
+		local currentFillType = g_fillTypeManager:getFillTypeByIndex(fillTypeIndex)
+		local fillLevel = outputFillTypes[i].fillLevel
+		if currentFillType.unitShort == "" then
+			currentFillType.unitShort = g_i18n:getText("unit_literShort")
+		end
+
+		local option = {
+			fillTypeIndex = fillTypeIndex,
+			fillLevel = fillLevel,
+			fillTypeIcon = currentFillType.hudOverlayFilename,
+			unitShort = currentFillType.unitShort,
+			title = currentFillType.title .. " (" .. g_i18n:formatVolume(fillLevel, 0, currentFillType.unitShort) .. ")",
+			packages = {}
+		}
+
+		-- Sonderfall Baumsetzlinge: eigene Palette pro Aufruf (type 4 dann 5), kein customEnvironment
+		if currentFillType.name == "TREESAPLINGS" then
+			local palletXML = Utils.getFilename(treePallet and "$data/objects/pallets/treeSaplingPallet02/treeSaplingPallet02.xml" or "$data/objects/pallets/treeSaplingPallet01/treeSaplingPallet01.xml", self.baseDirectory)
+			---@cast palletXML string
+
+			local type = treePallet and 5 or 4
+			treePallet = true
+
+			local palletXmlFile = XMLFile.load("palletXmlFilename", palletXML, Vehicle.xmlSchema)
+			---@cast palletXmlFile XMLFile
+
+			local capacity = FillUnit.getCapacityFromXml(palletXmlFile)
+			palletXmlFile:delete()
+			local size = StoreItemUtil.getSizeValues(palletXML, "vehicle", 0, {})
+			local max = math.floor(fillLevel / capacity)
+			if fillLevel - max * capacity >= 1 then
+				max = max + 1
+			end
+
+			for _, treeType in ipairs(self.treeTypes) do
+				table.insert(option.packages, {
+					capacity = capacity,
+					max = max,
+					width = size.width,
+					height = size.height,
+					length = size.length,
+					type = type,
+					customEnvironment = nil,
+					modIcon = Revamp.emptyIcon,
+					treeId = treeType.treeId,
+					title = g_i18n:getText("typeDesc_pallet") .. " " .. treeType.name .. " (" .. capacity .. " " .. currentFillType.unitShort .. ")"
+				})
+			end
+		end
+
+		-- Paletten eintragen wenn vorhanden (nicht für Baumsetzlinge, die haben ihre eigenen oben)
+		if currentFillType.palletFilename ~= nil and currentFillType.name ~= "TREESAPLINGS" then
+			for environment, palletFilename in pairs(currentFillType.pallets) do
+				local thisPallet = XMLFile.load("palletXmlFilename", palletFilename, Vehicle.xmlSchema)
+				if thisPallet ~= nil then
+					local size = StoreItemUtil.getSizeValues(palletFilename, "vehicle", 0, {})
+					local capacity = FillUnit.getCapacityFromXml(thisPallet)
+					thisPallet:delete()
+
+					local max = math.floor(fillLevel / capacity)
+					if fillLevel - max * capacity >= 1 then
+						max = max + 1
+					end
+
+					table.insert(option.packages, {
+						capacity = capacity,
+						max = max,
+						title = g_i18n:getText("typeDesc_pallet") .. " (" .. capacity .. " " .. currentFillType.unitShort .. ")",
+						modIcon = environment ~= "VANILLA" and g_modManager:getModByName(environment).iconFilename or Revamp.emptyIcon,
+						width = size.width,
+						height = size.height,
+						length = size.length,
+						type = 1, -- Palette
+						customEnvironment = environment
+					})
+				end
+			end
+		end
+
+		-- Ballen eintragen wenn vorhanden
+		if self.baleTypes[fillTypeIndex] ~= nil then
+			for _, baleSize in ipairs(self.baleTypes[fillTypeIndex].sizes) do
+				local bale = {
+					capacity = baleSize.capacity,
+					width = baleSize.width,
+					height = baleSize.height,
+					length = baleSize.length,
+					type = 2, -- Quaderballen
+					customEnvironment = baleSize.customEnvironment,
+					modIcon = baleSize.customEnvironment ~= "VANILLA" and g_modManager:getModByName(baleSize.customEnvironment).iconFilename or Revamp.emptyIcon
+				}
+				if baleSize.isRoundbale then
+					bale.type = 3 -- Rundballen
+					-- Höhe/Tiefe tauschen, da der Ballen liegend (auf der Seite) gespawnt wird
+					bale.length = baleSize.diameter
+					bale.height = baleSize.diameter
+				end
+				if Revamp.wrappedBaleFillTypes[currentFillType.name] then
+					bale.wrapped = true
+				end
+				if currentFillType.name == "COTTON" and not baleSize.isRoundbale then
+					-- Drehen, damit der Quaderballen in den Spawnbereich passt
+					bale.length = baleSize.height
+					bale.height = baleSize.width
+					bale.width = baleSize.length
+					bale.wrapped = false
+				end
+
+				bale.max = math.floor(fillLevel / bale.capacity)
+				if fillLevel - bale.max * bale.capacity >= 1 then
+					bale.max = bale.max + 1
+				end
+
+				bale.title = g_i18n:getText(baleSize.isRoundbale and "fillType_roundBale" or "fillType_squareBale") .. " " .. tostring(baleSize.isRoundbale and baleSize.diameter or baleSize.length) .. "m (" .. g_i18n:formatVolume(bale.capacity, 0, currentFillType.unitShort) .. ")"
+				table.insert(option.packages, bale)
+			end
+		end
+
+		Revamp.addWoodLogPackages(option, source, currentFillType, fillLevel)
+
+		table.insert(options, option)
+	end
+
+	if #options == 0 then
+		table.insert(options, {
+			openmenu = true,
+			title = g_i18n:getText("revamp_storageEmpty"),
+			fillTypeIndex = 0,
+			fillLevel = 0,
+			fillTypeIcon = Revamp.emptyIcon,
+			packages = {{max = 0, capacity = 0, title = g_i18n:getText("revamp_storageEmpty"), modIcon = Revamp.emptyIcon}}
+		})
+	end
+
+		return options
+	end
+
 ---Ersetzt Vanillas ProductionPointActivatable.run: Kauf-Trigger unverändert wie Vanilla,
 ---beim Öffnen der eigenen Produktion aber (falls ein Palettenspawner existiert) statt direkt ins Menü zu springen erst den Auslagern-Dialog mit allen auslagerbaren Output-FillTypes aufbauen.
 ---@param self table ProductionPointActivatable-Instanz
@@ -105,171 +526,22 @@ function Revamp.spawnerRun(self, superFunc, menue)
 			return
 		end
 
-		if self.baleTypes == nil then
-			self.baleTypes = Revamp.getBaleTypesForSpawn(self)
-		end
-
 		local outputFillTypes = {}
 		for _, fillTypeIndex in ipairs(self.productionPoint.outputFillTypeIdsArray) do
-			local fillLevel = self.productionPoint:getFillLevel(fillTypeIndex)
-			local fillType = g_fillTypeManager:getFillTypeByIndex(fillTypeIndex)
-			if fillLevel > 1 and (fillType.palletFilename ~= nil or self.baleTypes[fillTypeIndex] ~= nil or fillType.name == "TREESAPLINGS") then
-				local entry = {title = fillType.title, fillLevel = fillLevel, fillTypeIndex = fillTypeIndex}
-				table.insert(outputFillTypes, entry)
-				-- Baumsetzlinge 2x eintragen, damit beide Paletten-Varianten (Typ 4+5) verfügbar sind
-				if fillType.name == "TREESAPLINGS" then
-					self.treeTypes = Revamp.getTreeTypesForSpawn(self)
-					table.insert(outputFillTypes, entry)
-				end
-			end
+			table.insert(outputFillTypes, {fillTypeIndex = fillTypeIndex, fillLevel = self.productionPoint:getFillLevel(fillTypeIndex)})
 		end
 
-		table.sort(outputFillTypes, function(w1, w2) return w1.title < w2.title end)
+		local options = Revamp.buildSpawnOptions(self, self.productionPoint, outputFillTypes)
 
-		local options = {}
+		-- Der Pseudo-Eintrag steht vorn, damit der Dialog auch bei leerem Lager eine Zeile hat und man von dort ins Produktionsmenü kommt.
 		if menue ~= true then
-			table.insert(options, {
+			table.insert(options, 1, {
 				openmenu = true,
 				title = g_i18n:getText("revamp_storageOpenProduction"),
 				fillTypeIndex = 0,
 				fillLevel = 0,
 				fillTypeIcon = Revamp.emptyIcon,
-				packages = {{max = 0, title = #outputFillTypes == 1 and " " or "", capacity = 0, modIcon = Revamp.emptyIcon}}
-			})
-		end
-
-		local treePallet = false
-		for i = 1, #outputFillTypes do
-			local fillTypeIndex = outputFillTypes[i].fillTypeIndex
-			local currentFillType = g_fillTypeManager:getFillTypeByIndex(fillTypeIndex)
-			local fillLevel = outputFillTypes[i].fillLevel
-			if currentFillType.unitShort == "" then
-				currentFillType.unitShort = g_i18n:getText("unit_literShort")
-			end
-
-			local option = {
-				fillTypeIndex = fillTypeIndex,
-				fillLevel = fillLevel,
-				fillTypeIcon = currentFillType.hudOverlayFilename,
-				unitShort = currentFillType.unitShort,
-				title = currentFillType.title .. " (" .. g_i18n:formatVolume(fillLevel, 0, currentFillType.unitShort) .. ")",
-				packages = {}
-			}
-
-			-- Sonderfall Baumsetzlinge: eigene Palette pro Aufruf (type 4 dann 5), kein customEnvironment
-			if currentFillType.name == "TREESAPLINGS" then
-				local palletXML = Utils.getFilename(treePallet and "$data/objects/pallets/treeSaplingPallet02/treeSaplingPallet02.xml" or "$data/objects/pallets/treeSaplingPallet01/treeSaplingPallet01.xml", self.baseDirectory)
-				---@cast palletXML string
-
-				local type = treePallet and 5 or 4
-				treePallet = true
-
-				local palletXmlFile = XMLFile.load("palletXmlFilename", palletXML, Vehicle.xmlSchema)
-				---@cast palletXmlFile XMLFile
-
-				local capacity = FillUnit.getCapacityFromXml(palletXmlFile)
-				palletXmlFile:delete()
-				local size = StoreItemUtil.getSizeValues(palletXML, "vehicle", 0, {})
-				local max = math.floor(fillLevel / capacity)
-				if fillLevel - max * capacity >= 1 then
-					max = max + 1
-				end
-
-				for _, treeType in ipairs(self.treeTypes) do
-					table.insert(option.packages, {
-						capacity = capacity,
-						max = max,
-						width = size.width,
-						height = size.height,
-						length = size.length,
-						type = type,
-						customEnvironment = nil,
-						modIcon = Revamp.emptyIcon,
-						treeId = treeType.treeId,
-						title = g_i18n:getText("typeDesc_pallet") .. " " .. treeType.name .. " (" .. capacity .. " " .. currentFillType.unitShort .. ")"
-					})
-				end
-			end
-
-			-- Paletten eintragen wenn vorhanden (nicht für Baumsetzlinge, die haben ihre eigenen oben)
-			if currentFillType.palletFilename ~= nil and currentFillType.name ~= "TREESAPLINGS" then
-				for environment, palletFilename in pairs(currentFillType.pallets) do
-					local thisPallet = XMLFile.load("palletXmlFilename", palletFilename, Vehicle.xmlSchema)
-					if thisPallet ~= nil then
-						local size = StoreItemUtil.getSizeValues(palletFilename, "vehicle", 0, {})
-						local capacity = FillUnit.getCapacityFromXml(thisPallet)
-						thisPallet:delete()
-
-						local max = math.floor(fillLevel / capacity)
-						if fillLevel - max * capacity >= 1 then
-							max = max + 1
-						end
-
-						table.insert(option.packages, {
-							capacity = capacity,
-							max = max,
-							title = g_i18n:getText("typeDesc_pallet") .. " (" .. capacity .. " " .. currentFillType.unitShort .. ")",
-							modIcon = environment ~= "VANILLA" and g_modManager:getModByName(environment).iconFilename or Revamp.emptyIcon,
-							width = size.width,
-							height = size.height,
-							length = size.length,
-							type = 1, -- Palette
-							customEnvironment = environment
-						})
-					end
-				end
-			end
-
-			-- Ballen eintragen wenn vorhanden
-			if self.baleTypes[fillTypeIndex] ~= nil then
-				for _, baleSize in ipairs(self.baleTypes[fillTypeIndex].sizes) do
-					local bale = {
-						capacity = baleSize.capacity,
-						width = baleSize.width,
-						height = baleSize.height,
-						length = baleSize.length,
-						type = 2, -- Quaderballen
-						customEnvironment = baleSize.customEnvironment,
-						modIcon = baleSize.customEnvironment ~= "VANILLA" and g_modManager:getModByName(baleSize.customEnvironment).iconFilename or Revamp.emptyIcon
-					}
-					if baleSize.isRoundbale then
-						bale.type = 3 -- Rundballen
-						-- Höhe/Tiefe tauschen, da der Ballen liegend (auf der Seite) gespawnt wird
-						bale.length = baleSize.diameter
-						bale.height = baleSize.diameter
-					end
-					if Revamp.wrappedBaleFillTypes[currentFillType.name] then
-						bale.wrapped = true
-					end
-					if currentFillType.name == "COTTON" and not baleSize.isRoundbale then
-						-- Drehen, damit der Quaderballen in den Spawnbereich passt
-						bale.length = baleSize.height
-						bale.height = baleSize.width
-						bale.width = baleSize.length
-						bale.wrapped = false
-					end
-
-					bale.max = math.floor(fillLevel / bale.capacity)
-					if fillLevel - bale.max * bale.capacity >= 1 then
-						bale.max = bale.max + 1
-					end
-
-					bale.title = g_i18n:getText(baleSize.isRoundbale and "fillType_roundBale" or "fillType_squareBale") .. " " .. tostring(baleSize.isRoundbale and baleSize.diameter or baleSize.length) .. "m (" .. g_i18n:formatVolume(bale.capacity, 0, currentFillType.unitShort) .. ")"
-					table.insert(option.packages, bale)
-				end
-			end
-
-			table.insert(options, option)
-		end
-
-		if #options == 0 then
-			table.insert(options, {
-				openmenu = true,
-				title = g_i18n:getText("revamp_storageEmpty"),
-				fillTypeIndex = 0,
-				fillLevel = 0,
-				fillTypeIcon = Revamp.emptyIcon,
-				packages = {{max = 0, capacity = 0, title = g_i18n:getText("revamp_storageEmpty"), modIcon = Revamp.emptyIcon}}
+				packages = {{max = 0, title = #options == 1 and " " or "", capacity = 0, modIcon = Revamp.emptyIcon}}
 			})
 		end
 
@@ -287,7 +559,7 @@ end
 ProductionPointActivatable.run = Utils.overwrittenFunction(ProductionPointActivatable.run, Revamp.spawnerRun)
 
 ---Spawnt die im Auslagern-Dialog gewählte Verpackung - Server-Seite, empfangen über Revamp_EventSpawn (siehe revamp_eventSpawn.lua).
----@param self table ProductionPoint-Instanz
+---@param self table Spawn-Ziel, aus dem ausgelagert wird
 ---@param ownerFarmId number Farm, der das gespawnte Objekt gehören soll
 ---@param fillTypeIndex number FillType-Index
 ---@param pendingLiters number Noch aus dem Lager abzuziehende Literzahl
@@ -302,7 +574,13 @@ ProductionPointActivatable.run = Utils.overwrittenFunction(ProductionPointActiva
 ---@param color1 number Foliencolor-Komponente 1 (bei einfoliert spawnenden Ballen)
 ---@param color2 number Foliencolor-Komponente 2
 ---@param color3 number Foliencolor-Komponente 3
-function ProductionPoint:ReceiveSpawnEvent(ownerFarmId, fillTypeIndex, pendingLiters, width, height, length, capacity, type, customEnvironment, treeId, amount, color1, color2, color3)
+function Revamp.receiveSpawnEvent(self, ownerFarmId, fillTypeIndex, pendingLiters, width, height, length, capacity, type, customEnvironment, treeId, amount, color1, color2, color3)
+	-- Stammholz läuft nicht über den Palettenspawner: es wird nicht gesucht und platziert, sondern an einer festen Stelle abgelegt.
+	if type == 7 then
+		Revamp.startWoodLogSpawn(self, fillTypeIndex, capacity, length, amount)
+		return
+	end
+
 	local item = {
 		size = {height = height, width = width, length = length},
 		capacity = capacity,
@@ -349,13 +627,15 @@ function ProductionPoint:ReceiveSpawnEvent(ownerFarmId, fillTypeIndex, pendingLi
 	g_currentMission:addUpdateable(self.palletSpawner)
 end
 
+ProductionPoint.ReceiveSpawnEvent = Revamp.receiveSpawnEvent
+
 ---Callback des PalletSpawners, sobald ein einzelnes Objekt aus der Spawn-Queue platziert wurde - befüllt die Palette/den Baumsetzling mit dem angeforderten Füllstand und zieht ihn aus dem Lager ab
 ---(Ballen ziehen stattdessen ihre feste Kapazität ab, da sie nicht nachträglich befüllt werden).
----@param self table ProductionPoint-Instanz
+---@param self table Spawn-Ziel, aus dem ausgelagert wird
 ---@param pallet? table Gespawntes Objekt, nil wenn kein Platz gefunden wurde
 ---@param result number PalletSpawner.RESULT_*-Konstante
 ---@param fillTypeIndex number FillType-Index
-function ProductionPoint:getPalletCallback(pallet, result, fillTypeIndex)
+function Revamp.spawnPalletCallback(self, pallet, result, fillTypeIndex)
 	self.spawnPending = false
 	if pallet == nil then
 		return
@@ -395,16 +675,15 @@ function ProductionPoint:getPalletCallback(pallet, result, fillTypeIndex)
 		pallet:updateTreeSaplingVisuals()
 	end
 
-	local available = self.storage.fillLevels[fillTypeIndex]
-	if available ~= nil and available > 0 then
-		self.storage:setFillLevel(available - math.min(delta, available), fillTypeIndex)
-	end
+	Revamp.removeSpawnSourceFillLevel(self, fillTypeIndex, delta)
 
 	if self.palletSpawner.pendingLiters[fillTypeIndex] == 0 then
 		self.palletSpawner.pendingLiters[fillTypeIndex] = nil
 		self.palletSpawner.pendingItem[fillTypeIndex] = nil
 	end
 end
+
+ProductionPoint.getPalletCallback = Revamp.spawnPalletCallback
 
 ---Startet die Platzierungssuche für das nächste Objekt der Spawn-Queue -
 ---Paletten/Baumsetzlinge über Vanillas eigenes onSpawnSearchFinished, Ballen über die eigene onSpawnSearchFinishedOther unten.

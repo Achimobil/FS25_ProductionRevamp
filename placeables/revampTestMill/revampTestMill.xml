@@ -230,6 +230,15 @@
                     <output fillType="FERTILIZER" amount="3"/>
                 </outputs>
             </production>
+            <!-- Nur als Testfall für das Auslagern von Stammholz gedacht: eine Produktionsstätte, die Holz erzeugt, ergibt inhaltlich wenig Sinn -->
+            <production id="strawWood" name="$l10n_revamp_recipe_strawWood" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="STRAW" amount="10"/>
+                </inputs>
+                <outputs>
+                    <output fillType="WOOD" amount="8"/>
+                </outputs>
+            </production>
         </productions>
 
         <!-- Testfall für das wetterabhängige Lager: WATER sammelt sich bei Niederschlag von selbst an,
@@ -251,6 +260,7 @@
             <capacity fillType="FLOUR" capacity="60000"/>
             <capacity fillType="STRAW"      capacity="60000" allowSelling="false"/>
             <capacity fillType="FERTILIZER" capacity="60000"/>
+            <capacity fillType="WOOD"       capacity="60000"/>
         </storage>
 
         <sellingStation supportsExtension="false">
@@ -284,6 +294,9 @@
     <revampObjectFillLevels>
         <revampObjectFillLevel rootNode="revampFillLevelObjects" fillType="FLOUR" maxAtFillLevel="60000"/>
     </revampObjectFillLevels>
+
+    <!-- Ablagestelle für ausgelagerte Stämme, wählbar sind 6 bis 12 Meter -->
+    <revampSpawner woodSpawnNode="revampWoodSpawn" minWoodLogLength="6" maxWoodLogLength="12" maxWoodLogs="5"/>
 
     <revampDisplays>
         <revampDisplay node="playerTriggerMarker" fillType="FLOUR" mask="000000" size="0.25"/>
@@ -327,5 +340,6 @@
         <i3dMapping id="palletAreaEnd03" node="0>11|2|0" />
         <i3dMapping id="props" node="0>12|1" />
         <i3dMapping id="revampFillLevelObjects" node="0>14" />
+        <i3dMapping id="revampWoodSpawn" node="0>15" />
     </i3dMappings>
 </placeable>

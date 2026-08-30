@@ -17,6 +17,7 @@
         <text name="revamp_recipe_limitBoostedFlour"             text="Einzel-Booster-Mehl"/>
         <text name="revamp_recipe_mixedBoostedFlour"             text="Misch-Booster-Mehl"/>
         <text name="revamp_recipe_grainFertilizer"               text="Getreide-Dünger"/>
+        <text name="revamp_recipe_strawWood"                     text="Stroh zu Holz"/>
         <text name="revamp_category_grain"                       text="Getreide"/>
         <text name="revamp_ui_production_totalBoost"             text="Gesamt-Boost"/>
         <text name="revamp_ui_production_sharedStorage"          text="Geteilter Lagerplatz"/>
@@ -51,6 +52,7 @@
         <text name="revamp_storageMax"                           text="Max"/>
         <text name="revamp_storageNone"                          text="Nix"/>
         <text name="revamp_storageAll"                           text="Alles"/>
+        <text name="revamp_storageWoodLog"                       text="Stammholz %d m"/>
         <text name="revamp_buyButton"                            text="Einkaufen"/>
         <text name="revamp_sellButton"                           text="Verkaufen"/>
         <text name="revamp_descBuy"                              text="Kaufe Ware vom Handler und lasse diese liefern. Hinweis: Der Händler verlangt mehr, wenn er selber liefert."/>

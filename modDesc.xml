@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.21</version>
+    <version>0.0.0.22</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.22 - Erzeugnisse lassen sich jetzt auch als Stammholz auslagern, die Länge ist dabei wählbar
 0.0.0.21 - Produktionsstätten, Silos und Gewächshäuser können ihren Bestand jetzt am Gebäude zeigen: als mitwachsenden Stapel und als Ziffernanzeige
 0.0.0.20 - Waren, die sich einen Lagerplatz teilen, blockieren sich nicht mehr gegenseitig und sind mit einem * gekennzeichnet
 0.0.0.19
