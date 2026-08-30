@@ -17,7 +17,7 @@
         <text name="revamp_recipe_limitBoostedFlour"             text="Einzel-Booster-Mehl"/>
         <text name="revamp_recipe_mixedBoostedFlour"             text="Misch-Booster-Mehl"/>
         <text name="revamp_recipe_grainFertilizer"               text="Getreide-Dünger"/>
-        <text name="revamp_recipe_strawWood"                     text="Stroh zu Holz"/>
+        <text name="revamp_recipe_sorghumWood"                   text="Hirse zu Holz"/>
         <text name="revamp_category_grain"                       text="Getreide"/>
         <text name="revamp_ui_production_totalBoost"             text="Gesamt-Boost"/>
         <text name="revamp_ui_production_sharedStorage"          text="Geteilter Lagerplatz"/>

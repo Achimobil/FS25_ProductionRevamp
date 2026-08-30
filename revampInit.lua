@@ -1,6 +1,7 @@
 source(g_currentModDirectory .. "scripts/revamp_changeLimits.lua")
 source(g_currentModDirectory .. "scripts/revamp_main.lua")
 source(g_currentModDirectory .. "scripts/revamp_settings.lua")
+source(g_currentModDirectory .. "scripts/revamp_extension.lua")
 source(g_currentModDirectory .. "scripts/events/revamp_eventSettings.lua")
 source(g_currentModDirectory .. "scripts/events/revamp_eventSettingsChange.lua")
 source(g_currentModDirectory .. "scripts/revamp_productionModes.lua")

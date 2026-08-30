@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.24</version>
+    <version>0.0.0.25</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.25 - Andere Mods können jetzt eigene Gebäude für Production Revamp mitliefern, die nur auftauchen wenn Production Revamp installiert ist
 0.0.0.24 - Silos können ihre Waren jetzt genauso als Palette, Ballen oder Stammholz auslagern wie Produktionsstätten
 0.0.0.23 - Beim Auslagern von Stammholz wird jetzt die Menge abgezogen, die im Stamm tatsächlich steckt
 0.0.0.22 - Erzeugnisse lassen sich jetzt auch als Stammholz auslagern, die Länge ist dabei wählbar

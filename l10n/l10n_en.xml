@@ -17,7 +17,7 @@
         <text name="revamp_recipe_limitBoostedFlour"             text="Single Booster Flour"/>
         <text name="revamp_recipe_mixedBoostedFlour"             text="Mixed Boosted Flour"/>
         <text name="revamp_recipe_grainFertilizer"               text="Grain Fertilizer"/>
-        <text name="revamp_recipe_strawWood"                     text="Straw to wood"/>
+        <text name="revamp_recipe_sorghumWood"                   text="Sorghum to wood"/>
         <text name="revamp_category_grain"                       text="Grain"/>
         <text name="revamp_ui_production_totalBoost"             text="Total boost"/>
         <text name="revamp_ui_production_sharedStorage"          text="Shared storage"/>
