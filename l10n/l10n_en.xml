@@ -119,5 +119,38 @@
         <text name="revamp_setting_showBuildingCosts_tooltip"        text="Shows the monthly upkeep of every production point in the production menu."/>
         <text name="revamp_setting_showDistributionTargets"          text="Show distribution targets"/>
         <text name="revamp_setting_showDistributionTargets_tooltip"  text="Shows behind every product in the output list where it is delivered to first."/>
+
+        <text name="revamp_help_title"                 text="Production Revamp"/>
+        <text name="revamp_help_menu_title"            text="Production menu"/>
+        <text name="revamp_help_menu_dualRoleTitle"    text="Every good only once"/>
+        <text name="revamp_help_menu_dualRole"         text="A good that is both an ingredient and a product at the same production point used to be listed twice. It now appears once, in its own section between the incoming materials and the outgoing products."/>
+        <text name="revamp_help_menu_sharedTitle"      text="Shared storage"/>
+        <text name="revamp_help_menu_shared"           text="An asterisk behind an amount means several goods share the same storage space. The capacity shown is what is currently still free for that good, and it drops as soon as one of the others grows. The size of the shared space is shown in the info box below."/>
+        <text name="revamp_help_menu_extrasTitle"      text="Additional information"/>
+        <text name="revamp_help_menu_extras"           text="Below the name of each production point you can see its monthly building costs. The symbol next to a production line shows whether the point runs all lines at the same time or one after another. Both can be hidden in the settings."/>
+        <text name="revamp_help_menu_buttonsTitle"     text="Two new buttons"/>
+        <text name="revamp_help_menu_buttons"          text="The bar at the bottom gains “Manage” and “Take out goods”. Both are also available directly at the building, without going through the menu."/>
+        <text name="revamp_help_manage_title"          text="Manage"/>
+        <text name="revamp_help_manage_intro"          text="The manage dialog lists all goods of a production point with exact amounts instead of bars only, split by whether they are an ingredient, a product, or both."/>
+        <text name="revamp_help_manage_outputTitle"    text="What happens to a product"/>
+        <text name="revamp_help_manage_output"         text="For every product you decide what should happen to it: keep it in storage, sell it right away, distribute it to other production points, or store it and take it out later as pallets or bales."/>
+        <text name="revamp_help_manage_tradeTitle"     text="Buying and selling"/>
+        <text name="revamp_help_manage_trade"          text="Ingredients can be bought and products sold right at the production point, without driving anything. Buying costs more and selling pays less than at the market, so the convenience has a price. Individual goods can be excluded from this."/>
+        <text name="revamp_help_manage_viewsTitle"     text="More views"/>
+        <text name="revamp_help_manage_views"          text="The confirm key switches between goods, production lines and distribution. In the production lines you choose which ingredient is used when several are possible. Under distribution you decide which production points receive your products, and in which order."/>
+        <text name="revamp_help_spawn_title"           text="Taking out goods"/>
+        <text name="revamp_help_spawn_intro"           text="Stored products can be taken out as pallets, bales or wood logs whenever you want, instead of waiting for the game to place something on its own."/>
+        <text name="revamp_help_spawn_howTitle"        text="How it works"/>
+        <text name="revamp_help_spawn_how"             text="Pick the good, then the packaging, then the amount. Bales come as round or square bales in the sizes available for that good, and for wood logs you choose the length. The amount of liters per unit is always shown."/>
+        <text name="revamp_help_spawn_optionsTitle"    text="Wrapping colour and owner"/>
+        <text name="revamp_help_spawn_options"         text="Bales that come out wrapped get a wrapping colour of your choice. In multiplayer you also decide which farm the goods should belong to."/>
+        <text name="revamp_help_spawn_siloTitle"       text="At silos as well"/>
+        <text name="revamp_help_spawn_silo"            text="A silo built for it can do the same. There it is triggered at its own trigger at the building."/>
+        <text name="revamp_help_settings_title"        text="Settings"/>
+        <text name="revamp_help_settings_globalTitle"  text="For the whole savegame"/>
+        <text name="revamp_help_settings_global"       text="In the settings, under Game, you find the “Production Revamp” section. There an administrator turns individual features off for everyone and sets who may buy and sell, what distribution costs, and what selling on site pays. Whatever is turned off also disappears from the controls."/>
+        <text name="revamp_help_settings_displayTitle" text="Only for you"/>
+        <text name="revamp_help_settings_display"      text="Under General there is also “Production Revamp: Display”. These switches only affect your own screen, change nothing about the game itself, and need no admin rights."/>
+        <text name="revamp_help_settings_keep"         text="Nothing is lost when a feature is turned off: distribution targets, stored goods and the chosen modes stay saved and apply again as soon as the switch is turned back on."/>
     </texts>
 </l10n>

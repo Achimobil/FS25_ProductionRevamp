@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.26</version>
+    <version>0.0.0.27</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.27 - Eigener Abschnitt im Hilfe-Menü des Spiels, der die neuen Bedienelemente an Produktionsstätten erklärt
 0.0.0.26 - Eine Ware, die an derselben Produktionsstätte Zutat und Erzeugnis zugleich ist, steht im Produktionsmenü nur noch einmal in der Liste
 0.0.0.25 - Andere Mods können jetzt eigene Gebäude für Production Revamp mitliefern, die nur auftauchen wenn Production Revamp installiert ist
 0.0.0.24 - Silos können ihre Waren jetzt genauso als Palette, Ballen oder Stammholz auslagern wie Produktionsstätten
@@ -70,6 +71,76 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
 
     <l10n filenamePrefix="l10n/l10n"/>
 
+    <helpLines>
+        <category title="$l10n_revamp_help_title">
+            <page title="$l10n_revamp_help_menu_title">
+                <paragraph>
+                    <title text="$l10n_revamp_help_menu_dualRoleTitle"/>
+                    <text text="$l10n_revamp_help_menu_dualRole"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_menu_sharedTitle"/>
+                    <text text="$l10n_revamp_help_menu_shared"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_menu_extrasTitle"/>
+                    <text text="$l10n_revamp_help_menu_extras"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_menu_buttonsTitle"/>
+                    <text text="$l10n_revamp_help_menu_buttons"/>
+                </paragraph>
+            </page>
+            <page title="$l10n_revamp_help_manage_title">
+                <paragraph>
+                    <text text="$l10n_revamp_help_manage_intro"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_manage_outputTitle"/>
+                    <text text="$l10n_revamp_help_manage_output"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_manage_tradeTitle"/>
+                    <text text="$l10n_revamp_help_manage_trade"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_manage_viewsTitle"/>
+                    <text text="$l10n_revamp_help_manage_views"/>
+                </paragraph>
+            </page>
+            <page title="$l10n_revamp_help_spawn_title">
+                <paragraph>
+                    <text text="$l10n_revamp_help_spawn_intro"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_spawn_howTitle"/>
+                    <text text="$l10n_revamp_help_spawn_how"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_spawn_optionsTitle"/>
+                    <text text="$l10n_revamp_help_spawn_options"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_spawn_siloTitle"/>
+                    <text text="$l10n_revamp_help_spawn_silo"/>
+                </paragraph>
+            </page>
+            <page title="$l10n_revamp_help_settings_title">
+                <paragraph>
+                    <title text="$l10n_revamp_help_settings_globalTitle"/>
+                    <text text="$l10n_revamp_help_settings_global"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_settings_displayTitle"/>
+                    <text text="$l10n_revamp_help_settings_display"/>
+                </paragraph>
+                <paragraph>
+                    <text text="$l10n_revamp_help_settings_keep"/>
+                </paragraph>
+            </page>
+        </category>
+    </helpLines>
+
     <storeItems>
         <storeItem xmlFilename="placeables/revampTestMill/revampTestMill.xml"/>
     </storeItems>
@@ -85,7 +156,7 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
     <!-- Eigene Typen statt einer Erweiterung der Vanilla-Typen: ein Modder entscheidet damit pro Placeable, ob sie die Zusatzanzeigen bekommt.
          Das Gewächshaus braucht keinen eigenen Eintrag in den Spezialisierungen, weil der Vanilla-Typ die productionPoint-Spezialisierung selbst mitbringt. -->
     <placeableTypes>
-        <type name="RevampSilo"           parent="silo"           filename="$dataS/scripts/placeables/Placeable.lua">
+        <type name="RevampSilo" parent="silo" filename="$dataS/scripts/placeables/Placeable.lua">
             <specialization name="revampObjectFillLevel"/>
             <specialization name="revampDisplay"/>
             <specialization name="revampSpawner"/>
@@ -94,7 +165,7 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
             <specialization name="revampObjectFillLevel"/>
             <specialization name="revampDisplay"/>
         </type>
-        <type name="RevampGreenhouse"     parent="greenhouse"     filename="$dataS/scripts/placeables/Placeable.lua">
+        <type name="RevampGreenhouse" parent="greenhouse" filename="$dataS/scripts/placeables/Placeable.lua">
             <specialization name="revampObjectFillLevel"/>
             <specialization name="revampDisplay"/>
         </type>
