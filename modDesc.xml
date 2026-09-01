@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.28</version>
+    <version>0.0.0.29</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.29 - Andere Mods können ihre eigenen Waren jetzt an den Verkaufsstellen und Silos der Karte anmelden, ohne dass die Karte dafür angepasst werden muss
 0.0.0.28
 - Produktionsstätten können jetzt lebende Tiere als Zutat annehmen, abgegeben werden sie mit dem Tiertransporter an einem eigenen Auslöser am Gebäude
 - Produktionslinien, die von selbst laufen sollen, starten jetzt auch direkt nach dem Bauen und lassen sich nicht mehr abschalten
