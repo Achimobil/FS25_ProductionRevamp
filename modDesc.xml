@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.27</version>
+    <version>0.0.0.28</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,9 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.28
+- Produktionsstätten können jetzt lebende Tiere als Zutat annehmen, abgegeben werden sie mit dem Tiertransporter an einem eigenen Auslöser am Gebäude
+- Produktionslinien, die von selbst laufen sollen, starten jetzt auch direkt nach dem Bauen und lassen sich nicht mehr abschalten
 0.0.0.27 - Eigener Abschnitt im Hilfe-Menü des Spiels, der die neuen Bedienelemente an Produktionsstätten erklärt
 0.0.0.26 - Eine Ware, die an derselben Produktionsstätte Zutat und Erzeugnis zugleich ist, steht im Produktionsmenü nur noch einmal in der Liste
 0.0.0.25 - Andere Mods können jetzt eigene Gebäude für Production Revamp mitliefern, die nur auftauchen wenn Production Revamp installiert ist
@@ -125,6 +128,19 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
                     <text text="$l10n_revamp_help_spawn_silo"/>
                 </paragraph>
             </page>
+            <page title="$l10n_revamp_help_animals_title">
+                <paragraph>
+                    <text text="$l10n_revamp_help_animals_intro"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_animals_howTitle"/>
+                    <text text="$l10n_revamp_help_animals_how"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_animals_amountTitle"/>
+                    <text text="$l10n_revamp_help_animals_amount"/>
+                </paragraph>
+            </page>
             <page title="$l10n_revamp_help_settings_title">
                 <paragraph>
                     <title text="$l10n_revamp_help_settings_globalTitle"/>
@@ -143,6 +159,7 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
 
     <storeItems>
         <storeItem xmlFilename="placeables/revampTestMill/revampTestMill.xml"/>
+        <storeItem xmlFilename="placeables/revampTestLivestock/revampTestLivestock.xml"/>
     </storeItems>
 
     <fillTypes filename="revamp_fillTypes.xml"/>

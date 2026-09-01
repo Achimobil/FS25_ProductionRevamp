@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<GUI onOpen="onOpen" onClose="onClose" onCreate="onCreate">
+    <GuiElement profile="newLayer"/>
+    <Bitmap profile="dialogFullscreenBg" id="dialogBg"/>
+    <GuiElement profile="revamp_animalDialogBg" id="dialogElement">
+        <ThreePartBitmap profile="fs25_dialogBgMiddleSmall"/>
+        <ThreePartBitmap profile="fs25_dialogBgTopSmall"/>
+        <ThreePartBitmap profile="fs25_dialogBgBottom"/>
+        <GuiElement profile="fs25_dialogContentContainer">
+            <Text profile="fs25_dialogTitle" text="$l10n_revamp_animalDeliveryTitle"       id="dialogTitleElement" position="0px -35px"/>
+            <Text profile="fs25_dialogText"  text="$l10n_revamp_animalDeliveryDescription" id="dialogTextElement"  position="0px -75px"/>
+
+            <!-- Das Bild der Rasse und darüber das Zeichen, ob diese Tiergruppe hier angenommen wird - beide gleich groß und an derselben Stelle, das Zeichen liegt also über dem Tier -->
+            <Bitmap profile="revamp_animalIcon" id="animalIcon"/>
+            <Bitmap profile="revamp_animalIcon" id="acceptedIcon"/>
+
+            <!-- Die beiden Auswahlelemente zeigen mit focusChange gegenseitig aufeinander: der Regler braucht dafür eine eigene focusId,
+                 sonst ist er mit der Tastatur nicht erreichbar (gleiches Muster und derselbe Grund wie in revamp_storageDialog.xml) -->
+            <MultiTextOption profile="revamp_animalMultiTextOption" id="itemsElement" position="0px -300px" onClick="onClickItems" focusId="animalItems" focusChangeTop="animalQuantity" handleFocus="true">
+                <Text profile="fs25_multiTextOptionText" id="itemsText" name="text"/>
+            </MultiTextOption>
+
+            <OptionSlider profile="revamp_animalOptionSlider" id="quantityElement" position="0px -350px" onClick="onClickQuantity" focusId="animalQuantity" focusChangeBottom="animalItems">
+                <Text profile="fs25_optionSliderText" id="quantityText" name="text"/>
+            </OptionSlider>
+
+            <Text profile="revamp_animalDialogLabel" text="$l10n_revamp_animalAmountPerAnimal" position="100px -405px"/>
+            <Text profile="revamp_animalDialogValue" id="amountPerAnimalText"                  position="420px -405px"/>
+            <Text profile="revamp_animalDialogLabel" text="$l10n_revamp_animalAmountTotal"     position="100px -435px"/>
+            <Text profile="revamp_animalDialogValue" id="amountTotalText"                      position="420px -435px"/>
+        </GuiElement>
+
+        <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
+            <Button profile="buttonOK" text="$l10n_revamp_transferAnimals" onClick="onClickOk" id="yesButton"/>
+            <Bitmap profile="fs25_dialogButtonBoxSeparator"/>
+            <Button profile="buttonBack" text="$l10n_button_back" onClick="onClickBack" id="noButton"/>
+        </BoxLayout>
+    </GuiElement>
+    <GUIProfiles>
+        <Profile name="revamp_animalDialogBg" extends="fs25_dialogBg">
+            <size value="820px 560px"/>
+        </Profile>
+        <!-- Quadratisch wie im Vanilla-Tiermenü, dessen Bilder hier ja auch angezeigt werden -->
+        <Profile name="revamp_animalIcon" extends="baseReference" with="anchorTopCenter">
+            <size value="160px 160px"/>
+            <position value="0px -110px"/>
+            <imageSliceId value="noSlice"/>
+        </Profile>
+        <!-- Breiter als in den übrigen Revamp-Dialogen: in einer Zeile stehen Anzahl, Rasse, Alter und Gesundheit einer Tiergruppe -->
+        <Profile name="revamp_animalMultiTextOption" extends="baseReference" with="anchorTopCenter">
+            <size value="620px 36px"/>
+            <autoAddDefaultElements value="true"/>
+            <defaultProfileButtonLeft value="fs25_multiTextOptionLeft"/>
+            <defaultProfileButtonRight value="fs25_multiTextOptionRight"/>
+            <defaultProfileText value="fs25_multiTextOptionText"/>
+            <defaultProfileBgThreePart value="fs25_multiTextOptionBg"/>
+        </Profile>
+        <Profile name="revamp_animalOptionSlider" extends="fs25_multiTextOption" with="anchorTopCenter">
+            <width value="620px"/>
+            <sliderOffset value="5px"/>
+            <useFillingBar value="true"/>
+            <updateTextPosition value="false"/>
+            <hideLeftRightButtons value="true"/>
+            <defaultProfileBgThreePart value="fs25_optionSliderBg"/>
+            <defaultProfileText value="fs25_optionSliderText"/>
+            <defaultProfileSlider value="fs25_optionSliderIcon"/>
+            <defaultProfileFillingBarThreePart value="fs25_optionSliderFillingBar"/>
+        </Profile>
+        <!-- Beschriftung links, Menge rechts in derselben Zeile: die beiden Mengen stehen dadurch untereinander und bleiben vergleichbar -->
+        <Profile name="revamp_animalDialogLabel" extends="fs25_dialogText" with="anchorTopLeft">
+            <size value="300px 20px"/>
+            <textAlignment value="left"/>
+            <textColor value="$preset_fs25_colorGreyText"/>
+        </Profile>
+        <Profile name="revamp_animalDialogValue" extends="fs25_dialogText" with="anchorTopLeft">
+            <size value="280px 20px"/>
+            <textAlignment value="right"/>
+        </Profile>
+    </GUIProfiles>
+</GUI>

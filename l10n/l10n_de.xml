@@ -3,6 +3,7 @@
     <texts>
         <text name="revamp_ui_production_buildingCostsPerMonth"  text="Gebäudekosten"/>
         <text name="revamp_station_testMill"                     text="Revamp Test-Mühle"/>
+        <text name="revamp_station_testLivestock"                text="Revamp Test-Tierannahme"/>
         <text name="revamp_ui_production_mixGroup"               text="Mix-Gruppe %d"/>
         <text name="revamp_ui_production_converterGroup"         text="Alternative Zutaten"/>
         <text name="revamp_ui_production_booster"                text="Booster"/>
@@ -90,6 +91,23 @@
         <text name="revamp_descDistributionLimit"                text="Bis zu welchem Lagerstand soll dieses Ziel beliefert werden?"/>
         <text name="finance_productionDeliveryCosts"             text="Lieferkosten"/>
 
+        <text name="revamp_transferAnimals"           text="Tiere transferieren"/>
+        <text name="revamp_animalDeliveryTitle"       text="Tiere an Produktion liefern"/>
+        <text name="revamp_animalDeliveryDescription" text="Wie viel ein Tier einbringt, hängt von der Tierart, dem Alter und der Gesundheit ab."/>
+        <text name="revamp_animalAmountPerAnimal"     text="Liefermenge pro Tier"/>
+        <text name="revamp_animalAmountTotal"         text="Liefermenge gesamt"/>
+        <text name="revamp_animalCountSingular"       text="%d Tier"/>
+        <text name="revamp_animalCount"               text="%d Tiere"/>
+        <text name="revamp_animalAgeError"            text="Tiere müssen zwischen %s und %s Monate alt sein."/>
+        <text name="revamp_animalAgeErrorFrom"        text="Tiere müssen mindestens %s Monate alt sein."/>
+        <text name="revamp_animalHealthError"         text="Tiere müssen zwischen %s %% und %s %% Gesundheit haben."/>
+        <text name="revamp_animalNotValid"            text="Diese Tierart wird hier nicht angenommen."/>
+        <text name="revamp_animalNotValidForTrigger"  text="Diese Tierart wird an diesem Auslöser nicht angenommen."/>
+        <text name="revamp_animalNoSpace"             text="Das Lager der Produktion ist voll."/>
+        <text name="revamp_animalAgeFrom"             text="ab %s"/>
+        <text name="revamp_manageViewAnimals"         text="Tiere"/>
+        <text name="revamp_manageSectionAnimals"      text="Tiere, die angenommen werden"/>
+
         <text name="revamp_settings_title"                           text="Production Revamp"/>
         <text name="revamp_setting_distributionActive"               text="Verteilen"/>
         <text name="revamp_setting_distributionActive_tooltip"       text="Schaltet das Verteilen zwischen Produktionsstätten ein oder aus. Abgeschaltet verteilt das Spiel wieder von sich aus, die eingestellten Ziele bleiben dabei erhalten."/>
@@ -137,7 +155,7 @@
         <text name="revamp_help_manage_tradeTitle"     text="Kaufen und verkaufen"/>
         <text name="revamp_help_manage_trade"          text="Zutaten lassen sich direkt an der Produktionsstätte zukaufen und Erzeugnisse dort verkaufen, ohne etwas fahren zu müssen. Der Zukauf ist teurer und der Verkauf bringt weniger als am Markt, die Bequemlichkeit kostet also etwas. Einzelne Waren können davon ausgenommen sein."/>
         <text name="revamp_help_manage_viewsTitle"     text="Weitere Ansichten"/>
-        <text name="revamp_help_manage_views"          text="Mit der Bestätigen-Taste schaltest du zwischen Waren, Produktionslinien und Verteilen um. In den Produktionslinien legst du fest, welche Zutat verwendet wird, wenn mehrere in Frage kommen. Unter Verteilen bestimmst du, welche Produktionsstätten deine Erzeugnisse bekommen und in welcher Reihenfolge."/>
+        <text name="revamp_help_manage_views"          text="Mit der Bestätigen-Taste schaltest du zwischen Waren, Produktionslinien und Verteilen um, an einer Produktionsstätte, die Tiere annimmt, zusätzlich auf Tiere. In den Produktionslinien legst du fest, welche Zutat verwendet wird, wenn mehrere in Frage kommen. Unter Verteilen bestimmst du, welche Produktionsstätten deine Erzeugnisse bekommen und in welcher Reihenfolge."/>
         <text name="revamp_help_spawn_title"           text="Waren auslagern"/>
         <text name="revamp_help_spawn_intro"           text="Eingelagerte Erzeugnisse holst du gezielt als Palette, Ballen oder Stammholz heraus, statt zu warten, bis das Spiel von selbst etwas hinstellt."/>
         <text name="revamp_help_spawn_howTitle"        text="So geht es"/>
@@ -146,6 +164,12 @@
         <text name="revamp_help_spawn_options"         text="Ballen, die eingewickelt erscheinen, bekommen eine Folienfarbe deiner Wahl. Im Mehrspieler legst du außerdem fest, welchem Hof das Ausgelagerte gehören soll."/>
         <text name="revamp_help_spawn_siloTitle"       text="Auch am Silo"/>
         <text name="revamp_help_spawn_silo"            text="Ein entsprechend gebautes Silo kann dasselbe. Ausgelöst wird es dort an einem eigenen Auslöser am Gebäude."/>
+        <text name="revamp_help_animals_title"         text="Tiere abgeben"/>
+        <text name="revamp_help_animals_intro"         text="Manche Produktionsstätten nehmen lebende Tiere als Zutat an, zum Beispiel ein Schlachter. Sie haben dafür einen eigenen Auslöser am Gebäude, an dem du mit einem Tiertransporter vorfährst."/>
+        <text name="revamp_help_animals_howTitle"      text="So geht es"/>
+        <text name="revamp_help_animals_how"           text="Fahre mit dem Transporter an den Auslöser und bleib im Fahrzeug sitzen. Wähle dann die Tiergruppe aus deinem Anhänger und wie viele Tiere du abgeben willst. Wird eine Gruppe nicht angenommen, steht der Grund an der Stelle, an der sonst die Anzahl steht."/>
+        <text name="revamp_help_animals_amountTitle"   text="Was ein Tier einbringt"/>
+        <text name="revamp_help_animals_amount"        text="Die Menge hängt von der Tierart, dem Alter und der Gesundheit ab: ältere und gesündere Tiere bringen mehr. Welche Tiere eine Produktionsstätte überhaupt annimmt und was sie einbringen, steht im Verwalten-Dialog in der Ansicht „Tiere“."/>
         <text name="revamp_help_settings_title"        text="Einstellungen"/>
         <text name="revamp_help_settings_globalTitle"  text="Für den ganzen Spielstand"/>
         <text name="revamp_help_settings_global"       text="Unter Einstellungen und dort im Bereich Spiel steht der Abschnitt „Production Revamp“. Dort schaltet ein Administrator einzelne Funktionen für alle ab und legt fest, wer kaufen und verkaufen darf, was das Verteilen kostet und was der Direktverkauf einbringt. Was abgeschaltet ist, verschwindet auch aus der Bedienung."/>

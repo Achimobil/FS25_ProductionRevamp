@@ -30,6 +30,14 @@
                         <Text profile="revamp_manageListItemCosts"             name="costs"/>
                         <Text profile="revamp_manageListItemLevel"             name="level"/>
                     </ListItem>
+                    <!-- Vierte Zeilenform für die Tier-Ansicht: Bild und Name der Rasse, die Bedingungen an Alter und Gesundheit und was ein Tier der Produktion einbringt -->
+                    <ListItem profile="revamp_manageListItem" name="animalRow">
+                        <Bitmap profile="revamp_manageListItemAnimalIcon" name="icon"/>
+                        <Text profile="revamp_manageListItemAnimalName"   name="name"/>
+                        <Text profile="revamp_manageListItemAnimalAge"    name="age"/>
+                        <Text profile="revamp_manageListItemAnimalHealth" name="health"/>
+                        <Text profile="revamp_manageListItemAnimalResult" name="result"/>
+                    </ListItem>
                     <ListItem profile="fs25_productionDetailsListSection" name="section">
                         <Text profile="fs25_productionDetailsListSectionTitle" name="title"/>
                     </ListItem>
@@ -134,6 +142,30 @@
         <Profile name="revamp_manageListItemLevel" extends="revamp_manageListItemMode">
             <position value="830px 0px"/>
             <width value="180px"/>
+        </Profile>
+        <!-- Spalten der Tier-Ansicht. Das Bild der Rasse ist breiter als ein Fülltyp-Symbol, weil es ein Foto und kein Piktogramm ist;
+             Bedingungen und Liefermenge stehen rechtsbündig, damit die Zahlen untereinander vergleichbar bleiben -->
+        <Profile name="revamp_manageListItemAnimalIcon" extends="revamp_manageListItemIcon">
+            <size value="60px 40px"/>
+        </Profile>
+        <Profile name="revamp_manageListItemAnimalName" extends="revamp_manageListItemName">
+            <position value="85px 0px"/>
+            <width value="280px"/>
+        </Profile>
+        <Profile name="revamp_manageListItemAnimalAge" extends="fs25_textDarkHighlight" with="anchorMiddleLeft">
+            <position value="375px 0px"/>
+            <width value="200px"/>
+            <textAlignment value="right"/>
+        </Profile>
+        <Profile name="revamp_manageListItemAnimalHealth" extends="fs25_textDarkHighlight" with="anchorMiddleLeft">
+            <position value="595px 0px"/>
+            <width value="140px"/>
+            <textAlignment value="right"/>
+        </Profile>
+        <Profile name="revamp_manageListItemAnimalResult" extends="revamp_manageListItemMode">
+            <position value="755px 0px"/>
+            <width value="255px"/>
+            <textAlignment value="right"/>
         </Profile>
         <!-- Fußnote unter der Liste: grau und kleiner als die Zeilen selbst, damit sie als Erläuterung und nicht als weitere Zeile gelesen wird.
              Die Liste endet 580px unter der oberen Kante des Inhaltsbereichs, die Knopfleiste beginnt 68px über der unteren Kante des Dialogs - dazwischen liegt genau diese eine Zeile -->

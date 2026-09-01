@@ -9,29 +9,32 @@
 -- Kaufen nur bei Input-Rolle, Verkaufen nur bei Output-Rolle, analog zu PSTs eigener Aufteilung (inputFillTypeIdsArray/outputFillTypeIdsArray).
 --
 -- Über die weiteren Ansichten sind zusätzlich die Einstellungen erreichbar, die nicht pro Ware gelten: die Auswahlmodi für Zutaten und Booster
--- pro Rezeptlinie (siehe revamp_recipeSettings.lua) und die Verteilziele je Erzeugnis (siehe revamp_distribution.lua). Der Dialog ist damit der
--- gemeinsame Ort für alles, was der Spieler an einer eigenen Produktionsstätte einstellen kann, statt für jede weitere Einstellung einen eigenen
--- Menü-Button zu brauchen (die Leiste hat nur sechs Plätze).
+-- pro Rezeptlinie (siehe revamp_recipeSettings.lua), die Verteilziele je Erzeugnis (siehe revamp_distribution.lua) und die Übersicht der annehmbaren Tiere an einer Produktionsstätte mit Tier-Trigger (siehe revamp_animals.lua).
+-- Der Dialog ist damit der gemeinsame Ort für alles, was der Spieler an einer eigenen Produktionsstätte einstellen kann, statt für jede weitere Einstellung einen eigenen Menü-Button zu brauchen (die Leiste hat nur sechs Plätze).
 
 RevampManageDialog = {}
 local RevampManageDialog_mt = Class(RevampManageDialog, YesNoDialog)
 
--- Der Dialog hat drei Ansichten: die FillType-Ansicht zeigt, was pro Ware gilt (Bestand, Ausgangsmodus, Kaufen/Verkaufen),
+-- Der Dialog hat vier Ansichten: die FillType-Ansicht zeigt, was pro Ware gilt (Bestand, Ausgangsmodus, Kaufen/Verkaufen),
 -- die Produktionslinien-Ansicht das, was pro Rezeptlinie gilt (die Auswahlmodi, siehe revamp_recipeSettings.lua),
--- und die Verteilen-Ansicht die Ziele je Erzeugnis (siehe revamp_distribution.lua).
+-- die Verteilen-Ansicht die Ziele je Erzeugnis (siehe revamp_distribution.lua)
+-- und die Tier-Ansicht, welche Tiere die Produktionsstätte annimmt und was sie einbringen (siehe revamp_animals.lua).
 -- Die Verteilziele hätten auch in die Waren-Ansicht gepasst, brauchen aber eine Zeile je Ziel statt je Ware und damit eine eigene Liste.
+-- Die Tier-Ansicht gibt es nur an einer Produktionsstätte mit Tier-Trigger, überall sonst wird sie beim Umschalten übersprungen.
 RevampManageDialog.VIEW = {
 	FILLTYPES = 1,
 	PRODUCTIONS = 2,
-	DISTRIBUTION = 3
+	DISTRIBUTION = 3,
+	ANIMALS = 4
 }
-RevampManageDialog.VIEW_COUNT = 3
+RevampManageDialog.VIEW_COUNT = 4
 
 -- Beschriftung des Umschalt-Buttons, benannt ist darauf immer die Ansicht, in die er führt.
 RevampManageDialog.VIEW_TEXTS = {
 	[RevampManageDialog.VIEW.FILLTYPES] = "revamp_manageViewFillTypes",
 	[RevampManageDialog.VIEW.PRODUCTIONS] = "revamp_manageViewProductions",
-	[RevampManageDialog.VIEW.DISTRIBUTION] = "revamp_manageViewDistribution"
+	[RevampManageDialog.VIEW.DISTRIBUTION] = "revamp_manageViewDistribution",
+	[RevampManageDialog.VIEW.ANIMALS] = "revamp_manageViewAnimals"
 }
 
 ---Lädt die Dialog-XML und registriert die Dialoginstanz beim GUI-System.
@@ -116,6 +119,7 @@ function RevampManageDialog:updateRows()
 	self.pureInputs, self.dual, self.pureOutputs = Revamp.splitFillTypesByRole(self.productionPoint)
 	self.productions = Revamp.getVisibleProductions(self.productionPoint)
 	self.distributionSections = Revamp.getDistributionSections(self.productionPoint)
+	self.animals = Revamp.getAnimalRows(self.productionPoint)
 	-- Mit true, weil die beiden Ansichten unterschiedliche Zeilenformen haben: ohne das Kennzeichen behält die Liste die bereits erzeugten Zeilen und befüllt nur deren Inhalt neu,
 	-- die neue Ansicht bekäme also die Felder der alten (siehe SmoothListElement:reloadData).
 	self.manageList:reloadData(true)
@@ -137,15 +141,18 @@ function RevampManageDialog:updateSharedStorageHint()
 	end
 end
 
----Prüft, ob eine Ansicht gerade zur Verfügung steht - ein abgeschaltetes Modul soll nicht nur wirkungslos, sondern gar nicht mehr erreichbar sein.
+---Prüft, ob eine Ansicht gerade zur Verfügung steht - ein abgeschaltetes Modul und eine Ansicht, die es an dieser Produktionsstätte gar nicht gibt, sollen nicht nur wirkungslos, sondern nicht erreichbar sein.
 ---@param viewMode number Eine der RevampManageDialog.VIEW-Konstanten
 ---@return boolean available true, wenn die Ansicht benutzbar ist
-function RevampManageDialog.isViewAvailable(viewMode)
+function RevampManageDialog:isViewAvailable(viewMode)
 	if viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
 		return Revamp.settings.recipeSettingsActive
 	end
 	if viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
 		return Revamp.settings.distributionActive
+	end
+	if viewMode == RevampManageDialog.VIEW.ANIMALS then
+		return Revamp.getHasAnimalInputs(self.productionPoint)
 	end
 	-- Die Waren-Ansicht zeigt die Bestände und bleibt deshalb immer erreichbar.
 	return true
@@ -155,10 +162,10 @@ end
 ---Sind alle übrigen abgeschaltet, kommt die aktuelle Ansicht selbst zurück.
 ---@param viewMode number Ansicht, von der aus weitergeschaltet wird
 ---@return number nextViewMode Nächste verfügbare Ansicht
-function RevampManageDialog.getNextView(viewMode)
+function RevampManageDialog:getNextView(viewMode)
 	for _ = 1, RevampManageDialog.VIEW_COUNT do
 		viewMode = viewMode % RevampManageDialog.VIEW_COUNT + 1
-		if RevampManageDialog.isViewAvailable(viewMode) then
+		if self:isViewAvailable(viewMode) then
 			break
 		end
 	end
@@ -166,9 +173,9 @@ function RevampManageDialog.getNextView(viewMode)
 	return viewMode
 end
 
----Schaltet der Reihe nach durch die Ansichten Waren, Produktionslinien und Verteilen.
+---Schaltet der Reihe nach durch die Ansichten Waren, Produktionslinien, Verteilen und Tiere.
 function RevampManageDialog:onClickToggleView()
-	self.viewMode = RevampManageDialog.getNextView(self.viewMode)
+	self.viewMode = self:getNextView(self.viewMode)
 
 	self:updateRows()
 	-- Erst nach dem Neuaufbau, weil setSelectedItem gegen die Sektionen der jeweils geladenen Liste prüft.
@@ -176,7 +183,7 @@ function RevampManageDialog:onClickToggleView()
 	self.manageList:setSelectedItem(1, 1, true)
 end
 
----Liefert die Zeilenform der aktuellen Ansicht - die Liste hat zwei davon (FillType-Zeile mit Icon und Menge, Produktionslinien-Zeile mit Auswahlmodi).
+---Liefert die Zeilenform der aktuellen Ansicht - jede Ansicht hat ihre eigene, weil in jeder andere Spalten stehen.
 ---@param list table Liste, die die Zeile aufbauen will
 ---@param section number Sektionsindex
 ---@param index number Zeilenindex innerhalb der Sektion
@@ -186,6 +193,9 @@ function RevampManageDialog:getCellTypeForItemInSection(list, section, index) --
 	end
 	if self.viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
 		return "distributionRow"
+	end
+	if self.viewMode == RevampManageDialog.VIEW.ANIMALS then
+		return "animalRow"
 	end
 	return "fillTypeRow"
 end
@@ -220,6 +230,15 @@ function RevampManageDialog:onListSelectionChanged(list, section, index)
 		self.levelButton:setVisible(target ~= nil)
 		-- Eine Obergrenze für ein Ziel, das ohnehin nie beliefert wird, hätte keine Wirkung.
 		self.limitButton:setVisible(target ~= nil and target.level ~= "NEVER")
+	elseif self.viewMode == RevampManageDialog.VIEW.ANIMALS then
+		-- Die Tier-Ansicht zeigt nur, was der Modder festgelegt hat - daran gibt es für den Spieler nichts einzustellen.
+		self.yesButton:setVisible(false)
+		self.buyButton:setVisible(false)
+		self.sellButton:setVisible(false)
+		self.mixModeButton:setVisible(false)
+		self.boostModeButton:setVisible(false)
+		self.levelButton:setVisible(false)
+		self.limitButton:setVisible(false)
 	else
 		local fillTypes, hasInputRole, hasOutputRole = self:getSectionFillTypes(section)
 		local fillType = fillTypes[index]
@@ -237,7 +256,7 @@ function RevampManageDialog:onListSelectionChanged(list, section, index)
 	end
 
 	-- Bleibt nur die Waren-Ansicht übrig, führt der Knopf nirgendwo mehr hin und verschwindet.
-	local nextView = RevampManageDialog.getNextView(self.viewMode)
+	local nextView = self:getNextView(self.viewMode)
 	self.viewButton:setVisible(nextView ~= self.viewMode)
 	self.viewButton:setText(g_i18n:getText(RevampManageDialog.VIEW_TEXTS[nextView]))
 
@@ -275,6 +294,9 @@ function RevampManageDialog:getNumberOfSections(list)
 		-- Ohne einen einzigen Abnehmer bleibt eine Sektion übrig, deren Überschrift genau das sagt - eine komplett leere Liste sähe nach einem Fehler aus.
 		return math.max(#self.distributionSections, 1)
 	end
+	if self.viewMode == RevampManageDialog.VIEW.ANIMALS then
+		return 1
+	end
 	return #self.dual > 0 and 3 or 2
 end
 
@@ -295,6 +317,9 @@ function RevampManageDialog:getTitleForSectionHeader(list, section)
 			return g_i18n:getText("revamp_distributionNoTargets")
 		end
 		return g_fillTypeManager:getFillTypeByIndex(sectionData.fillTypeIndex).title
+	end
+	if self.viewMode == RevampManageDialog.VIEW.ANIMALS then
+		return g_i18n:getText("revamp_manageSectionAnimals")
 	end
 	if section == 1 then
 		return g_i18n:getText("ui_productions_incomingMaterials")
@@ -320,6 +345,9 @@ function RevampManageDialog:getNumberOfItemsInSection(list, section)
 		local sectionData = self.distributionSections[section]
 		return sectionData ~= nil and #sectionData.targets or 0
 	end
+	if self.viewMode == RevampManageDialog.VIEW.ANIMALS then
+		return #self.animals
+	end
 	return #self:getSectionFillTypes(section)
 end
 
@@ -340,6 +368,11 @@ function RevampManageDialog:populateCellForItemInSection(list, section, index, c
 
 	if self.viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
 		self:populateDistributionCell(section, index, cell)
+		return
+	end
+
+	if self.viewMode == RevampManageDialog.VIEW.ANIMALS then
+		self:populateAnimalCell(index, cell)
 		return
 	end
 
@@ -388,6 +421,41 @@ function RevampManageDialog:populateProductionCell(index, cell)
 		table.insert(modes, string.format("%s: %s", g_i18n:getText("revamp_boostModeLabel"), Revamp.getSelectionModeText(production.boostMode, true)))
 	end
 	cell:getAttribute("modes"):setText(table.concat(modes, "   "))
+end
+
+---Befüllt eine Zeile der Tier-Ansicht mit Rasse, den Bedingungen und dem, was ein Tier einbringt.
+---@param index number Zeilenindex
+---@param cell table Zu befüllende Zelle
+function RevampManageDialog:populateAnimalCell(index, cell)
+	local row = self.animals[index]
+	if row == nil then
+		return
+	end
+
+	cell:getAttribute("icon"):setImageFilename(row.imageFilename)
+	cell:getAttribute("name"):setText(row.title)
+
+	-- Eine Produktion ohne Höchstalter nimmt Tiere jeden Alters ab dem Mindestalter, dort stünde sonst eine Monatszahl, die kein Tier je erreicht.
+	if row.maxAge >= Revamp.ANIMAL_DEFAULT_MAX_AGE then
+		cell:getAttribute("age"):setText(string.format(g_i18n:getText("revamp_animalAgeFrom"), g_i18n:formatNumMonth(row.minAge)))
+	else
+		cell:getAttribute("age"):setText(string.format("%s - %s", row.minAge, g_i18n:formatNumMonth(row.maxAge)))
+	end
+
+	cell:getAttribute("health"):setText(string.format("%d - %d %%", row.minHealth, row.maxHealth))
+
+	local fillType = g_fillTypeManager:getFillTypeByIndex(row.fillTypeIndex)
+	local unitShort = fillType.unitShort
+	if unitShort == "" then
+		unitShort = g_i18n:getText("unit_literShort")
+	end
+
+	-- Nur eine Menge anzeigen, wenn das Alter an der Liefermenge nichts ändert - "1000 l - 1000 l" sähe nach einer Spanne aus, die es nicht gibt.
+	local amountText = g_i18n:formatVolume(row.biggestAmount, 0, unitShort)
+	if math.floor(row.smallestAmount) ~= math.floor(row.biggestAmount) then
+		amountText = string.format("%s - %s", g_i18n:formatVolume(row.smallestAmount, 0), amountText)
+	end
+	cell:getAttribute("result"):setText(string.format("%s %s", amountText, fillType.title))
 end
 
 ---Liefert das Verteilziel einer Zeile der Verteilen-Ansicht.
@@ -574,11 +642,23 @@ function Revamp.removeVanillaOutputModeButton(self)
 	table.removeElement(self.menuButtonInfo, self.toggleStorageModeButtonInfo)
 end
 
+---Nimmt Vanillas Deaktivieren-Knopf aus der Leiste, solange eine Linie gewählt ist, die laut Produktion von selbst laufen soll.
+---Sie lässt sich ohnehin nicht mehr abschalten (siehe Revamp.setProductionState in revamp_production.lua) - ein Knopf, der nichts bewirkt, sieht für den Spieler nach einem Fehler aus.
+---@param self table InGameMenuProductionFrame-Instanz
+function Revamp.removeActivateButtonForAutoStart(self)
+	local production = self:getSelectedProduction()
+
+	if production ~= nil and (production.autoStart or production.hideFromMenu) then
+		table.removeElement(self.menuButtonInfo, self.activateButtonInfo)
+	end
+end
+
 ---Fügt den "Verwalten"-Button in die Menü-Button-Leiste ein, sobald eine eigene Produktionsstätte gewählt ist - gleiches Muster wie PSCs eigener "Spawn"-Button (updateMenuButtonsAppend),
 ---eigene InputAction (MENU_EXTRA_1) damit es nicht mit Vanillas bestehendem Ausgangsmodus-Button (MENU_ACTIVATE) kollidiert.
 ---@param self table InGameMenuProductionFrame-Instanz
 function Revamp.addManageButton(self)
 	Revamp.removeVanillaOutputModeButton(self)
+	Revamp.removeActivateButtonForAutoStart(self)
 	if self.pointsSelector:getState() == InGameMenuProductionFrame.POINTS_OWNED then
 		local _, productionPoint = self:getSelectedProduction()
 		if productionPoint ~= nil then

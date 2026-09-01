@@ -1,7 +1,7 @@
 -- Erweitert die Vanilla-Produktions-Ladefunktion um die Revamp-eigenen Rezept-Felder (Mix-Gruppen, Booster, Fülltyp-Kategorien als Zutat, erzwungener Primär-Output, Sichtbarkeit).
 -- Die Vanilla-Funktion wird dafür aufgerufen statt komplett neu geschrieben, damit alles, was Vanilla schon selbst leistet (Storage/Verkaufsstelle/Palettenspawner/Validierung), unverändert bleibt.
 --
--- Die FeedMixer-/Tier-Trigger-Anbindung wird hier nicht geladen.
+-- Die FeedMixer-Anbindung wird hier nicht geladen, der Tier-Trigger steht in revamp_animals.lua.
 -- Mix-Gruppen, Booster/Master-Booster und die Wetter-/Zeit-Modi wertet Revamp.updateProduction weiter unten aus, die Modus-Berechnung selbst steht in revamp_productionModes.lua.
 
 Revamp.MIX_BOOST = 98
@@ -61,6 +61,7 @@ function Revamp.registerProductionXMLPaths(schema, basePath)
 	schema:register(XMLValueType.BOOL, basePath .. ".productions.production(?).outputs.output(?)#hideFromMenu", "Output ist standardmäßig im Menü versteckt", false)
 
 	Revamp.registerSpawnerXMLPaths(schema)
+	Revamp.registerAnimalXMLPaths(schema, basePath)
 end
 
 ProductionPoint.registerXMLPaths = Utils.prependedFunction(ProductionPoint.registerXMLPaths, Revamp.registerProductionXMLPaths)
@@ -238,6 +239,7 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 
 	Revamp.loadWeatherStorage(self, xmlFile, key)
 	Revamp.loadBuySellPermissions(self, xmlFile, key)
+	Revamp.loadAnimals(self, xmlFile, key, components, i3dMappings)
 
 	-- Öffnungszeiten aller Rezeptlinien zusammen: der Betrieb gilt als offen, solange mindestens eine Linie laufen darf.
 	self.openingHoursTable = {}
@@ -360,6 +362,27 @@ function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, c
 end
 
 ProductionPoint.load = Utils.overwrittenFunction(ProductionPoint.load, Revamp.loadProductionPoint)
+
+---Lässt eine Linie, die von selbst laufen soll, nicht mehr abschalten.
+---Das betrifft drei Stellen, die sie sonst wieder ausmachen würden: Vanillas ProductionPoint:setOwnerFarmId schaltet beim Bauen im laufenden Spiel jede Linie ab,
+---ein Spielstand kann ein gespeichertes "aus" von früher mitbringen (etwa wenn autoStart erst mit einer neuen Fassung der Produktion dazugekommen ist),
+---und im Menü hängt an einer gewählten Linie Vanillas Deaktivieren-Knopf (der zusätzlich verschwindet, siehe Revamp.removeActivateButtonForAutoStart).
+---Eine versteckte Linie gehört genauso dazu: sie taucht im Menü gar nicht auf, der Spieler könnte sie also nie wieder einschalten.
+---@param self table ProductionPoint-Instanz
+---@param superFunc function Ursprüngliche ProductionPoint.setProductionState
+---@param productionId string Id der Rezeptlinie
+---@param state boolean true schaltet ein, false aus
+---@param noEventSend? boolean true unterdrückt das Netzwerk-Event
+function Revamp.setProductionState(self, superFunc, productionId, state, noEventSend)
+	local production = self.productionsIdToObj[productionId]
+	if not state and production ~= nil and (production.autoStart or production.hideFromMenu) then
+		return
+	end
+
+	superFunc(self, productionId, state, noEventSend)
+end
+
+ProductionPoint.setProductionState = Utils.overwrittenFunction(ProductionPoint.setProductionState, Revamp.setProductionState)
 
 ---Verarbeitet eine einzelne Rezeptlinie für den aktuellen Takt.
 ---Ausgelagert aus Revamp.updateProduction, damit eine gerade angehaltene Linie einfach per return übersprungen werden kann.

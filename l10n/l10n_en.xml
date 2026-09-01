@@ -3,6 +3,7 @@
     <texts>
         <text name="revamp_ui_production_buildingCostsPerMonth"  text="Building costs"/>
         <text name="revamp_station_testMill"                     text="Revamp Test Mill"/>
+        <text name="revamp_station_testLivestock"                text="Revamp test livestock collection"/>
         <text name="revamp_ui_production_mixGroup"               text="Mix group %d"/>
         <text name="revamp_ui_production_converterGroup"         text="Alternative ingredients"/>
         <text name="revamp_ui_production_booster"                text="Booster"/>
@@ -90,6 +91,23 @@
         <text name="revamp_descDistributionLimit"                text="Up to which stock level should this target be supplied?"/>
         <text name="finance_productionDeliveryCosts"             text="Delivery costs"/>
 
+        <text name="revamp_transferAnimals"           text="Transfer animals"/>
+        <text name="revamp_animalDeliveryTitle"       text="Deliver animals to production"/>
+        <text name="revamp_animalDeliveryDescription" text="How much an animal is worth depends on its type, its age and its health."/>
+        <text name="revamp_animalAmountPerAnimal"     text="Amount per animal"/>
+        <text name="revamp_animalAmountTotal"         text="Amount in total"/>
+        <text name="revamp_animalCountSingular"       text="%d animal"/>
+        <text name="revamp_animalCount"               text="%d animals"/>
+        <text name="revamp_animalAgeError"            text="Animals need to be between %s and %s months old."/>
+        <text name="revamp_animalAgeErrorFrom"        text="Animals need to be at least %s months old."/>
+        <text name="revamp_animalHealthError"         text="Animals need a health between %s %% and %s %%."/>
+        <text name="revamp_animalNotValid"            text="This animal type is not accepted here."/>
+        <text name="revamp_animalNotValidForTrigger"  text="This animal type is not accepted at this trigger."/>
+        <text name="revamp_animalNoSpace"             text="The storage of this production is full."/>
+        <text name="revamp_animalAgeFrom"             text="from %s"/>
+        <text name="revamp_manageViewAnimals"         text="Animals"/>
+        <text name="revamp_manageSectionAnimals"      text="Accepted animals"/>
+
         <text name="revamp_settings_title"                           text="Production Revamp"/>
         <text name="revamp_setting_distributionActive"               text="Distribution"/>
         <text name="revamp_setting_distributionActive_tooltip"       text="Turns distribution between production points on or off. When off the game distributes on its own again, the configured targets are kept."/>
@@ -137,7 +155,7 @@
         <text name="revamp_help_manage_tradeTitle"     text="Buying and selling"/>
         <text name="revamp_help_manage_trade"          text="Ingredients can be bought and products sold right at the production point, without driving anything. Buying costs more and selling pays less than at the market, so the convenience has a price. Individual goods can be excluded from this."/>
         <text name="revamp_help_manage_viewsTitle"     text="More views"/>
-        <text name="revamp_help_manage_views"          text="The confirm key switches between goods, production lines and distribution. In the production lines you choose which ingredient is used when several are possible. Under distribution you decide which production points receive your products, and in which order."/>
+        <text name="revamp_help_manage_views"          text="The confirm key switches between goods, production lines and distribution, plus animals at a production that accepts them. In the production lines you choose which ingredient is used when several are possible. Under distribution you decide which production points receive your products, and in which order."/>
         <text name="revamp_help_spawn_title"           text="Taking out goods"/>
         <text name="revamp_help_spawn_intro"           text="Stored products can be taken out as pallets, bales or wood logs whenever you want, instead of waiting for the game to place something on its own."/>
         <text name="revamp_help_spawn_howTitle"        text="How it works"/>
@@ -146,6 +164,12 @@
         <text name="revamp_help_spawn_options"         text="Bales that come out wrapped get a wrapping colour of your choice. In multiplayer you also decide which farm the goods should belong to."/>
         <text name="revamp_help_spawn_siloTitle"       text="At silos as well"/>
         <text name="revamp_help_spawn_silo"            text="A silo built for it can do the same. There it is triggered at its own trigger at the building."/>
+        <text name="revamp_help_animals_title"         text="Delivering animals"/>
+        <text name="revamp_help_animals_intro"         text="Some productions accept live animals as an ingredient, a slaughterhouse for example. They have their own trigger at the building where you pull up with a livestock trailer."/>
+        <text name="revamp_help_animals_howTitle"      text="How it works"/>
+        <text name="revamp_help_animals_how"           text="Drive the trailer to the trigger and stay in the vehicle. Then pick the group of animals from your trailer and how many of them you want to deliver. If a group is not accepted, the reason is shown where the number would be."/>
+        <text name="revamp_help_animals_amountTitle"   text="What an animal is worth"/>
+        <text name="revamp_help_animals_amount"        text="The amount depends on the animal type, its age and its health: older and healthier animals are worth more. Which animals a production accepts and what they are worth is listed in the manage dialog under “Animals”."/>
         <text name="revamp_help_settings_title"        text="Settings"/>
         <text name="revamp_help_settings_globalTitle"  text="For the whole savegame"/>
         <text name="revamp_help_settings_global"       text="In the settings, under Game, you find the “Production Revamp” section. There an administrator turns individual features off for everyone and sets who may buy and sell, what distribution costs, and what selling on site pays. Whatever is turned off also disappears from the controls."/>

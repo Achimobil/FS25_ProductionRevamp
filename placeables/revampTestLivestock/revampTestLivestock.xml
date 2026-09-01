@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="utf-8" standalone="no" ?>
+<!-- Test-Produktionsstätte für den Tier-Trigger: Tiere werden am Auslöser abgegeben und zu einer Ware im Lager,
+     die anschließend ein ganz normales Rezept weiterverarbeitet.
+
+     Als Modell dient bewusst der Vanilla-Kuhstall, weil dessen i3d bei Node 0>12 schon einen Auslöser mitbringt,
+     der auf Anhänger reagiert (Maske 0x110000) - ein eigenes Modell bräuchte genau diesen einen Knoten und sonst nichts.
+     Die i3d-Zuordnungen unten sind deshalb die des Vanilla-Stalls; alles, was zum Stall selbst gehört (Futter, Wasser,
+     Zaun, Weide), bleibt ungenutzt, da diese Placeable eine Produktionsstätte und kein Tierstall ist. -->
+<placeable type="RevampProductionPoint" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://validation.gdn.giants-software.com/xml/fs25/placeable.xsd">
+    <storeData>
+        <name>$l10n_revamp_station_testLivestock</name>
+        <functions>
+            <function>$l10n_function_productionPoint</function>
+        </functions>
+        <image>$data/placeables/brandless/animalHusbandries/cowBarnSmall/store_cowBarnSmall.png</image>
+        <price>15000</price>
+        <canBeSold>true</canBeSold>
+        <showInStore>true</showInStore>
+        <lifetime>1000</lifetime>
+        <rotation>0</rotation>
+        <brand>NONE</brand>
+        <species>PLACEABLE</species>
+        <category>productionPoints</category>
+        <brush>
+            <type>placeable</type>
+            <category>production</category>
+            <tab>factories</tab>
+        </brush>
+    </storeData>
+
+    <base>
+        <filename>$data/placeables/brandless/animalHusbandries/cowBarnSmall/cowBarnSmall.i3d</filename>
+    </base>
+
+    <placement useRandomYRotation="false" useManualYRotation="true">
+        <testAreas>
+            <testArea startNode="testArea1Start" endNode="testArea1End"/>
+        </testAreas>
+        <sounds>
+            <place template="smallImp"/>
+        </sounds>
+    </placement>
+
+    <clearAreas>
+        <clearArea startNode="clearArea1Start" widthNode="clearArea1Width" heightNode="clearArea1Height"/>
+    </clearAreas>
+
+    <leveling requireLeveling="true" maxSmoothDistance="10" maxSlope="75" maxEdgeAngle="30">
+        <levelAreas>
+            <levelArea startNode="levelArea1Start" widthNode="levelArea1Width" heightNode="levelArea1Height" groundType="dirt"/>
+        </levelAreas>
+    </leveling>
+
+    <indoorAreas>
+        <indoorArea startNode="indoorArea1Start" widthNode="indoorArea1Width" heightNode="indoorArea1Height"/>
+    </indoorAreas>
+
+    <tipOcclusionUpdateAreas>
+        <tipOcclusionUpdateArea startNode="tipOcclusionUpdateArea1Start" endNode="tipOcclusionUpdateArea1End"/>
+    </tipOcclusionUpdateAreas>
+
+    <ai>
+        <updateAreas>
+            <updateArea startNode="tipOcclusionUpdateArea1Start" endNode="tipOcclusionUpdateArea1End"/>
+        </updateAreas>
+    </ai>
+
+    <triggerMarkers>
+        <triggerMarker node="markerAnimals" filename="$data/shared/assets/marker/markerIconAnimals.i3d"/>
+    </triggerMarkers>
+
+    <infoTrigger triggerNode="infoTrigger"/>
+
+    <hotspots>
+        <hotspot type="PRODUCTION_POINT" linkNode="markerAnimals" teleportNode="teleportNode"/>
+    </hotspots>
+
+    <productionPoint>
+        <!-- autoStart, damit beide Linien ohne Zutun laufen: die Tiere sind hier der einzige Nachschub, alles andere wäre beim Testen nur ein zusätzlicher Handgriff -->
+        <productions sharedThroughputCapacity="false" autoStart="true">
+            <production id="cheese" name="%s %s" params="$l10n_fillType_milk|$l10n_fillType_cheese" cyclesPerHour="60" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="MILK" amount="10"/>
+                </inputs>
+                <outputs>
+                    <output fillType="CHEESE" amount="4"/>
+                </outputs>
+            </production>
+            <production id="fabric" name="%s %s" params="$l10n_fillType_wool|$l10n_fillType_fabric" cyclesPerHour="30" costsPerActiveHour="1">
+                <inputs>
+                    <input fillType="WOOL" amount="8"/>
+                </inputs>
+                <outputs>
+                    <output fillType="FABRIC" amount="3"/>
+                </outputs>
+            </production>
+        </productions>
+
+        <storage>
+            <capacity fillType="MILK"   capacity="40000"/>
+            <capacity fillType="CHEESE" capacity="20000"/>
+            <capacity fillType="WOOL"   capacity="20000"/>
+            <capacity fillType="FABRIC" capacity="10000"/>
+        </storage>
+
+        <!-- Eine Produktionsstätte braucht mindestens eine Ladestelle oder einen Palettenspawner, sonst lehnt Vanilla sie beim Bauen ab.
+             Palettenplätze hat das Stallmodell nicht, also die Ladestelle - ohne eigenen Knoten, genauso wie es die Vanilla-Gewächshäuser machen. -->
+        <loadingStation fillTypes="MILK CHEESE WOOL FABRIC" supportsExtension="true"/>
+
+        <!-- Zwei Eingänge an einem gemeinsamen Auslöser, um beide Schreibweisen und beide Rechenwege abzudecken:
+             Rinder über die ganze Tierart mit hochgerechneten Zwischenwerten, Schafe über eine einzelne Rasse mit
+             festen Stufen (calculateWeight="false"), engeren Gesundheitsgrenzen und ohne Höchstalter. -->
+        <animalTrigger triggerNode="loadingTrigger">
+            <inputs>
+                <input animalType="COW" inputFillType="MILK" minAgeMonth="6" maxAgeMonth="24" minHealthFactor="50" maxHealthFactor="100">
+                    <weight ageMonth="6"  value="500"/>
+                    <weight ageMonth="24" value="2000"/>
+                </input>
+                <input animalSubType="SHEEP_LANDRACE" inputFillType="WOOL" minAgeMonth="12" minHealthFactor="80" maxHealthFactor="100" calculateWeight="false">
+                    <weight ageMonth="12" value="100"/>
+                    <weight ageMonth="36" value="400"/>
+                </input>
+            </inputs>
+        </animalTrigger>
+    </productionPoint>
+
+    <i3dMappings>
+        <i3dMapping id="clearArea1Start" node="0>0|0" />
+        <i3dMapping id="clearArea1Width" node="0>0|0|0" />
+        <i3dMapping id="clearArea1Height" node="0>0|0|1" />
+        <i3dMapping id="levelArea1Start" node="0>1|0" />
+        <i3dMapping id="levelArea1Width" node="0>1|0|0" />
+        <i3dMapping id="levelArea1Height" node="0>1|0|1" />
+        <i3dMapping id="testArea1Start" node="0>2|0" />
+        <i3dMapping id="testArea1End" node="0>2|0|0" />
+        <i3dMapping id="indoorArea1Start" node="0>3|0" />
+        <i3dMapping id="indoorArea1Width" node="0>3|0|0" />
+        <i3dMapping id="indoorArea1Height" node="0>3|0|1" />
+        <i3dMapping id="tipOcclusionUpdateArea1Start" node="0>4|0" />
+        <i3dMapping id="tipOcclusionUpdateArea1End" node="0>4|0|0" />
+        <i3dMapping id="teleportNode" node="0>6" />
+        <i3dMapping id="infoTrigger" node="0>11" />
+        <i3dMapping id="loadingTrigger" node="0>12" />
+        <i3dMapping id="markerAnimals" node="0>13|1|0" />
+    </i3dMappings>
+</placeable>
