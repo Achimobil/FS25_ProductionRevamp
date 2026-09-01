@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- MP-Event fürs Abgeben von Tieren an einem Tier-Trigger (siehe revamp_animals.lua).
 --
 -- Über die Leitung gehen nur die Nummer des Triggers und die Id der Tiergruppe: die Node-Id des Triggers ist auf jedem Rechner

@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- Zeigt den Bestand eines Fülltyps als Ziffernfolge am Gebäude an, wie eine LCD-Tafel an einem echten Silo.
 -- Trotz des ähnlichen Namens etwas völlig anderes als die Objektdarstellung (revampObjectFillLevelSpecialization.lua): hier geht es um eine Zahl, dort um sichtbare Objekte.
 --

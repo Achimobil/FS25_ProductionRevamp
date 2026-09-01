@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- Vanilla widerspricht sich bei einem Lager, das den gemeinsamen Topf aus <storage>#capacity mit einzelnen <capacity fillType="..."/>-Zeilen mischt:
 -- Storage:load bildet den belegten Anteil des gemeinsamen Topfes ausdrücklich nur über die Fülltypen ohne eigene Zeile, Storage:getFreeCapacity dagegen über sämtliche Fülltypen des Lagers.
 -- Sobald die einzeln aufgeführten Fülltypen den Wert des Topfes rechnerisch ausschöpfen, meldet getFreeCapacity für jeden Fülltyp ohne eigene Zeile null freien Platz - er ließe sich dann weder abladen noch kaufen, obwohl der gemeinsame Topf tatsächlich leer ist.

@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- Einstellungen, die eine einzelne Rezeptlinie betreffen und die der Spieler im Spielstand ändern darf, statt sie hinnehmen zu müssen wie der Modder sie in der XML vorgegeben hat.
 -- Die XML-Werte sind damit nur noch der Startwert einer neu gebauten Produktionsstätte.
 --

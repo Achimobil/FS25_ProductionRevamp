@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- Vanilla begrenzt FillTypes standardmäßig auf 255 (FillTypeManager.SEND_NUM_BITS = 8, siehe FillTypeManager:addFillType) und Produktionspunkte auf ProductionChainManager.NUM_MAX_PRODUCTION_POINTS.
 -- Umfangreiche Produktions-Modpacks überschreiten beides deutlich - überzählige FillTypes werden von Vanilla dann stillschweigend verworfen ("FillTypeManager.addFillType too many fill types. Ignoring '...'").
 -- Das führt beim Laden jeder Produktion, die einen dieser FillTypes referenziert, zu Folgefehlern ("Unable to load fillType", fehlende Outputs).

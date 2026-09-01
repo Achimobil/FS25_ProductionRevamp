@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- MP-Event für den kompletten Stand der globalen Einstellungen (siehe revamp_settings.lua), immer vom Server an die Clients.
 -- Es geht an einen beitretenden Spieler und nach jeder Änderung an alle - genauso wie Vanilla seine eigenen Spielstand-Einstellungen mit SavegameSettingsEvent verteilt.
 --

@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- "Verwalten"-Dialog: eigener, selbst kontrollierter Ersatz für PSCs separate Einstellungs-Dialoge.
 -- Zeigt alle FillTypes einer Produktionsstätte in bis zu drei Bereichen (Input / Input+Output / Output, punktweiter Abgleich wie im FS25_InfoDisplayExtension-Vorbild -
 -- ein FillType gilt als "Input+Output", sobald er IRGENDWO am Punkt Input UND IRGENDWO Output ist, auch wenn beides in verschiedenen Rezeptlinien passiert) mit echten Mengenangaben statt Balken.

@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- Tier-Trigger an einer Produktionsstätte: ein Tiertransporter fährt an den Trigger, der Spieler wählt eine Tiergruppe und eine Anzahl, und die Tiere werden zu einer Warenmenge im Lager der Produktionsstätte.
 -- Damit lässt sich zum Beispiel ein Schlachter bauen, dessen Zutat lebende Tiere sind - die Verarbeitung danach ist ein ganz normales Rezept, das diesen Fülltyp als Zutat hat.
 --

@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- MP-Event für eine einzelne, von einem Admin im Einstellungsmenü geänderte Einstellung (siehe revamp_settings.lua), immer vom Client an den Server.
 -- Der Server prüft die Adminrechte, übernimmt die Änderung und schickt danach den kompletten Stand an alle zurück (Revamp_EventSettings) -
 -- so steht auf jedem Rechner das, was der Server tatsächlich übernommen hat, und nicht das, was ein Client gerne hätte.

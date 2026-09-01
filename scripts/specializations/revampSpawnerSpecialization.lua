@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- Auslagern an einem Silo: ein Auslöser am Gebäude, der denselben Auslagern-Dialog öffnet wie eine Produktionsstätte.
 -- Die Produktionsstätte braucht dafür keine Spezialisierung, sie bringt mit ProductionPointActivatable längst einen Auslöser mit, an den sich Revamp hängt (siehe revamp_spawner.lua).
 -- Ein Silo hat nichts Vergleichbares, deshalb hier ein eigener Trigger samt Aktivierbarem.

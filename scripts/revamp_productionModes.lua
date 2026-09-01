@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- Wetter- und zeitabhängige Produktion.
 -- Eine Rezeptlinie bekommt über modes="sun hourly ..." eine Liste von Modi, die pro Produktionstakt entweder den Durchsatz skalieren (Wetter-Modi) oder die Linie ganz anhalten (Zeit-Modi).
 -- Alle Modi einer Linie wirken zusammen: die Wetter-Faktoren multiplizieren sich, ein einziger blockierender Zeit-Modus hält die ganze Linie an.

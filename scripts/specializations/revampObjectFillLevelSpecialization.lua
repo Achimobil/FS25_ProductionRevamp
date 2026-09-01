@@ -1,3 +1,15 @@
+--[[
+Part of Production Revamp for Farming Simulator 25
+
+Originally created by Braeven for Farming Simulator 22.
+Continued for FS25 by Achimobil, with Braeven's explicit permission.
+
+Copyright (C) Achimobil 2026
+
+Copying or republishing parts of this mod without explicit permission is not
+allowed. See the repository README for the full terms.
+]]
+
 -- Blendet Objekte im Modell abhängig vom Lagerbestand nacheinander ein: je voller das Lager, desto mehr Kinder des angegebenen Wurzelknotens sind sichtbar.
 -- Gedacht für Dinge, die man im Lager tatsächlich stapeln würde - Paletten, Säcke, Kisten - statt für eine abstrakte Anzeige.
 --
