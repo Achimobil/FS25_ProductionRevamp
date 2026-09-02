@@ -454,8 +454,8 @@ end
 
 InGameMenuProductionFrame.populateCellForItemInSection = Utils.appendedFunction(InGameMenuProductionFrame.populateCellForItemInSection, Revamp.populateOutgoingFillTypeCell)
 
----Produktionseigene Paletten (abweichend vom FillType-Standard, z.B. ein individuell texturiertes Mehl-Sack-Modell) werden nur hier aus der FillType-XML ausgelesen
----und für den späteren Auslagern-Dialog (revamp_spawner.lua) zwischengespeichert - Vanilla selbst kennt dieses <pallet filename="..."> Element nicht.
+---Vanilla liest <pallet filename="..."> selbst, behält aber nur eine Palette je Fülltyp (FillTypeDesc.palletFilename, der letzte Eintrag gewinnt).
+---Hier wird dieselbe Angabe zusätzlich je Mod-Umgebung gesammelt, damit im Auslagern-Dialog (revamp_spawner.lua) die Standard-Palette und die eigenen Paletten mehrerer Mods nebeneinander zur Wahl stehen.
 ---@param self table FillTypeDesc-Instanz
 ---@param superFunc function Ursprüngliches FillTypeDesc.loadFromXMLFile
 ---@param xmlFile table XMLFile der FillType-XML
