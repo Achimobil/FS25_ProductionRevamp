@@ -138,43 +138,69 @@
         <text name="revamp_setting_showDistributionTargets"          text="Show distribution targets"/>
         <text name="revamp_setting_showDistributionTargets_tooltip"  text="Shows behind every product in the output list where it is delivered to first."/>
 
-        <text name="revamp_help_title"                 text="Production Revamp"/>
-        <text name="revamp_help_menu_title"            text="Production menu"/>
-        <text name="revamp_help_menu_dualRoleTitle"    text="Every good only once"/>
-        <text name="revamp_help_menu_dualRole"         text="A good that is both an ingredient and a product at the same production point used to be listed twice. It now appears once, in its own section between the incoming materials and the outgoing products."/>
-        <text name="revamp_help_menu_sharedTitle"      text="Shared storage"/>
-        <text name="revamp_help_menu_shared"           text="An asterisk behind an amount means several goods share the same storage space. The capacity shown is what is currently still free for that good, and it drops as soon as one of the others grows. The size of the shared space is shown in the info box below."/>
-        <text name="revamp_help_menu_extrasTitle"      text="Additional information"/>
-        <text name="revamp_help_menu_extras"           text="Below the name of each production point you can see its monthly building costs. The symbol next to a production line shows whether the point runs all lines at the same time or one after another. Both can be hidden in the settings."/>
-        <text name="revamp_help_menu_buttonsTitle"     text="Two new buttons"/>
-        <text name="revamp_help_menu_buttons"          text="The bar at the bottom gains “Manage” and “Take out goods”. Both are also available directly at the building, without going through the menu."/>
-        <text name="revamp_help_manage_title"          text="Manage"/>
-        <text name="revamp_help_manage_intro"          text="The manage dialog lists all goods of a production point with exact amounts instead of bars only, split by whether they are an ingredient, a product, or both."/>
-        <text name="revamp_help_manage_outputTitle"    text="What happens to a product"/>
-        <text name="revamp_help_manage_output"         text="For every product you decide what should happen to it: keep it in storage, sell it right away, distribute it to other production points, or store it and take it out later as pallets or bales."/>
-        <text name="revamp_help_manage_tradeTitle"     text="Buying and selling"/>
-        <text name="revamp_help_manage_trade"          text="Ingredients can be bought and products sold right at the production point, without driving anything. Buying costs more and selling pays less than at the market, so the convenience has a price. Individual goods can be excluded from this."/>
-        <text name="revamp_help_manage_viewsTitle"     text="More views"/>
-        <text name="revamp_help_manage_views"          text="The confirm key switches between goods, production lines and distribution, plus animals at a production that accepts them. In the production lines you choose which ingredient is used when several are possible. Under distribution you decide which production points receive your products, and in which order."/>
-        <text name="revamp_help_spawn_title"           text="Taking out goods"/>
-        <text name="revamp_help_spawn_intro"           text="Stored products can be taken out as pallets, bales or wood logs whenever you want, instead of waiting for the game to place something on its own."/>
-        <text name="revamp_help_spawn_howTitle"        text="How it works"/>
-        <text name="revamp_help_spawn_how"             text="Pick the good, then the packaging, then the amount. Bales come as round or square bales in the sizes available for that good, and for wood logs you choose the length. The amount of liters per unit is always shown."/>
-        <text name="revamp_help_spawn_optionsTitle"    text="Wrapping colour and owner"/>
-        <text name="revamp_help_spawn_options"         text="Bales that come out wrapped get a wrapping colour of your choice. In multiplayer you also decide which farm the goods should belong to."/>
-        <text name="revamp_help_spawn_siloTitle"       text="At silos as well"/>
-        <text name="revamp_help_spawn_silo"            text="A silo built for it can do the same. There it is triggered at its own trigger at the building."/>
-        <text name="revamp_help_animals_title"         text="Delivering animals"/>
-        <text name="revamp_help_animals_intro"         text="Some productions accept live animals as an ingredient, a slaughterhouse for example. They have their own trigger at the building where you pull up with a livestock trailer."/>
-        <text name="revamp_help_animals_howTitle"      text="How it works"/>
-        <text name="revamp_help_animals_how"           text="Drive the trailer to the trigger and stay in the vehicle. Then pick the group of animals from your trailer and how many of them you want to deliver. If a group is not accepted, the reason is shown where the number would be."/>
-        <text name="revamp_help_animals_amountTitle"   text="What an animal is worth"/>
-        <text name="revamp_help_animals_amount"        text="The amount depends on the animal type, its age and its health: older and healthier animals are worth more. Which animals a production accepts and what they are worth is listed in the manage dialog under “Animals”."/>
-        <text name="revamp_help_settings_title"        text="Settings"/>
-        <text name="revamp_help_settings_globalTitle"  text="For the whole savegame"/>
-        <text name="revamp_help_settings_global"       text="In the settings, under Game, you find the “Production Revamp” section. There an administrator turns individual features off for everyone and sets who may buy and sell, what distribution costs, and what selling on site pays. Whatever is turned off also disappears from the controls."/>
-        <text name="revamp_help_settings_displayTitle" text="Only for you"/>
-        <text name="revamp_help_settings_display"      text="Under General there is also “Production Revamp: Display”. These switches only affect your own screen, change nothing about the game itself, and need no admin rights."/>
-        <text name="revamp_help_settings_keep"         text="Nothing is lost when a feature is turned off: distribution targets, stored goods and the chosen modes stay saved and apply again as soon as the switch is turned back on."/>
+        <text name="revamp_help_title"                     text="Production Revamp"/>
+        <text name="revamp_help_menu_title"                text="Production menu"/>
+        <text name="revamp_help_menu_dualRoleTitle"        text="Every good only once"/>
+        <text name="revamp_help_menu_dualRole"             text="A good that is both an ingredient and a product at the same production point used to be listed twice. It now appears once, in its own section between the incoming materials and the outgoing products."/>
+        <text name="revamp_help_menu_sharedTitle"          text="Shared storage"/>
+        <text name="revamp_help_menu_shared"               text="An asterisk behind an amount means several goods share the same storage space. The capacity shown is what is currently still free for that good, and it drops as soon as one of the others grows. The size of the shared space is shown in the info box below."/>
+        <text name="revamp_help_menu_extrasTitle"          text="Additional information"/>
+        <text name="revamp_help_menu_extras"               text="Below the name of each production point you can see its monthly building costs. The symbol next to a production line shows whether the point runs all lines at the same time or one after another. Both can be hidden in the settings."/>
+        <text name="revamp_help_menu_buttonsTitle"         text="Two new buttons"/>
+        <text name="revamp_help_menu_buttons"              text="The bar at the bottom gains “Manage” and “Take out goods”. Both are also available directly at the building, without going through the menu."/>
+        <text name="revamp_help_recipe_title"              text="Reading recipes"/>
+        <text name="revamp_help_recipe_intro"              text="The recipe of a production line is shown on the right of the production menu. Above the ingredients you see the conditions under which the line runs at all, below them the ingredients themselves, and last what comes out of it."/>
+        <text name="revamp_help_recipe_mixTitle"           text="Ingredients to choose from"/>
+        <text name="revamp_help_recipe_mix"                text="Ingredients under a shared heading are alternatives: only one of them is needed, and the line keeps running as long as one of them is in storage. That is how a recipe asks for “any kind of grain” instead of wheat specifically. Which one is used is set in the manage dialog under “Production lines”."/>
+        <text name="revamp_help_recipe_boostTitle"         text="Boosters"/>
+        <text name="revamp_help_recipe_boost"              text="Boosters are optional extra ingredients that increase the yield. If they run out, production carries on and simply pays less. The booster group shows which factor is currently in effect, and the recipe shows the combined effect of all boosters together."/>
+        <text name="revamp_help_recipe_masterTitle"        text="Master boosters"/>
+        <text name="revamp_help_recipe_master"             text="A master booster speeds up the whole line instead of only increasing the yield: more is consumed and more is produced. Of several master boosters only ever one is in effect, and which one that is you set in the manage dialog just like the ingredient choice."/>
+        <text name="revamp_help_weather_title"             text="Weather and time of day"/>
+        <text name="revamp_help_weather_intro"             text="Some production lines depend on the weather or on the time of day. A bakery has opening hours, a solar dryer only works in sunshine, a windmill depends on the wind. What applies to a line is shown in the recipe above the ingredients, one line per condition."/>
+        <text name="revamp_help_weather_stopTitle"         text="When nothing happens"/>
+        <text name="revamp_help_weather_stop"              text="When a line is standing still, the production menu names the reason instead of “running”: outside opening hours, wrong season, wrong month, or not enough weather. A line stopped like this consumes nothing, produces nothing and costs no running expenses either. That is different from a line missing an ingredient – that one keeps running and is only waiting for material."/>
+        <text name="revamp_help_weather_speedTitle"        text="Faster and slower"/>
+        <text name="revamp_help_weather_speed"             text="With the weather a line does not stop but works at different speeds. How strongly the weather is affecting it right now is shown in the info box next to status, cycles and costs. Some lines have a base load and keep running slowly even in the worst weather."/>
+        <text name="revamp_help_weather_storageTitle"      text="Storage the weather fills"/>
+        <text name="revamp_help_weather_storage"           text="A storage can also fill or empty through the weather with no production at all, a rain barrel for example. That works even when no production is switched on at the point."/>
+        <text name="revamp_help_manage_title"              text="Manage"/>
+        <text name="revamp_help_manage_intro"              text="The manage dialog lists all goods of a production point with exact amounts instead of bars only, split by whether they are an ingredient, a product, or both."/>
+        <text name="revamp_help_manage_outputTitle"        text="What happens to a product"/>
+        <text name="revamp_help_manage_output"             text="For every product you decide what should happen to it: keep it in storage, sell it right away, distribute it to other production points, or store it and take it out later as pallets or bales."/>
+        <text name="revamp_help_manage_tradeTitle"         text="Buying and selling"/>
+        <text name="revamp_help_manage_trade"              text="Ingredients can be bought and products sold right at the production point, without driving anything. Buying costs more and selling pays less than at the market, so the convenience has a price. Individual goods can be excluded from this."/>
+        <text name="revamp_help_manage_viewsTitle"         text="More views"/>
+        <text name="revamp_help_manage_views"              text="The confirm key switches between goods, production lines and distribution, plus animals at a production that accepts them. In the production lines you choose which ingredient is used when several are possible. Under distribution you decide which production points receive your products, and in which order."/>
+        <text name="revamp_help_distribution_title"        text="Distribution"/>
+        <text name="revamp_help_distribution_intro"        text="When a product is set to distribute, the production point sends it once per game hour to your own productions that need it as an ingredient. Who gets how much of it is set in the manage dialog in the “Distribution” view."/>
+        <text name="revamp_help_distribution_levelsTitle"  text="The four levels"/>
+        <text name="revamp_help_distribution_levels"       text="The space bar steps the level of each consumer. “Primary” is served first, “Secondary” gets what the primary targets can no longer take, “Remainder” what is left after that, and “Never” nothing at all. Several targets on the same level get equal shares. Without any change every target sits on “Remainder”, which spreads everything evenly."/>
+        <text name="revamp_help_distribution_runningTitle" text="Only to running businesses"/>
+        <text name="revamp_help_distribution_running"      text="Only whoever is actually processing the good right now is supplied. A production line that is switched off gets nothing, and neither does one standing still because of its opening hours or the weather. The list still shows every possible consumer, including the ones currently switched off."/>
+        <text name="revamp_help_distribution_limitTitle"   text="Limit"/>
+        <text name="revamp_help_distribution_limit"        text="The limit sets the stock level up to which a target is supplied. “None” stops deliveries entirely, “Full” supplies without a limit. That leaves room for whatever you deliver yourself."/>
+        <text name="revamp_help_distribution_costsTitle"   text="What delivering costs"/>
+        <text name="revamp_help_distribution_costs"        text="Every delivery costs money depending on amount and distance, and it is charged to the receiver. The list shows per target what that amounts to per hour; a dash means this target gets nothing with the current setting. In the finances overview these costs appear as their own entry, “Delivery costs”."/>
+        <text name="revamp_help_spawn_title"               text="Taking out goods"/>
+        <text name="revamp_help_spawn_intro"               text="Stored products can be taken out as pallets, bales or wood logs whenever you want, instead of waiting for the game to place something on its own."/>
+        <text name="revamp_help_spawn_howTitle"            text="How it works"/>
+        <text name="revamp_help_spawn_how"                 text="Pick the good, then the packaging, then the amount. Bales come as round or square bales in the sizes available for that good, and for wood logs you choose the length. The amount of liters per unit is always shown."/>
+        <text name="revamp_help_spawn_optionsTitle"        text="Wrapping colour and owner"/>
+        <text name="revamp_help_spawn_options"             text="Bales that come out wrapped get a wrapping colour of your choice. In multiplayer you also decide which farm the goods should belong to."/>
+        <text name="revamp_help_spawn_siloTitle"           text="At silos as well"/>
+        <text name="revamp_help_spawn_silo"                text="A silo built for it can do the same. There it is triggered at its own trigger at the building."/>
+        <text name="revamp_help_animals_title"             text="Delivering animals"/>
+        <text name="revamp_help_animals_intro"             text="Some productions accept live animals as an ingredient, a slaughterhouse for example. They have their own trigger at the building where you pull up with a livestock trailer."/>
+        <text name="revamp_help_animals_howTitle"          text="How it works"/>
+        <text name="revamp_help_animals_how"               text="Drive the trailer to the trigger and stay in the vehicle. Then pick the group of animals from your trailer and how many of them you want to deliver. If a group is not accepted, the reason is shown where the number would be."/>
+        <text name="revamp_help_animals_amountTitle"       text="What an animal is worth"/>
+        <text name="revamp_help_animals_amount"            text="The amount depends on the animal type, its age and its health: older and healthier animals are worth more. Which animals a production accepts and what they are worth is listed in the manage dialog under “Animals”."/>
+        <text name="revamp_help_settings_title"            text="Settings"/>
+        <text name="revamp_help_settings_globalTitle"      text="For the whole savegame"/>
+        <text name="revamp_help_settings_global"           text="In the settings, under Game, you find the “Production Revamp” section. There an administrator turns individual features off for everyone and sets who may buy and sell, what distribution costs, and what selling on site pays. Whatever is turned off also disappears from the controls."/>
+        <text name="revamp_help_settings_displayTitle"     text="Only for you"/>
+        <text name="revamp_help_settings_display"          text="Under General there is also “Production Revamp: Display”. These switches only affect your own screen, change nothing about the game itself, and need no admin rights."/>
+        <text name="revamp_help_settings_keep"             text="Nothing is lost when a feature is turned off: distribution targets, stored goods and the chosen modes stay saved and apply again as soon as the switch is turned back on."/>
     </texts>
 </l10n>

@@ -138,43 +138,69 @@
         <text name="revamp_setting_showDistributionTargets"          text="Verteil-Ziele anzeigen"/>
         <text name="revamp_setting_showDistributionTargets_tooltip"  text="Zeigt in der Liste der Erzeugnisse hinter jeder Ware, wohin sie vorrangig geliefert wird."/>
 
-        <text name="revamp_help_title"                 text="Production Revamp"/>
-        <text name="revamp_help_menu_title"            text="Produktionsmenü"/>
-        <text name="revamp_help_menu_dualRoleTitle"    text="Jede Ware nur einmal"/>
-        <text name="revamp_help_menu_dualRole"         text="Eine Ware, die an derselben Produktionsstätte Zutat und Erzeugnis zugleich ist, stand bisher zweimal in der Liste. Sie steht jetzt einmal in einem eigenen Bereich zwischen den eingehenden Materialien und den ausgehenden Erzeugnissen."/>
-        <text name="revamp_help_menu_sharedTitle"      text="Geteilter Lagerplatz"/>
-        <text name="revamp_help_menu_shared"           text="Ein Stern hinter der Menge bedeutet, dass sich mehrere Waren denselben Lagerplatz teilen. Die angezeigte Kapazität ist dann das, was für diese Ware gerade noch frei ist, und sie sinkt, sobald eine der anderen Waren zunimmt. Wie groß der gemeinsame Platz insgesamt ist, steht unten im Infokasten."/>
-        <text name="revamp_help_menu_extrasTitle"      text="Zusätzliche Angaben"/>
-        <text name="revamp_help_menu_extras"           text="Unter dem Namen jeder Produktionsstätte stehen ihre monatlichen Gebäudekosten. Das Symbol neben einer Produktionslinie zeigt, ob die Stätte alle Linien gleichzeitig abarbeitet oder nacheinander. Beides lässt sich in den Einstellungen ausblenden."/>
-        <text name="revamp_help_menu_buttonsTitle"     text="Zwei neue Schaltflächen"/>
-        <text name="revamp_help_menu_buttons"          text="In der Leiste unten kommen „Verwalten“ und „Waren auslagern“ dazu. Beides erreichst du auch direkt am Gebäude, ohne den Umweg über das Menü."/>
-        <text name="revamp_help_manage_title"          text="Verwalten"/>
-        <text name="revamp_help_manage_intro"          text="Der Verwalten-Dialog zeigt alle Waren einer Produktionsstätte mit genauen Mengenangaben statt nur als Balken, aufgeteilt danach, ob sie Zutat, Erzeugnis oder beides sind."/>
-        <text name="revamp_help_manage_outputTitle"    text="Was mit einem Erzeugnis passiert"/>
-        <text name="revamp_help_manage_output"         text="Für jedes Erzeugnis stellst du hier ein, was damit geschehen soll: im Lager behalten, sofort verkaufen, an andere Produktionsstätten verteilen, oder einlagern und später gezielt als Palette oder Ballen herausholen."/>
-        <text name="revamp_help_manage_tradeTitle"     text="Kaufen und verkaufen"/>
-        <text name="revamp_help_manage_trade"          text="Zutaten lassen sich direkt an der Produktionsstätte zukaufen und Erzeugnisse dort verkaufen, ohne etwas fahren zu müssen. Der Zukauf ist teurer und der Verkauf bringt weniger als am Markt, die Bequemlichkeit kostet also etwas. Einzelne Waren können davon ausgenommen sein."/>
-        <text name="revamp_help_manage_viewsTitle"     text="Weitere Ansichten"/>
-        <text name="revamp_help_manage_views"          text="Mit der Bestätigen-Taste schaltest du zwischen Waren, Produktionslinien und Verteilen um, an einer Produktionsstätte, die Tiere annimmt, zusätzlich auf Tiere. In den Produktionslinien legst du fest, welche Zutat verwendet wird, wenn mehrere in Frage kommen. Unter Verteilen bestimmst du, welche Produktionsstätten deine Erzeugnisse bekommen und in welcher Reihenfolge."/>
-        <text name="revamp_help_spawn_title"           text="Waren auslagern"/>
-        <text name="revamp_help_spawn_intro"           text="Eingelagerte Erzeugnisse holst du gezielt als Palette, Ballen oder Stammholz heraus, statt zu warten, bis das Spiel von selbst etwas hinstellt."/>
-        <text name="revamp_help_spawn_howTitle"        text="So geht es"/>
-        <text name="revamp_help_spawn_how"             text="Wähle die Ware, dann die Verpackung und zuletzt die Menge. Bei Ballen stehen Rund- und Quaderballen in den Größen zur Wahl, die es für diese Ware gibt, bei Stammholz wählst du die Länge. Angezeigt wird immer, wie viele Liter eine Einheit kostet."/>
-        <text name="revamp_help_spawn_optionsTitle"    text="Folienfarbe und Empfänger"/>
-        <text name="revamp_help_spawn_options"         text="Ballen, die eingewickelt erscheinen, bekommen eine Folienfarbe deiner Wahl. Im Mehrspieler legst du außerdem fest, welchem Hof das Ausgelagerte gehören soll."/>
-        <text name="revamp_help_spawn_siloTitle"       text="Auch am Silo"/>
-        <text name="revamp_help_spawn_silo"            text="Ein entsprechend gebautes Silo kann dasselbe. Ausgelöst wird es dort an einem eigenen Auslöser am Gebäude."/>
-        <text name="revamp_help_animals_title"         text="Tiere abgeben"/>
-        <text name="revamp_help_animals_intro"         text="Manche Produktionsstätten nehmen lebende Tiere als Zutat an, zum Beispiel ein Schlachter. Sie haben dafür einen eigenen Auslöser am Gebäude, an dem du mit einem Tiertransporter vorfährst."/>
-        <text name="revamp_help_animals_howTitle"      text="So geht es"/>
-        <text name="revamp_help_animals_how"           text="Fahre mit dem Transporter an den Auslöser und bleib im Fahrzeug sitzen. Wähle dann die Tiergruppe aus deinem Anhänger und wie viele Tiere du abgeben willst. Wird eine Gruppe nicht angenommen, steht der Grund an der Stelle, an der sonst die Anzahl steht."/>
-        <text name="revamp_help_animals_amountTitle"   text="Was ein Tier einbringt"/>
-        <text name="revamp_help_animals_amount"        text="Die Menge hängt von der Tierart, dem Alter und der Gesundheit ab: ältere und gesündere Tiere bringen mehr. Welche Tiere eine Produktionsstätte überhaupt annimmt und was sie einbringen, steht im Verwalten-Dialog in der Ansicht „Tiere“."/>
-        <text name="revamp_help_settings_title"        text="Einstellungen"/>
-        <text name="revamp_help_settings_globalTitle"  text="Für den ganzen Spielstand"/>
-        <text name="revamp_help_settings_global"       text="Unter Einstellungen und dort im Bereich Spiel steht der Abschnitt „Production Revamp“. Dort schaltet ein Administrator einzelne Funktionen für alle ab und legt fest, wer kaufen und verkaufen darf, was das Verteilen kostet und was der Direktverkauf einbringt. Was abgeschaltet ist, verschwindet auch aus der Bedienung."/>
-        <text name="revamp_help_settings_displayTitle" text="Nur für dich"/>
-        <text name="revamp_help_settings_display"      text="Im Bereich Allgemein gibt es zusätzlich „Production Revamp: Anzeige“. Diese Schalter gelten nur für deinen Bildschirm, ändern nichts am Spielgeschehen und brauchen keine Adminrechte."/>
-        <text name="revamp_help_settings_keep"         text="Beim Abschalten geht nichts verloren: eingestellte Verteil-Ziele, eingelagerte Waren und gewählte Modi bleiben gespeichert und gelten unverändert weiter, sobald der Schalter wieder umgelegt wird."/>
+        <text name="revamp_help_title"                     text="Production Revamp"/>
+        <text name="revamp_help_menu_title"                text="Produktionsmenü"/>
+        <text name="revamp_help_menu_dualRoleTitle"        text="Jede Ware nur einmal"/>
+        <text name="revamp_help_menu_dualRole"             text="Eine Ware, die an derselben Produktionsstätte Zutat und Erzeugnis zugleich ist, stand bisher zweimal in der Liste. Sie steht jetzt einmal in einem eigenen Bereich zwischen den eingehenden Materialien und den ausgehenden Erzeugnissen."/>
+        <text name="revamp_help_menu_sharedTitle"          text="Geteilter Lagerplatz"/>
+        <text name="revamp_help_menu_shared"               text="Ein Stern hinter der Menge bedeutet, dass sich mehrere Waren denselben Lagerplatz teilen. Die angezeigte Kapazität ist dann das, was für diese Ware gerade noch frei ist, und sie sinkt, sobald eine der anderen Waren zunimmt. Wie groß der gemeinsame Platz insgesamt ist, steht unten im Infokasten."/>
+        <text name="revamp_help_menu_extrasTitle"          text="Zusätzliche Angaben"/>
+        <text name="revamp_help_menu_extras"               text="Unter dem Namen jeder Produktionsstätte stehen ihre monatlichen Gebäudekosten. Das Symbol neben einer Produktionslinie zeigt, ob die Stätte alle Linien gleichzeitig abarbeitet oder nacheinander. Beides lässt sich in den Einstellungen ausblenden."/>
+        <text name="revamp_help_menu_buttonsTitle"         text="Zwei neue Schaltflächen"/>
+        <text name="revamp_help_menu_buttons"              text="In der Leiste unten kommen „Verwalten“ und „Waren auslagern“ dazu. Beides erreichst du auch direkt am Gebäude, ohne den Umweg über das Menü."/>
+        <text name="revamp_help_recipe_title"              text="Rezepte lesen"/>
+        <text name="revamp_help_recipe_intro"              text="Das Rezept einer Produktionslinie steht rechts im Produktionsmenü. Über den Zutaten stehen die Bedingungen, unter denen die Linie überhaupt läuft, darunter die Zutaten selbst und zuletzt, was dabei herauskommt."/>
+        <text name="revamp_help_recipe_mixTitle"           text="Zutaten zur Wahl"/>
+        <text name="revamp_help_recipe_mix"                text="Zutaten unter einer gemeinsamen Überschrift sind Alternativen: gebraucht wird nur eine davon, und die Linie läuft, solange eine davon im Lager liegt. So verlangt ein Rezept „irgendeine Getreidesorte“ statt genau Weizen. Welche genommen wird, stellst du im Verwalten-Dialog unter „Produktionslinien“ ein."/>
+        <text name="revamp_help_recipe_boostTitle"         text="Booster"/>
+        <text name="revamp_help_recipe_boost"              text="Booster sind freiwillige Zusatz-Zutaten, die die Ausbeute erhöhen. Fehlen sie, läuft die Produktion trotzdem weiter und bringt nur weniger ein. An der Booster-Gruppe steht, welcher Faktor gerade tatsächlich greift, und am Rezept die Gesamtwirkung aller Booster zusammen."/>
+        <text name="revamp_help_recipe_masterTitle"        text="Master-Booster"/>
+        <text name="revamp_help_recipe_master"             text="Ein Master-Booster beschleunigt die ganze Linie, statt nur die Ausbeute zu erhöhen: es wird mehr verbraucht und mehr erzeugt. Von mehreren Master-Boostern wirkt immer nur einer, und welcher das ist, stellst du wie die Zutatenwahl im Verwalten-Dialog ein."/>
+        <text name="revamp_help_weather_title"             text="Wetter und Uhrzeit"/>
+        <text name="revamp_help_weather_intro"             text="Manche Produktionslinien hängen vom Wetter oder von der Uhrzeit ab. Eine Bäckerei hat Öffnungszeiten, ein Solar-Trockner arbeitet nur bei Sonne, eine Windmühle je nach Wind. Was für eine Linie gilt, steht im Rezept über den Zutaten, eine Zeile je Bedingung."/>
+        <text name="revamp_help_weather_stopTitle"         text="Wenn nichts passiert"/>
+        <text name="revamp_help_weather_stop"              text="Steht eine Linie still, nennt das Produktionsmenü den Grund statt „läuft“: außerhalb der Öffnungszeiten, falsche Jahreszeit, falscher Monat oder Wetter reicht nicht. Eine so angehaltene Linie verbraucht nichts, erzeugt nichts und kostet auch keine Betriebskosten. Das ist etwas anderes als eine Linie, der eine Zutat fehlt – die läuft weiter und wartet nur auf Material."/>
+        <text name="revamp_help_weather_speedTitle"        text="Schneller und langsamer"/>
+        <text name="revamp_help_weather_speed"             text="Beim Wetter steht eine Linie nicht still, sondern arbeitet unterschiedlich schnell. Wie stark das Wetter gerade wirkt, steht im Infokasten neben Status, Zyklen und Kosten. Manche Linien haben eine Grundlast und laufen auch bei schlechtestem Wetter langsam weiter."/>
+        <text name="revamp_help_weather_storageTitle"      text="Lager, die das Wetter füllt"/>
+        <text name="revamp_help_weather_storage"           text="Ein Lager kann sich auch ganz ohne Produktion durch das Wetter füllen oder leeren, ein Regenfass zum Beispiel. Das läuft auch dann, wenn an der Stätte gar keine Produktion eingeschaltet ist."/>
+        <text name="revamp_help_manage_title"              text="Verwalten"/>
+        <text name="revamp_help_manage_intro"              text="Der Verwalten-Dialog zeigt alle Waren einer Produktionsstätte mit genauen Mengenangaben statt nur als Balken, aufgeteilt danach, ob sie Zutat, Erzeugnis oder beides sind."/>
+        <text name="revamp_help_manage_outputTitle"        text="Was mit einem Erzeugnis passiert"/>
+        <text name="revamp_help_manage_output"             text="Für jedes Erzeugnis stellst du hier ein, was damit geschehen soll: im Lager behalten, sofort verkaufen, an andere Produktionsstätten verteilen, oder einlagern und später gezielt als Palette oder Ballen herausholen."/>
+        <text name="revamp_help_manage_tradeTitle"         text="Kaufen und verkaufen"/>
+        <text name="revamp_help_manage_trade"              text="Zutaten lassen sich direkt an der Produktionsstätte zukaufen und Erzeugnisse dort verkaufen, ohne etwas fahren zu müssen. Der Zukauf ist teurer und der Verkauf bringt weniger als am Markt, die Bequemlichkeit kostet also etwas. Einzelne Waren können davon ausgenommen sein."/>
+        <text name="revamp_help_manage_viewsTitle"         text="Weitere Ansichten"/>
+        <text name="revamp_help_manage_views"              text="Mit der Bestätigen-Taste schaltest du zwischen Waren, Produktionslinien und Verteilen um, an einer Produktionsstätte, die Tiere annimmt, zusätzlich auf Tiere. In den Produktionslinien legst du fest, welche Zutat verwendet wird, wenn mehrere in Frage kommen. Unter Verteilen bestimmst du, welche Produktionsstätten deine Erzeugnisse bekommen und in welcher Reihenfolge."/>
+        <text name="revamp_help_distribution_title"        text="Verteilen"/>
+        <text name="revamp_help_distribution_intro"        text="Steht ein Erzeugnis auf „Verteilen“, schickt die Produktionsstätte es einmal je Spielstunde an deine eigenen Produktionen, die es als Zutat brauchen. Wer davon wie viel bekommt, stellst du im Verwalten-Dialog in der Ansicht „Verteilen“ ein."/>
+        <text name="revamp_help_distribution_levelsTitle"  text="Die vier Stufen"/>
+        <text name="revamp_help_distribution_levels"       text="Mit der Leertaste schaltest du je Abnehmer die Stufe weiter. „Primär“ bekommt zuerst, „Sekundär“ das, was die Primär-Ziele nicht mehr aufnehmen, „Rest“ was danach übrig ist, und „Nie“ gar nichts. Mehrere Ziele derselben Stufe bekommen gleich viel. Ohne Zutun steht jedes Ziel auf „Rest“, dann wird gleichmäßig an alle verteilt."/>
+        <text name="revamp_help_distribution_runningTitle" text="Nur an laufende Betriebe"/>
+        <text name="revamp_help_distribution_running"      text="Beliefert wird nur, wer die Ware gerade tatsächlich verarbeitet. Eine abgeschaltete Produktionslinie bekommt nichts, ebenso eine, die wegen ihrer Öffnungszeiten oder des Wetters gerade stillsteht. In der Liste stehen trotzdem alle möglichen Abnehmer, auch die gerade ausgeschalteten."/>
+        <text name="revamp_help_distribution_limitTitle"   text="Obergrenze"/>
+        <text name="revamp_help_distribution_limit"        text="Mit der Obergrenze legst du fest, bis zu welchem Lagerstand ein Ziel beliefert wird. „Nix“ liefert gar nicht, „Voll“ liefert ohne Obergrenze. So bleibt Platz für das, was du selbst hinfährst."/>
+        <text name="revamp_help_distribution_costsTitle"   text="Was das Liefern kostet"/>
+        <text name="revamp_help_distribution_costs"        text="Jede Lieferung kostet Geld, abhängig von Menge und Entfernung, und wird dem Empfänger belastet. In der Liste steht je Ziel, was das pro Stunde ausmacht; ein Strich bedeutet, dass dieses Ziel bei der aktuellen Einstellung nichts bekommt. In der Finanzübersicht stehen diese Kosten als eigener Posten „Lieferkosten“."/>
+        <text name="revamp_help_spawn_title"               text="Waren auslagern"/>
+        <text name="revamp_help_spawn_intro"               text="Eingelagerte Erzeugnisse holst du gezielt als Palette, Ballen oder Stammholz heraus, statt zu warten, bis das Spiel von selbst etwas hinstellt."/>
+        <text name="revamp_help_spawn_howTitle"            text="So geht es"/>
+        <text name="revamp_help_spawn_how"                 text="Wähle die Ware, dann die Verpackung und zuletzt die Menge. Bei Ballen stehen Rund- und Quaderballen in den Größen zur Wahl, die es für diese Ware gibt, bei Stammholz wählst du die Länge. Angezeigt wird immer, wie viele Liter eine Einheit kostet."/>
+        <text name="revamp_help_spawn_optionsTitle"        text="Folienfarbe und Empfänger"/>
+        <text name="revamp_help_spawn_options"             text="Ballen, die eingewickelt erscheinen, bekommen eine Folienfarbe deiner Wahl. Im Mehrspieler legst du außerdem fest, welchem Hof das Ausgelagerte gehören soll."/>
+        <text name="revamp_help_spawn_siloTitle"           text="Auch am Silo"/>
+        <text name="revamp_help_spawn_silo"                text="Ein entsprechend gebautes Silo kann dasselbe. Ausgelöst wird es dort an einem eigenen Auslöser am Gebäude."/>
+        <text name="revamp_help_animals_title"             text="Tiere abgeben"/>
+        <text name="revamp_help_animals_intro"             text="Manche Produktionsstätten nehmen lebende Tiere als Zutat an, zum Beispiel ein Schlachter. Sie haben dafür einen eigenen Auslöser am Gebäude, an dem du mit einem Tiertransporter vorfährst."/>
+        <text name="revamp_help_animals_howTitle"          text="So geht es"/>
+        <text name="revamp_help_animals_how"               text="Fahre mit dem Transporter an den Auslöser und bleib im Fahrzeug sitzen. Wähle dann die Tiergruppe aus deinem Anhänger und wie viele Tiere du abgeben willst. Wird eine Gruppe nicht angenommen, steht der Grund an der Stelle, an der sonst die Anzahl steht."/>
+        <text name="revamp_help_animals_amountTitle"       text="Was ein Tier einbringt"/>
+        <text name="revamp_help_animals_amount"            text="Die Menge hängt von der Tierart, dem Alter und der Gesundheit ab: ältere und gesündere Tiere bringen mehr. Welche Tiere eine Produktionsstätte überhaupt annimmt und was sie einbringen, steht im Verwalten-Dialog in der Ansicht „Tiere“."/>
+        <text name="revamp_help_settings_title"            text="Einstellungen"/>
+        <text name="revamp_help_settings_globalTitle"      text="Für den ganzen Spielstand"/>
+        <text name="revamp_help_settings_global"           text="Unter Einstellungen und dort im Bereich Spiel steht der Abschnitt „Production Revamp“. Dort schaltet ein Administrator einzelne Funktionen für alle ab und legt fest, wer kaufen und verkaufen darf, was das Verteilen kostet und was der Direktverkauf einbringt. Was abgeschaltet ist, verschwindet auch aus der Bedienung."/>
+        <text name="revamp_help_settings_displayTitle"     text="Nur für dich"/>
+        <text name="revamp_help_settings_display"          text="Im Bereich Allgemein gibt es zusätzlich „Production Revamp: Anzeige“. Diese Schalter gelten nur für deinen Bildschirm, ändern nichts am Spielgeschehen und brauchen keine Adminrechte."/>
+        <text name="revamp_help_settings_keep"             text="Beim Abschalten geht nichts verloren: eingestellte Verteil-Ziele, eingelagerte Waren und gewählte Modi bleiben gespeichert und gelten unverändert weiter, sobald der Schalter wieder umgelegt wird."/>
     </texts>
 </l10n>

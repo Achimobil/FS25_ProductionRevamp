@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.29</version>
+    <version>0.0.0.30</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.30 - Drei neue Seiten im Hilfe-Menü: wie ein Rezept zu lesen ist, warum eine Produktion wegen Wetter oder Uhrzeit stillsteht und wie das Verteilen funktioniert
 0.0.0.29 - Andere Mods können ihre eigenen Waren jetzt an den Verkaufsstellen und Silos der Karte anmelden, ohne dass die Karte dafür angepasst werden muss
 0.0.0.28
 - Produktionsstätten können jetzt lebende Tiere als Zutat annehmen, abgegeben werden sie mit dem Tiertransporter an einem eigenen Auslöser am Gebäude
@@ -77,7 +78,7 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
 
     <helpLines>
         <category title="$l10n_revamp_help_title">
-            <page title="$l10n_revamp_help_menu_title">
+            <page title="$l10n_revamp_help_menu_title"         iconSliceId="helpline.basicEconomy_productionChains">
                 <paragraph>
                     <title text="$l10n_revamp_help_menu_dualRoleTitle"/>
                     <text text="$l10n_revamp_help_menu_dualRole"/>
@@ -95,7 +96,41 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
                     <text text="$l10n_revamp_help_menu_buttons"/>
                 </paragraph>
             </page>
-            <page title="$l10n_revamp_help_manage_title">
+            <page title="$l10n_revamp_help_recipe_title"       iconSliceId="helpline.icon_products">
+                <paragraph>
+                    <text text="$l10n_revamp_help_recipe_intro"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_recipe_mixTitle"/>
+                    <text text="$l10n_revamp_help_recipe_mix"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_recipe_boostTitle"/>
+                    <text text="$l10n_revamp_help_recipe_boost"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_recipe_masterTitle"/>
+                    <text text="$l10n_revamp_help_recipe_master"/>
+                </paragraph>
+            </page>
+            <page title="$l10n_revamp_help_weather_title"      iconSliceId="helpline.firstSteps_seasonalFarming">
+                <paragraph>
+                    <text text="$l10n_revamp_help_weather_intro"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_weather_stopTitle"/>
+                    <text text="$l10n_revamp_help_weather_stop"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_weather_speedTitle"/>
+                    <text text="$l10n_revamp_help_weather_speed"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_weather_storageTitle"/>
+                    <text text="$l10n_revamp_help_weather_storage"/>
+                </paragraph>
+            </page>
+            <page title="$l10n_revamp_help_manage_title"       iconSliceId="helpline.basicEconomy_makingMoney">
                 <paragraph>
                     <text text="$l10n_revamp_help_manage_intro"/>
                 </paragraph>
@@ -112,7 +147,28 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
                     <text text="$l10n_revamp_help_manage_views"/>
                 </paragraph>
             </page>
-            <page title="$l10n_revamp_help_spawn_title">
+            <page title="$l10n_revamp_help_distribution_title" iconSliceId="helpline.misc_transport">
+                <paragraph>
+                    <text text="$l10n_revamp_help_distribution_intro"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_distribution_levelsTitle"/>
+                    <text text="$l10n_revamp_help_distribution_levels"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_distribution_runningTitle"/>
+                    <text text="$l10n_revamp_help_distribution_running"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_distribution_limitTitle"/>
+                    <text text="$l10n_revamp_help_distribution_limit"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_distribution_costsTitle"/>
+                    <text text="$l10n_revamp_help_distribution_costs"/>
+                </paragraph>
+            </page>
+            <page title="$l10n_revamp_help_spawn_title"        iconSliceId="helpline.misc_loadingMachines">
                 <paragraph>
                     <text text="$l10n_revamp_help_spawn_intro"/>
                 </paragraph>
@@ -129,7 +185,7 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
                     <text text="$l10n_revamp_help_spawn_silo"/>
                 </paragraph>
             </page>
-            <page title="$l10n_revamp_help_animals_title">
+            <page title="$l10n_revamp_help_animals_title"      iconSliceId="helpline.animals_general">
                 <paragraph>
                     <text text="$l10n_revamp_help_animals_intro"/>
                 </paragraph>
@@ -142,7 +198,7 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
                     <text text="$l10n_revamp_help_animals_amount"/>
                 </paragraph>
             </page>
-            <page title="$l10n_revamp_help_settings_title">
+            <page title="$l10n_revamp_help_settings_title"     iconSliceId="helpline.icon_others">
                 <paragraph>
                     <title text="$l10n_revamp_help_settings_globalTitle"/>
                     <text text="$l10n_revamp_help_settings_global"/>
