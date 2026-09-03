@@ -64,7 +64,6 @@ function RevampManageDialog.show(productionPoint)
 		local dialog = RevampManageDialog.INSTANCE
 		dialog.productionPoint = productionPoint
 		dialog.viewMode = RevampManageDialog.VIEW.FILLTYPES
-		dialog:setTitle(g_i18n:getText("revamp_manageDialogTitle"))
 		dialog:updateRows()
 		g_gui:showDialog("RevampManageDialog")
 	end
@@ -135,8 +134,15 @@ function RevampManageDialog:updateRows()
 	-- Mit true, weil die beiden Ansichten unterschiedliche Zeilenformen haben: ohne das Kennzeichen behält die Liste die bereits erzeugten Zeilen und befüllt nur deren Inhalt neu,
 	-- die neue Ansicht bekäme also die Felder der alten (siehe SmoothListElement:reloadData).
 	self.manageList:reloadData(true)
+	self:updateTitle()
 	self:updateSharedStorageHint()
 	self:onListSelectionChanged(self.manageList, self.manageList.selectedSectionIndex, self.manageList.selectedIndex)
+end
+
+---Schreibt die gerade gezeigte Ansicht in den Dialogtitel.
+---Der Umschalt-Knopf ist immer nach der Ansicht benannt, in die er führt, ohne den Titel stünde also nirgends, welche gerade zu sehen ist.
+function RevampManageDialog:updateTitle()
+	self:setTitle(g_i18n:getText("revamp_manageDialogTitle") .. " - " .. g_i18n:getText(RevampManageDialog.VIEW_TEXTS[self.viewMode]))
 end
 
 ---Zeigt unter der Liste die Legende zum Kennzeichen für geteilten Lagerplatz (siehe Revamp.getSharedStorageCapacity in revamp_storage.lua).
@@ -158,7 +164,8 @@ end
 ---@return boolean available true, wenn die Ansicht benutzbar ist
 function RevampManageDialog:isViewAvailable(viewMode)
 	if viewMode == RevampManageDialog.VIEW.PRODUCTIONS then
-		return Revamp.settings.recipeSettingsActive
+		-- Ohne eine einzige Wahlmöglichkeit bleibt von der Ansicht nur eine Liste der Linien-Namen mit leerer Modus-Spalte übrig.
+		return Revamp.settings.recipeSettingsActive and Revamp.getHasRecipeChoices(self.productionPoint)
 	end
 	if viewMode == RevampManageDialog.VIEW.DISTRIBUTION then
 		return Revamp.settings.distributionActive

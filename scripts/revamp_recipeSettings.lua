@@ -83,6 +83,23 @@ function Revamp.updateRecipeChoiceFlags(production)
 	Revamp.DebugText("updateRecipeChoiceFlags(): %s hasMixChoice=%s hasBoostChoice=%s", production.id, tostring(production.hasMixChoice), tostring(production.hasBoostChoice))
 end
 
+---Prüft, ob an einer Produktionsstätte überhaupt eine Rezeptlinie eine Wahlmöglichkeit hat.
+---@param productionPoint table ProductionPoint-Instanz
+---@return boolean hasChoices true, wenn mindestens eine sichtbare Rezeptlinie einen Mix- oder Booster-Modus anbietet
+function Revamp.getHasRecipeChoices(productionPoint)
+	if productionPoint == nil then
+		return false
+	end
+
+	for _, production in ipairs(Revamp.getVisibleProductions(productionPoint)) do
+		if production.hasMixChoice or production.hasBoostChoice then
+			return true
+		end
+	end
+
+	return false
+end
+
 ---Setzt Mix- und/oder Booster-Modus einer Rezeptlinie und verteilt die Änderung im Mehrspieler.
 ---@param productionId string Id der Rezeptlinie
 ---@param mixMode? string Neuer Mix-Modus, nil lässt den bisherigen stehen

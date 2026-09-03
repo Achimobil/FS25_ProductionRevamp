@@ -2,7 +2,7 @@
 <modDesc descVersion="111">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.30</version>
+    <version>0.0.0.31</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,11 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.31
+- Die farbigen Blöcke in der Rezeptansicht bleiben jetzt sichtbar, wenn die Zeile ausgewählt ist oder die Maus darüber steht
+- Der Verwalten-Dialog nennt im Titel jetzt die Ansicht, die gerade zu sehen ist
+- Die Ansicht der Produktionslinien wird nur noch angeboten, wenn es an der Produktionsstätte auch etwas einzustellen gibt
+- Beim Scrollen in der Rezeptansicht einer großen Produktionsstätte konnte die Liste kurz stocken
 0.0.0.30 - Drei neue Seiten im Hilfe-Menü: wie ein Rezept zu lesen ist, warum eine Produktion wegen Wetter oder Uhrzeit stillsteht und wie das Verteilen funktioniert
 0.0.0.29 - Andere Mods können ihre eigenen Waren jetzt an den Verkaufsstellen und Silos der Karte anmelden, ohne dass die Karte dafür angepasst werden muss
 0.0.0.28

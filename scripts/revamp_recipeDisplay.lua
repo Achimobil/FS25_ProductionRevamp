@@ -299,6 +299,16 @@ Revamp.RECIPE_MISSING_COLOR = {1, 0, 0, 1}
 -- gedimmter Grauton statt Rot, siehe Kommentar oben.
 Revamp.RECIPE_INACTIVE_COLOR = {0.3, 0.3, 0.3, 1}
 
+-- Der Hintergrund erbt über emptyPanel für Auswahl, Fokus und Maus-Hover eigene, vollständig durchsichtige Farben, und GuiOverlay.getOverlayColor greift in diesen Zuständen nicht auf die Grundfarbe zurück.
+-- Ohne dieselbe Farbe in jedem Zustand verschwindet der Balken deshalb, sobald die Rezeptzelle ausgewählt, fokussiert oder mit der Maus überfahren wird.
+Revamp.RECIPE_BACKGROUND_STATES = {
+	GuiOverlay.STATE_NORMAL,
+	GuiOverlay.STATE_SELECTED,
+	GuiOverlay.STATE_FOCUSED,
+	GuiOverlay.STATE_HIGHLIGHTED,
+	GuiOverlay.STATE_PRESSED
+}
+
 function Revamp.addRecipeRowBackground(row, color)
 	-- BitmapElement.new() + applyProfile() rendert bei einem zur Laufzeit erzeugten Element nicht
 	-- richtig. Stattdessen ein bereits vorhandenes Bitmap-Element klonen (row hat durch
@@ -309,7 +319,9 @@ function Revamp.addRecipeRowBackground(row, color)
 	table.remove(row.elements) -- clone() hängt hinten an, für den Hintergrund muss es aber vorne (hinter Icon/Menge/Name) stehen
 	table.insert(row.elements, 1, background)
 	background:applyProfile("Revamp_recipeGroupBox")
-	background:setImageColor(GuiOverlay.STATE_NORMAL, color[1], color[2], color[3], color[4])
+	for _, state in ipairs(Revamp.RECIPE_BACKGROUND_STATES) do
+		background:setImageColor(state, color[1], color[2], color[3], color[4])
+	end
 	background:updateAnchorDeltas()
 	background:updateAbsolutePosition()
 end
@@ -767,3 +779,45 @@ function Revamp.populateRecipeCellForItemInSection(self, superFunc, list, sectio
 end
 
 InGameMenuProductionFrame.populateCellForItemInSection = Utils.overwrittenFunction(InGameMenuProductionFrame.populateCellForItemInSection, Revamp.populateRecipeCellForItemInSection)
+
+---Nimmt den Scroll-Wert einer Liste um den Zeilenabstand am Sektionsende zurück, wenn er in einem Bereich liegt, mit dem SmoothListElement:updateView nicht umgehen kann.
+---buildSectionInfo rechnet listItemSpacing in den endOffset einer Sektion ein, die Suche nach der ersten sichtbaren Zeile in updateView vergleicht dagegen nur Zeilenoffset plus Zellhöhe.
+---Für einen Scroll-Wert in diesem Zwischenraum gilt beides zugleich: die Sektion zählt als sichtbar, aber keine ihrer Zeilen wird gefunden, und die Zeilennummer bleibt auf ihrem Startwert 0 stehen.
+---Eine Sektion ohne Kopfzeile hat für die Zeilennummer 0 keinen Offset, updateView rechnet dann mit nil weiter und bricht mit einem Fehler ab.
+---Nach dem Rückzug gilt die letzte Zeile der Sektion wieder als erste sichtbare - genau das, was updateView an dieser Stelle selbst vorhat: sein eingebauter Rückfall auf die letzte Zeile greift nur nie, weil die Zeilennummer mit 0 statt mit nil startet.
+---Der Rückzug beträgt höchstens einen Zeilenabstand und ist auf dem Bildschirm nicht zu sehen.
+---@param list table SmoothListElement-Instanz
+function Revamp.clampListViewOffset(list)
+	if list.sections == nil then
+		return
+	end
+
+	for sectionIndex, section in ipairs(list.sections) do
+		-- Maßgeblich ist die erste Sektion, die noch in den Sichtbereich reicht: dieselbe, die updateView gleich als firstSection nimmt.
+		if list.viewOffset < section.endOffset then
+			if section.itemOffsets[0] == nil and section.numItems > 0 then
+				local lastOffset = section.itemOffsets[section.numItems]
+				if lastOffset ~= nil then
+					local lastEnd = lastOffset + list:getLengthOfItemFast(sectionIndex, section.numItems)
+					if lastEnd <= list.viewOffset + SmoothListElement.CHECK_OFFSET_EPSILON then
+						list.viewOffset = lastEnd - 2 * SmoothListElement.CHECK_OFFSET_EPSILON
+					end
+				end
+			end
+
+			return
+		end
+	end
+end
+
+---@param self table SmoothListElement-Instanz
+---@param superFunc function Ursprüngliches SmoothListElement.updateView
+---@param updateSlider? boolean Siehe SmoothListElement:updateView
+---@param repopulate? boolean Siehe SmoothListElement:updateView
+function Revamp.updateSmoothListView(self, superFunc, updateSlider, repopulate)
+	Revamp.clampListViewOffset(self)
+
+	return superFunc(self, updateSlider, repopulate)
+end
+
+SmoothListElement.updateView = Utils.overwrittenFunction(SmoothListElement.updateView, Revamp.updateSmoothListView)
