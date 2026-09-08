@@ -298,6 +298,63 @@ function Revamp.loadAnimalInput(productionPoint, xmlFile, animalKey, mainTrigger
 	end
 end
 
+-- Wortlaut der Vanilla-Warnung aus ProductionPoint:load, die für Tier-Zutaten unterdrückt wird.
+Revamp.UNSUPPORTED_INPUT_WARNING = "Input filltype '%s' is not supported by unloading station"
+
+---Reicht alle XML-Warnungen weiter, außer Vanillas Meldung über eine Zutat, die die Abladestelle nicht annimmt, wenn diese Zutat von Tieren kommt.
+---@param xmlFile table XMLFile, auf das sich die Warnung bezieht
+---@param message string Formatzeichenkette der Warnung
+---@param ... any Werte zur Formatzeichenkette
+function Revamp.xmlWarningSkippingAnimalInputs(xmlFile, message, ...)
+	local fillTypeName = ...
+	-- Ein anderer Mod kann diese Funktion inzwischen selbst als vermeintliches Original weiterreichen, deshalb entscheidet allein die Liste, ob gerade etwas unterdrückt wird.
+	if Revamp.suppressedInputFillTypeNames ~= nil and message == Revamp.UNSUPPORTED_INPUT_WARNING and Revamp.suppressedInputFillTypeNames[fillTypeName] then
+		return
+	end
+
+	Revamp.originalXmlWarning(xmlFile, message, ...)
+end
+
+---Schaltet die Warnung über nicht annehmbare Zutaten für die Tier-Zutaten dieser Produktionsstätte ab.
+---Vanilla prüft beim Laden jede Zutat gegen die Abladestelle, eine Zutat aus Tieren wird dort aber nie abgeladen: sie entsteht direkt im Lager, sobald ein Tier abgegeben wird (siehe Revamp.linkStorageToUnloadingStation).
+---Betroffen ist nur diese eine Meldung und nur für die Fülltypen der Tier-Eingänge, alles andere läuft unverändert weiter ins Log.
+---@param xmlFile table XMLFile der Placeable
+---@param key string XML-Basispfad des productionPoint-Elements
+function Revamp.suppressAnimalInputWarnings(xmlFile, key)
+	if not xmlFile:hasProperty(key .. ".animalTrigger") then
+		return
+	end
+
+	local fillTypeNames = {}
+	xmlFile:iterate(key .. ".animalTrigger.inputs.input", function(_, animalKey)
+		local fillTypeName = xmlFile:getValue(animalKey .. "#inputFillType")
+		if fillTypeName ~= nil then
+			-- Der Umweg über den Fülltyp-Manager gleicht die Schreibweise an die an, mit der Vanilla die Meldung zusammensetzt.
+			local fillTypeIndex = g_fillTypeManager:getFillTypeIndexByName(fillTypeName)
+			if fillTypeIndex ~= nil then
+				fillTypeNames[g_fillTypeManager:getFillTypeNameByIndex(fillTypeIndex)] = true
+			end
+		end
+	end)
+
+	if next(fillTypeNames) == nil then
+		return
+	end
+
+	Revamp.suppressedInputFillTypeNames = fillTypeNames
+
+	-- Der Filter bleibt nach dem ersten Einhängen dauerhaft in der Kette: ihn nach jedem Ladevorgang wieder auszutauschen würde eine Umbiegung wegwerfen, die ein anderer Mod zwischenzeitlich gesetzt hat.
+	if Logging.xmlWarning ~= Revamp.xmlWarningSkippingAnimalInputs then
+		Revamp.originalXmlWarning = Logging.xmlWarning
+		Logging.xmlWarning = Revamp.xmlWarningSkippingAnimalInputs
+	end
+end
+
+---Gibt die Warnungen wieder frei, sobald Vanillas Ladevorgang durch ist.
+function Revamp.restoreAnimalInputWarnings()
+	Revamp.suppressedInputFillTypeNames = nil
+end
+
 ---Lädt den kompletten Tier-Trigger einer Produktionsstätte und legt für jeden verwendeten Trigger-Node ein Trigger-Objekt an.
 ---@param productionPoint table ProductionPoint-Instanz
 ---@param xmlFile table XMLFile der Placeable

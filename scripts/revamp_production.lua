@@ -225,8 +225,12 @@ ProductionPoint.loadSpecValueInputFillTypes = Revamp.loadSpecValueInputFillTypes
 
 function Revamp.loadProductionPoint(self, superFunc, components, xmlFile, key, customEnv, i3dMappings)
 	Revamp.expandFillTypeCategoryInputs(xmlFile, key)
+	Revamp.suppressAnimalInputWarnings(xmlFile, key)
 
-	if not superFunc(self, components, xmlFile, key, customEnv, i3dMappings) then
+	local isLoaded = superFunc(self, components, xmlFile, key, customEnv, i3dMappings)
+	Revamp.restoreAnimalInputWarnings()
+
+	if not isLoaded then
 		return false
 	end
 
