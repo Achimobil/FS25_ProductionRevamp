@@ -67,6 +67,11 @@ Revamp.displaySettings = {}
 -- Die aktuellen Werte, Schlüssel ist die Id der Einstellung. Zum Ändern immer Revamp.setSetting benutzen, sonst fehlt die Prüfung des Wertes.
 Revamp.settings = {}
 
+-- Dieselben Werte noch einmal auf einer Vanilla-Klasse, damit ein lesender Mod sie ohne Umweg über Revamps Mod-Umgebung in _G bekommt.
+-- Ohne Revamp gibt es das Feld überhaupt nicht: ein nil sagt dem fremden Mod damit zugleich, dass gar keine dieser Einstellungen greift.
+-- Bewusst eine Kopie und nicht Revamp.settings selbst: ein fremder Mod, der versehentlich hineinschreibt, verstellt so nicht den echten Zustand des Spielstands.
+ProductionPoint.REVAMP_SETTINGS = {}
+
 -- Zugriff auf eine Definition über ihre Id, statt jedes Mal durch die Listen oben zu laufen.
 Revamp.settingsById = {}
 Revamp.displaySettingsById = {}
@@ -76,6 +81,7 @@ function Revamp.initSettings()
 	for _, definition in ipairs(Revamp.SETTINGS) do
 		Revamp.settingsById[definition.id] = definition
 		Revamp.settings[definition.id] = definition.default
+		ProductionPoint.REVAMP_SETTINGS[definition.id] = definition.default
 	end
 
 	for _, definition in ipairs(Revamp.DISPLAY_SETTINGS) do
@@ -161,6 +167,7 @@ function Revamp.setSetting(id, value)
 	end
 
 	Revamp.settings[id] = Revamp.getValidSettingValue(definition, value)
+	ProductionPoint.REVAMP_SETTINGS[id] = Revamp.settings[id]
 	Revamp.DebugText("setSetting(): %s = %s", id, tostring(Revamp.settings[id]))
 end
 
