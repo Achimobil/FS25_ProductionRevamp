@@ -46,38 +46,13 @@ function Revamp.snapshotHooks()
 	end
 end
 
----Ermittelt, woher eine gesetzte Funktion stammt.
----Die Zuordnung zu einem Mod gelingt nur bei einer direkten Zuweisung: Utils.overwrittenFunction und seine Verwandten liefern eine anonyme Closure zurück, die in Utils.lua des Grundspiels definiert ist.
----Die eigentliche Funktion des Mods steckt darin als Upvalue, und Luau kennt kein debug.getupvalue, über das sie erreichbar wäre.
----@param func function Aktuell gesetzte Funktion
----@return string origin Name des Mods, sonst ein Hinweis samt Datei, in der die Funktion definiert ist
-function Revamp.getHookOrigin(func)
-	-- Das Grundspiel prüft debug selbst auf Vorhandensein, statt sich darauf zu verlassen.
-	if debug == nil or debug.info == nil then
-		return "an unidentified mod (this game version provides no debug information)"
-	end
-
-	local source = debug.info(func, "s")
-	if source == nil or source == "" then
-		return "an unidentified mod"
-	end
-
-	for modName, modDirectory in pairs(g_modNameToDirectory) do
-		if string.startsWith(source, modDirectory) then
-			return modName
-		end
-	end
-
-	return string.format("an unidentified mod (defined in %s)", source)
-end
-
 ---Prüft nach dem Laden aller Mods, ob die überwachten Funktionen noch die beim Laden von Revamp gesetzten sind.
 ---@param mission table Laufende Mission
 function Revamp.checkHooks(mission) ---@diagnostic disable-line: unused-local
 	for _, hook in ipairs(Revamp.watchedHooks) do
 		local current = hook.class[hook.key]
 		if current ~= hook.loaded then
-			Logging.warning("Production Revamp: '%s' was replaced after Revamp by %s. If that mod does not pass the original call on, the Revamp features using it stop working without any further error.", hook.name, Revamp.getHookOrigin(current))
+			Logging.warning("Production Revamp: '%s' was replaced after Revamp by another mod. If that mod does not pass the original call on, the Revamp features using it stop working without any further error.", hook.name)
 		end
 	end
 end

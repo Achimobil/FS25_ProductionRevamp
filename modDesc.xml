@@ -2,7 +2,7 @@
 <modDesc descVersion="113">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.33</version>
+    <version>0.0.0.34</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.34 - Der Hinweis im Log auf einen Mod, der Funktionen von Production Revamp ersetzt, nennt diesen Mod nicht mehr beim Namen, weil sich der Verursacher nicht zuverlässig bestimmen ließ
 0.0.0.33 - Andere Mods können jetzt auslesen, welche Bereiche von Production Revamp der Admin abgeschaltet hat
 0.0.0.32
 - Ersetzt ein anderer Mod Funktionen von Production Revamp, steht das jetzt im Log, statt dass Teile unbemerkt ausfallen
