@@ -220,19 +220,16 @@ end
 ---@return number amountPerHour Ausstoß in Litern je Stunde
 function Revamp.getHourlyOutputAmount(productionPoint, fillTypeIndex)
 	-- Teilen sich mehrere Linien die Durchsatzkapazität, schafft jede davon nur ihren Bruchteil - genauso rechnet Revamp.updateProduction den tatsächlichen Ausstoß aus.
-	local numSharedThroughputCapacity = 0
-	for _, production in ipairs(productionPoint.activeProductions) do
-		if production.modeStatus == nil and productionPoint.sharedThroughputCapacity and production.sharedThroughputCapacity then
-			numSharedThroughputCapacity = numSharedThroughputCapacity + 1
-		end
-	end
+	local numSharedThroughputCapacity = Revamp.countSharedThroughputLines(productionPoint)
+	-- Die Länge einer Jahreszeit streckt den Produktionstakt, bei zwölf Tagen je Monat kommt in einer Spielstunde nur ein Zwölftel des Nennwerts heraus.
+	local timeAdjustment = g_currentMission.environment.timeAdjustment
 
 	local amountPerHour = 0
 	for _, production in ipairs(productionPoint.activeProductions) do
 		if production.modeStatus == nil then
 			local output = Revamp.findProductionEntryByType(production.outputs, fillTypeIndex)
 			if output ~= nil then
-				local cyclesPerHour = production.cyclesPerMinute * 60
+				local cyclesPerHour = production.cyclesPerMinute * 60 * timeAdjustment
 				if numSharedThroughputCapacity > 0 and production.sharedThroughputCapacity then
 					cyclesPerHour = cyclesPerHour / numSharedThroughputCapacity
 				end
@@ -244,20 +241,36 @@ function Revamp.getHourlyOutputAmount(productionPoint, fillTypeIndex)
 	return amountPerHour
 end
 
----Liefert die Lieferkosten, die ein einzelnes Ziel pro Stunde verursacht.
----Die Stundenmenge wird dabei gleichmäßig auf alle Ziele seiner Stufe aufgeteilt, weil das Verteilen selbst genauso rechnet.
+---Liefert die Lieferkosten, die eine Menge an ein einzelnes Ziel kostet.
 ---@param distributingPoint table Verteilende ProductionPoint-Instanz
 ---@param receivingPoint table Empfangende ProductionPoint-Instanz
----@param amountPerHour number Stündlicher Ausstoß des Erzeugnisses
----@param targetCount number Anzahl Ziele derselben Verteilstufe
----@return number costs Lieferkosten je Stunde
-function Revamp.getDistributionCostsPerHour(distributingPoint, receivingPoint, amountPerHour, targetCount)
-	if amountPerHour <= 0 or targetCount <= 0 then
+---@param amount number Menge in Litern, die dieses Ziel bekommt
+---@return number costs Lieferkosten für diese Menge
+function Revamp.getDistributionCosts(distributingPoint, receivingPoint, amount)
+	if amount <= 0 then
 		return 0
 	end
 
 	local distance = calcDistanceFrom(distributingPoint.owningPlaceable.rootNode, receivingPoint.owningPlaceable.rootNode)
-	return amountPerHour / targetCount * distance * ProductionPoint.DIRECT_DELIVERY_PRICE * Revamp.settings.distributionCostFactor
+	return amount * distance * ProductionPoint.DIRECT_DELIVERY_PRICE * Revamp.settings.distributionCostFactor
+end
+
+---Teilt eine Menge auf die Ziele einer Stufe auf, nach dem eingestellten Verteilungsmodus.
+---Gerechnet wird ohne freien Lagerplatz und ohne Obergrenzen: das Ergebnis sagt, wie viel jedes Ziel bekommen soll, nicht wie viel es aufnehmen kann.
+---@param targets table Ziele derselben Verteilstufe, im Bedarfs-Modus mit rate und fillLevel
+---@param amount number Zu verteilende Menge in Litern
+---@return table shares Menge je Ziel, Schlüssel ist dessen Position in targets
+function Revamp.getDistributionShares(targets, amount)
+	if Revamp.settings.distributionMode == "demand" then
+		return Revamp.getDemandShares(targets, amount)
+	end
+
+	local shares = {}
+	for index in ipairs(targets) do
+		shares[index] = amount / #targets
+	end
+
+	return shares
 end
 
 ---Liefert die Namen aller Primär-Ziele eines Erzeugnisses als eine Zeile.
@@ -326,11 +339,23 @@ function Revamp.getDistributionSections(productionPoint)
 				end
 			end
 
-			-- Erst in einem zweiten Durchlauf, weil die Kosten eines Ziels davon abhängen, wie viele Ziele sich seine Stufe teilen.
+			-- Erst in einem zweiten Durchlauf, weil die Kosten eines Ziels davon abhängen, wie die Stundenmenge unter den Zielen seiner Stufe aufgeteilt wird.
 			-- Ziele ohne Kostenangabe behalten nil und zeigen im Dialog einen Strich statt eines Betrags, den sie gar nicht zahlen.
+			local activeTargets = {}
 			for _, target in ipairs(targets) do
 				if target.level == activeLevel then
-					target.costsPerHour = Revamp.getDistributionCostsPerHour(productionPoint, target.productionPoint, amountPerHour, levelCounts[activeLevel])
+					if Revamp.settings.distributionMode == "demand" then
+						target.rate, target.fillLevel = Revamp.getFillTypeDemand(target.productionPoint, fillTypeIndex)
+					end
+					table.insert(activeTargets, target)
+				end
+			end
+
+			for index, share in ipairs(Revamp.getDistributionShares(activeTargets, amountPerHour)) do
+				-- Ein Ziel, das bei der aktuellen Aufteilung leer ausgeht, behält seinen Strich statt eines Betrags von null.
+				-- Steht die Produktion dagegen ganz still, bekommt keines etwas und alle zeigen die Null: das ist der Zustand der Stätte und keine Eigenheit einzelner Ziele.
+				if share > 0 or amountPerHour <= 0 then
+					activeTargets[index].costsPerHour = Revamp.getDistributionCosts(productionPoint, activeTargets[index].productionPoint, share)
 				end
 			end
 
@@ -342,14 +367,15 @@ function Revamp.getDistributionSections(productionPoint)
 end
 
 ---Prüft, ob eine Produktionsstätte einen Fülltyp gerade überhaupt gebrauchen kann.
----Maßgeblich ist nicht der Lagerplatz, sondern ob eine eingeschaltete Rezeptlinie diesen Fülltyp verbraucht und gerade auch laufen darf - eine nachts stillstehende Linie soll nicht auf Vorrat beliefert werden und dafür Lieferkosten verursachen.
+---Maßgeblich ist nicht der Lagerplatz, sondern ob eine eingeschaltete Rezeptlinie diesen Fülltyp als Zutat führt.
+---Ob die Linie in diesem Moment auch tatsächlich arbeitet, spielt keine Rolle: eine Bäckerei in ihrer Mittagspause ist eingeschaltet und braucht ihr Mehl, sonst steht sie beim Wiederanfahren leer da.
+---In activeProductions stehen ausschließlich die vom Spieler eingeschalteten Linien - eine abgeschaltete Linie kommt hier also gar nicht erst vor.
 ---@param productionPoint table Empfangende ProductionPoint-Instanz
 ---@param fillTypeIndex number FillType-Index
----@return boolean canReceive true, wenn mindestens eine laufende Rezeptlinie den Fülltyp verbraucht
+---@return boolean canReceive true, wenn mindestens eine eingeschaltete Rezeptlinie den Fülltyp verbraucht
 function Revamp.canReceiveFillType(productionPoint, fillTypeIndex)
 	for _, production in ipairs(productionPoint.activeProductions) do
-		-- modeStatus setzt Revamp.updateProduction in jedem Takt: nil heißt, kein Wetter- oder Zeit-Modus hält die Linie gerade an.
-		if production.modeStatus == nil and Revamp.findProductionEntryByType(production.inputs, fillTypeIndex) ~= nil then
+		if Revamp.findProductionEntryByType(production.inputs, fillTypeIndex) ~= nil then
 			return true
 		end
 	end
@@ -399,13 +425,28 @@ function Revamp.collectDistributionTargets(distributingPoint, fillTypeIndex, pro
 			local level, limit = Revamp.getDistributionTarget(distributingPoint, fillTypeIndex, prodPoint.owningPlaceable:getUniqueId())
 
 			if level ~= "NEVER" then
+				local fillLevel = prodPoint.storage:getFillLevel(fillTypeIndex)
 				local freeAmount = prodPoint.storage:getFreeCapacity(fillTypeIndex)
 				if limit ~= nil then
-					freeAmount = math.min(freeAmount, limit - prodPoint.storage:getFillLevel(fillTypeIndex))
+					freeAmount = math.min(freeAmount, limit - fillLevel)
 				end
 
+				local target = {productionPoint = prodPoint, freeAmount = freeAmount}
+				-- Verbrauch und Bestand fragt nur der bedarfsabhängige Modus ab, die gleichmäßige Aufteilung braucht beides nicht.
+				if Revamp.settings.distributionMode == "demand" then
+					target.rate, target.fillLevel = Revamp.getFillTypeDemand(prodPoint, fillTypeIndex)
+				end
+
+				-- Ohne Verbrauch gibt es keine Restlaufzeit: der gleichmäßige Modus fragt den Bedarf gar nicht erst ab, und ein Ziel ohne laufenden Verbrauch kann nicht leerlaufen.
+				local hoursLeft = 0
+				if (target.rate or 0) > 0 then
+					hoursLeft = target.fillLevel / target.rate
+				end
+
+				Revamp.DebugText("collectDistributionTargets(): %s %s, Stufe %s, Lager %.0f l, freier Platz %.0f l, Verbrauch %.0f l/h, Restlaufzeit %.2f h", prodPoint:getName(), g_fillTypeManager:getFillTypeNameByIndex(fillTypeIndex), level, fillLevel, freeAmount, target.rate or 0, hoursLeft)
+
 				if freeAmount >= Revamp.DISTRIBUTION_MIN_AMOUNT then
-					table.insert(buckets[level], {productionPoint = prodPoint, freeAmount = freeAmount})
+					table.insert(buckets[level], target)
 				end
 			end
 		end
@@ -430,7 +471,7 @@ function Revamp.transferGoods(distributingPoint, receivingPoint, fillTypeIndex, 
 	Revamp.DebugText("transferGoods(): %.0f l %s von %s nach %s, %.2f m, Kosten %.2f", amount, g_fillTypeManager:getFillTypeNameByIndex(fillTypeIndex), distributingPoint:getName(), receivingPoint:getName(), distance, costs)
 end
 
----Verteilt eine Menge zu gleichen Teilen auf die Ziele einer Stufe.
+---Verteilt eine Menge auf die Ziele einer Stufe, nach dem eingestellten Verteilungsmodus.
 ---Ein Ziel, das weniger aufnehmen kann als seinen Anteil, nimmt sein Maximum, der Überhang wird unter den übrigen Zielen derselben Stufe neu aufgeteilt - ohne diese weiteren Runden bliebe er liegen, obwohl es noch Abnehmer dafür gibt.
 ---@param distributingPoint table Verteilende ProductionPoint-Instanz
 ---@param fillTypeIndex number FillType-Index
@@ -442,15 +483,19 @@ function Revamp.distributeToLevel(distributingPoint, fillTypeIndex, targets, amo
 	local openTargets = targets
 
 	while remaining >= Revamp.DISTRIBUTION_MIN_AMOUNT and #openTargets > 0 do
-		local share = remaining / #openTargets
+		local shares = Revamp.getDistributionShares(openTargets, remaining)
 		local nextTargets = {}
 		local roundAmount = 0
 
-		for _, target in ipairs(openTargets) do
-			local amount = math.min(share, target.freeAmount)
+		for index, target in ipairs(openTargets) do
+			local amount = math.min(shares[index], target.freeAmount)
 			if amount > 0 then
 				Revamp.transferGoods(distributingPoint, target.productionPoint, fillTypeIndex, amount)
 				target.freeAmount = target.freeAmount - amount
+				-- Die nächste Runde teilt bedarfsabhängig neu auf und muss dabei sehen, was dieses Ziel gerade schon bekommen hat.
+				if target.fillLevel ~= nil then
+					target.fillLevel = target.fillLevel + amount
+				end
 				roundAmount = roundAmount + amount
 			end
 			if target.freeAmount >= Revamp.DISTRIBUTION_MIN_AMOUNT then
@@ -462,6 +507,7 @@ function Revamp.distributeToLevel(distributingPoint, fillTypeIndex, targets, amo
 		openTargets = nextTargets
 
 		-- Kann kein Ziel mehr etwas aufnehmen, würde die Schleife sonst mit unveränderter Restmenge weiterlaufen.
+		-- Im bedarfsabhängigen Modus endet sie hier auch dann, wenn nur noch Ziele ohne Verbrauch offen sind: die bekommen nichts und ihre Restmenge bleibt beim Absender liegen.
 		if roundAmount <= 0 then
 			break
 		end

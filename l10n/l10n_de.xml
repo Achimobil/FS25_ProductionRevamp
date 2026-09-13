@@ -111,6 +111,10 @@
         <text name="revamp_settings_title"                           text="Production Revamp"/>
         <text name="revamp_setting_distributionActive"               text="Verteilen"/>
         <text name="revamp_setting_distributionActive_tooltip"       text="Schaltet das Verteilen zwischen Produktionsstätten ein oder aus. Abgeschaltet verteilt das Spiel wieder von sich aus, die eingestellten Ziele bleiben dabei erhalten."/>
+        <text name="revamp_setting_distributionMode"                 text="Aufteilung beim Verteilen"/>
+        <text name="revamp_setting_distributionMode_tooltip"         text="Legt fest, wie eine Produktionsstätte ihr Erzeugnis unter mehreren Abnehmern derselben Stufe aufteilt. „Gleichmäßig“ gibt jedem gleich viel, „Nach Bedarf“ bevorzugt die Betriebe, deren Vorrat am schnellsten zur Neige geht."/>
+        <text name="revamp_setting_distributionMode_equal"           text="Gleichmäßig"/>
+        <text name="revamp_setting_distributionMode_demand"          text="Nach Bedarf"/>
         <text name="revamp_setting_distributionCostFactor"           text="Kosten fürs Verteilen"/>
         <text name="revamp_setting_distributionCostFactor_tooltip"   text="Legt fest, wie teuer das Verteilen zwischen Produktionsstätten ist. Bei 0 % wird kostenlos geliefert, bei 200 % kostet jede Lieferung doppelt so viel."/>
         <text name="revamp_setting_storageActive"                    text="Lager-Erweiterung"/>
@@ -175,9 +179,11 @@
         <text name="revamp_help_distribution_title"        text="Verteilen"/>
         <text name="revamp_help_distribution_intro"        text="Steht ein Erzeugnis auf „Verteilen“, schickt die Produktionsstätte es einmal je Spielstunde an deine eigenen Produktionen, die es als Zutat brauchen. Wer davon wie viel bekommt, stellst du im Verwalten-Dialog in der Ansicht „Verteilen“ ein."/>
         <text name="revamp_help_distribution_levelsTitle"  text="Die vier Stufen"/>
-        <text name="revamp_help_distribution_levels"       text="Mit der Leertaste schaltest du je Abnehmer die Stufe weiter. „Primär“ bekommt zuerst, „Sekundär“ das, was die Primär-Ziele nicht mehr aufnehmen, „Rest“ was danach übrig ist, und „Nie“ gar nichts. Mehrere Ziele derselben Stufe bekommen gleich viel. Ohne Zutun steht jedes Ziel auf „Rest“, dann wird gleichmäßig an alle verteilt."/>
-        <text name="revamp_help_distribution_runningTitle" text="Nur an laufende Betriebe"/>
-        <text name="revamp_help_distribution_running"      text="Beliefert wird nur, wer die Ware gerade tatsächlich verarbeitet. Eine abgeschaltete Produktionslinie bekommt nichts, ebenso eine, die wegen ihrer Öffnungszeiten oder des Wetters gerade stillsteht. In der Liste stehen trotzdem alle möglichen Abnehmer, auch die gerade ausgeschalteten."/>
+        <text name="revamp_help_distribution_levels"       text="Mit der Leertaste schaltest du je Abnehmer die Stufe weiter. „Primär“ bekommt zuerst, „Sekundär“ das, was die Primär-Ziele nicht mehr aufnehmen, „Rest“ was danach übrig ist, und „Nie“ gar nichts. Ohne Zutun steht jedes Ziel auf „Rest“, dann sind alle gleichrangig."/>
+        <text name="revamp_help_distribution_splitTitle"   text="Wie die Menge aufgeteilt wird"/>
+        <text name="revamp_help_distribution_split"        text="Innerhalb einer Stufe bekommt jeder Abnehmer gleich viel. Steht die Aufteilung in den Einstellungen dagegen auf „Nach Bedarf“, kommen erst die Betriebe dran, deren Vorrat am schnellsten zur Neige geht, bis sie mit den übrigen gleichgezogen haben - ein frisch gebauter, noch leerer Betrieb füllt sich damit deutlich schneller. Was danach übrig bleibt, geht im Verhältnis des Verbrauchs an alle."/>
+        <text name="revamp_help_distribution_runningTitle" text="Nur an eingeschaltete Betriebe"/>
+        <text name="revamp_help_distribution_running"      text="Beliefert wird jede eingeschaltete Produktionslinie, die die Ware als Zutat braucht - auch eine, die wegen ihrer Öffnungszeiten, der Jahreszeit oder des Wetters gerade stillsteht: sie soll beim Wiederanfahren nicht ohne Vorrat dastehen. Eine abgeschaltete Linie bekommt dagegen nichts. In der Liste stehen trotzdem alle möglichen Abnehmer, auch die abgeschalteten."/>
         <text name="revamp_help_distribution_limitTitle"   text="Obergrenze"/>
         <text name="revamp_help_distribution_limit"        text="Mit der Obergrenze legst du fest, bis zu welchem Lagerstand ein Ziel beliefert wird. „Nix“ liefert gar nicht, „Voll“ liefert ohne Obergrenze. So bleibt Platz für das, was du selbst hinfährst."/>
         <text name="revamp_help_distribution_costsTitle"   text="Was das Liefern kostet"/>

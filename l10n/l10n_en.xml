@@ -111,6 +111,10 @@
         <text name="revamp_settings_title"                           text="Production Revamp"/>
         <text name="revamp_setting_distributionActive"               text="Distribution"/>
         <text name="revamp_setting_distributionActive_tooltip"       text="Turns distribution between production points on or off. When off the game distributes on its own again, the configured targets are kept."/>
+        <text name="revamp_setting_distributionMode"                 text="Distribution split"/>
+        <text name="revamp_setting_distributionMode_tooltip"         text="Defines how a production point splits its product between several consumers on the same level. “Evenly” gives each the same amount, “By demand” favours the businesses whose stock runs out first."/>
+        <text name="revamp_setting_distributionMode_equal"           text="Evenly"/>
+        <text name="revamp_setting_distributionMode_demand"          text="By demand"/>
         <text name="revamp_setting_distributionCostFactor"           text="Distribution costs"/>
         <text name="revamp_setting_distributionCostFactor_tooltip"   text="Defines how expensive distributing goods between production points is. At 0 % delivery is free, at 200 % every delivery costs twice as much."/>
         <text name="revamp_setting_storageActive"                    text="Storage extension"/>
@@ -175,9 +179,11 @@
         <text name="revamp_help_distribution_title"        text="Distribution"/>
         <text name="revamp_help_distribution_intro"        text="When a product is set to distribute, the production point sends it once per game hour to your own productions that need it as an ingredient. Who gets how much of it is set in the manage dialog in the “Distribution” view."/>
         <text name="revamp_help_distribution_levelsTitle"  text="The four levels"/>
-        <text name="revamp_help_distribution_levels"       text="The space bar steps the level of each consumer. “Primary” is served first, “Secondary” gets what the primary targets can no longer take, “Remainder” what is left after that, and “Never” nothing at all. Several targets on the same level get equal shares. Without any change every target sits on “Remainder”, which spreads everything evenly."/>
-        <text name="revamp_help_distribution_runningTitle" text="Only to running businesses"/>
-        <text name="revamp_help_distribution_running"      text="Only whoever is actually processing the good right now is supplied. A production line that is switched off gets nothing, and neither does one standing still because of its opening hours or the weather. The list still shows every possible consumer, including the ones currently switched off."/>
+        <text name="revamp_help_distribution_levels"       text="The space bar steps the level of each consumer. “Primary” is served first, “Secondary” gets what the primary targets can no longer take, “Remainder” what is left after that, and “Never” nothing at all. Without any change every target sits on “Remainder”, which puts them all on equal footing."/>
+        <text name="revamp_help_distribution_splitTitle"   text="How the amount is split"/>
+        <text name="revamp_help_distribution_split"        text="Within one level every consumer gets the same amount. If the split is set to “By demand” in the settings instead, the businesses whose stock runs out first are served until they have caught up with the others - a freshly built, still empty business fills up much faster that way. Whatever is left after that goes to everyone in proportion to their consumption."/>
+        <text name="revamp_help_distribution_runningTitle" text="Only to switched-on businesses"/>
+        <text name="revamp_help_distribution_running"      text="Every switched-on production line that needs the good as an ingredient is supplied - including one standing still because of its opening hours, the season or the weather, so it does not start up without any stock. A line that is switched off gets nothing. The list still shows every possible consumer, including the ones switched off."/>
         <text name="revamp_help_distribution_limitTitle"   text="Limit"/>
         <text name="revamp_help_distribution_limit"        text="The limit sets the stock level up to which a target is supplied. “None” stops deliveries entirely, “Full” supplies without a limit. That leaves room for whatever you deliver yourself."/>
         <text name="revamp_help_distribution_costsTitle"   text="What delivering costs"/>

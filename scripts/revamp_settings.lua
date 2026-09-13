@@ -32,11 +32,15 @@ Revamp.FACTOR_MAX = 2
 -- Wer an einer Produktionsstätte kaufen und verkaufen darf.
 Revamp.TRADE_RESTRICTIONS = {"everyone", "farmManager", "productionAgent"}
 
+-- Wie eine Produktionsstätte ihr Erzeugnis innerhalb einer Verteilstufe aufteilt: zu gleichen Teilen oder nach der Restlaufzeit der Abnehmer.
+Revamp.DISTRIBUTION_MODES = {"equal", "demand"}
+
 -- Reihenfolge im Menü, jeder Schalter direkt vor den Einstellungen, die zu ihm gehören. "default" ist der Wert, mit dem ein neuer Spielstand startet.
 -- Ein abgeschalteter Bereich verschwindet auch aus der Bedienung und wird nicht nur wirkungslos: was es nicht gibt, soll man auch nicht anklicken können.
 -- Was der Spieler dazu schon eingestellt hatte (Verteilziele, eingelagerte Waren, Auswahlmodi), bleibt dabei gespeichert und gilt beim Wiedereinschalten unverändert weiter.
 Revamp.SETTINGS = {
 	{id = "distributionActive",       settingType = Revamp.SETTING_TYPE.BOOL,   default = true},
+	{id = "distributionMode",         settingType = Revamp.SETTING_TYPE.CHOICE, default = "equal", values = Revamp.DISTRIBUTION_MODES},
 	{id = "distributionCostFactor",   settingType = Revamp.SETTING_TYPE.FACTOR, default = 1},
 	{id = "storageActive",            settingType = Revamp.SETTING_TYPE.BOOL,   default = true},
 	{id = "buyingActive",             settingType = Revamp.SETTING_TYPE.BOOL,   default = true},

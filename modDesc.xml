@@ -2,7 +2,7 @@
 <modDesc descVersion="113">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.34</version>
+    <version>0.0.0.35</version>
     <title>
         <en>Production Revamp</en>
         <de>Production Revamp</de>
@@ -17,6 +17,9 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.35
+- Neue Einstellung "Aufteilung beim Verteilen": auf Wunsch bekommen die Abnehmer zuerst, deren Vorrat am schnellsten zur Neige geht, statt alle gleich viel
+- Eine eingeschaltete Produktion wird jetzt auch dann beliefert, wenn sie gerade wegen ihrer Öffnungszeiten, der Jahreszeit oder des Wetters stillsteht
 0.0.0.34 - Der Hinweis im Log auf einen Mod, der Funktionen von Production Revamp ersetzt, nennt diesen Mod nicht mehr beim Namen, weil sich der Verursacher nicht zuverlässig bestimmen ließ
 0.0.0.33 - Andere Mods können jetzt auslesen, welche Bereiche von Production Revamp der Admin abgeschaltet hat
 0.0.0.32
@@ -164,6 +167,10 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
                 <paragraph>
                     <title text="$l10n_revamp_help_distribution_levelsTitle"/>
                     <text text="$l10n_revamp_help_distribution_levels"/>
+                </paragraph>
+                <paragraph>
+                    <title text="$l10n_revamp_help_distribution_splitTitle"/>
+                    <text text="$l10n_revamp_help_distribution_split"/>
                 </paragraph>
                 <paragraph>
                     <title text="$l10n_revamp_help_distribution_runningTitle"/>
