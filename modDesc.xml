@@ -2,10 +2,9 @@
 <modDesc descVersion="113">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.35</version>
+    <version>0.0.0.36</version>
     <title>
         <en>Production Revamp</en>
-        <de>Production Revamp</de>
     </title>
 
     <description>
@@ -17,6 +16,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.36 - Mod-Symbol in höherer Auflösung, damit es in der Mod-Übersicht schärfer aussieht
 0.0.0.35
 - Neue Einstellung "Aufteilung beim Verteilen": auf Wunsch bekommen die Abnehmer zuerst, deren Vorrat am schnellsten zur Neige geht, statt alle gleich viel
 - Eine eingeschaltete Produktion wird jetzt auch dann beliefert, wenn sie gerade wegen ihrer Öffnungszeiten, der Jahreszeit oder des Wetters stillsteht
