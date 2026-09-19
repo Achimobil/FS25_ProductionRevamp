@@ -125,14 +125,35 @@ function Revamp.getVisibleProductions(productionPoint)
 	return productions
 end
 
+---Gibt alle gebauten Listenzeilen an den Zellen-Cache zurück, damit die nächste Ansicht ihre eigene Zeilenform bekommt.
+---SmoothListElement:reloadData(true) macht das selbst, läuft dabei aber über #section.cells: war die Liste gescrollt, fehlt dort der Index 1,
+---der Längenoperator liefert dann 0 und keine einzige Zeile wird zurückgegeben.
+function RevampManageDialog:releaseListCells()
+	for _, section in pairs(self.manageList.sections) do
+		-- Erst sammeln, dann zurückgeben: queueReusableCell entfernt die Zelle aus section.cells und verändert damit die gerade laufende Iteration.
+		local cells = {}
+		for index, cell in pairs(section.cells) do
+			-- Der Sektionskopf bei Index 0 hat in allen Ansichten dieselbe Form und bleibt stehen.
+			if index > 0 then
+				table.insert(cells, cell)
+			end
+		end
+
+		for _, cell in ipairs(cells) do
+			self.manageList:queueReusableCell(cell)
+		end
+	end
+end
+
 ---Berechnet die Sektionsaufteilung neu und lädt die Liste + Auswahlzustand neu - wird beim Öffnen, nach jedem Moduswechsel und nach jedem Ansichtswechsel aufgerufen.
 function RevampManageDialog:updateRows()
 	self.pureInputs, self.dual, self.pureOutputs = Revamp.splitFillTypesByRole(self.productionPoint)
 	self.productions = Revamp.getVisibleProductions(self.productionPoint)
 	self.distributionSections = Revamp.getDistributionSections(self.productionPoint)
 	self.animals = Revamp.getAnimalRows(self.productionPoint)
-	-- Mit true, weil die beiden Ansichten unterschiedliche Zeilenformen haben: ohne das Kennzeichen behält die Liste die bereits erzeugten Zeilen und befüllt nur deren Inhalt neu,
-	-- die neue Ansicht bekäme also die Felder der alten (siehe SmoothListElement:reloadData).
+	-- Jede Ansicht hat ihre eigene Zeilenform, die Zeilen der bisherigen müssen vor dem Neuaufbau also weg.
+	-- reloadData(true) allein erwischt dabei nicht alle, siehe releaseListCells.
+	self:releaseListCells()
 	self.manageList:reloadData(true)
 	self:updateTitle()
 	self:updateSharedStorageHint()
