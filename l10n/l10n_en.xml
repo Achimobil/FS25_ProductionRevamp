@@ -50,6 +50,7 @@
         <text name="revamp_storageOpenProduction"                text="Open production menu."/>
         <text name="revamp_storageEmpty"                         text="Storage is empty."/>
         <text name="revamp_storageButtonSpawn"                   text="Spawn goods"/>
+        <text name="revamp_menuButtonOverflow"                   text="Production Revamp: More buttons are registered for the production menu than it can display. The savegame is being left, otherwise buttons would go missing unnoticed."/>
         <text name="revamp_storageMax"                           text="Max"/>
         <text name="revamp_storageNone"                          text="None"/>
         <text name="revamp_storageAll"                           text="All"/>

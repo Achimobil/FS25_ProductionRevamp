@@ -37,6 +37,7 @@ source(g_currentModDirectory .. "scripts/events/revamp_eventRecipeSettings.lua")
 source(g_currentModDirectory .. "scripts/revamp_animals.lua")
 source(g_currentModDirectory .. "scripts/events/revamp_eventMoveAnimals.lua")
 source(g_currentModDirectory .. "scripts/revamp_animalDeliveryDialog.lua")
+source(g_currentModDirectory .. "scripts/revamp_menuButtons.lua")
 
 -- Muss als letzte Datei geladen werden, weil sie sich die gesetzten Funktionen aller Hooks von Revamp merkt, um sie nach dem Laden aller Mods auf Fremdüberschreibungen zu prüfen.
 source(g_currentModDirectory .. "scripts/revamp_hookGuard.lua")

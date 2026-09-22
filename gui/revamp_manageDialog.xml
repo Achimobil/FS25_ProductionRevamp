@@ -25,18 +25,18 @@
                     <!-- Dritte Zeilenform für die Verteilen-Ansicht: statt eines Fülltyps steht hier eine Zielproduktion mit ihrem Vorschaubild, der eingestellten Obergrenze, den laufenden Lieferkosten und der Verteilstufe -->
                     <ListItem profile="revamp_manageListItem" name="distributionRow">
                         <Bitmap profile="revamp_manageListItemIcon" name="icon"/>
-                        <Text profile="revamp_manageListItemTargetName"        name="name"/>
-                        <Text profile="revamp_manageListItemLimit"             name="limit"/>
-                        <Text profile="revamp_manageListItemCosts"             name="costs"/>
-                        <Text profile="revamp_manageListItemLevel"             name="level"/>
+                        <Text profile="revamp_manageListItemTargetName" name="name"/>
+                        <Text profile="revamp_manageListItemLimit"      name="limit"/>
+                        <Text profile="revamp_manageListItemCosts"      name="costs"/>
+                        <Text profile="revamp_manageListItemLevel"      name="level"/>
                     </ListItem>
                     <!-- Vierte Zeilenform für die Tier-Ansicht: Bild und Name der Rasse, die Bedingungen an Alter und Gesundheit und was ein Tier der Produktion einbringt -->
                     <ListItem profile="revamp_manageListItem" name="animalRow">
                         <Bitmap profile="revamp_manageListItemAnimalIcon" name="icon"/>
-                        <Text profile="revamp_manageListItemAnimalName"   name="name"/>
-                        <Text profile="revamp_manageListItemAnimalAge"    name="age"/>
-                        <Text profile="revamp_manageListItemAnimalHealth" name="health"/>
-                        <Text profile="revamp_manageListItemAnimalResult" name="result"/>
+                        <Text profile="revamp_manageListItemAnimalName"        name="name"/>
+                        <Text profile="revamp_manageListItemAnimalAge"         name="age"/>
+                        <Text profile="revamp_manageListItemAnimalHealth"      name="health"/>
+                        <Text profile="revamp_manageListItemAnimalResult"      name="result"/>
                     </ListItem>
                     <ListItem profile="fs25_productionDetailsListSection" name="section">
                         <Text profile="fs25_productionDetailsListSectionTitle" name="title"/>
@@ -53,17 +53,27 @@
             <Text profile="revamp_manageDialogFootnote" id="sharedStorageHint"/>
         </GuiElement>
 
-        <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
-            <!-- Jede gleichzeitig sichtbare Aktion braucht eine eigene Taste: mit dem Standardprofil buttonOK lägen alle auf Enter und nur der Mausklick würde sie noch auseinanderhalten.
-                 Dieselben Tasten werden von mehreren Ansichten benutzt, sichtbar ist immer nur der Satz Knöpfe der aktuellen Ansicht -->
-            <Button profile="revamp_buttonExtra1" text="$l10n_revamp_buyButton"               onClick="onClickBuy"             id="buyButton"/>
-            <Button profile="revamp_buttonExtra2" text="$l10n_revamp_sellButton"              onClick="onClickSell"            id="sellButton"/>
+        <!-- Untergrund der oberen Knopfreihe. Der dunkle Fuß der Dialoggrafik endet 50px über der Unterkante und lässt sich nicht vergrößern,
+             ohne dieses Feld stünde die obere Reihe als einzige auf der hellen Inhaltsfläche -->
+        <Bitmap profile="revamp_manageDialogButtonBoxTopBg"/>
+
+        <!-- Obere Reihe: alles, was sich auf die markierte Zeile bezieht und deshalb mit der Ansicht wechselt.
+             Jede gleichzeitig sichtbare Aktion braucht eine eigene Taste: mit dem Standardprofil buttonOK lägen alle auf Enter und nur der Mausklick würde sie noch auseinanderhalten.
+             Dieselben Tasten werden von mehreren Ansichten benutzt, sichtbar ist immer nur der Satz Knöpfe der aktuellen Ansicht -->
+        <BoxLayout profile="revamp_manageDialogButtonBoxTop" id="buttonsRow">
+            <Button profile="revamp_buttonExtra2" text="$l10n_revamp_buyButton"               onClick="onClickBuy"             id="buyButton"/>
+            <Button profile="revamp_buttonExtra3" text="$l10n_revamp_sellButton"              onClick="onClickSell"            id="sellButton"/>
             <Button profile="buttonActivate"      text="$l10n_ui_production_changeOutputMode" onClick="onClickChangeMode"      id="yesButton"/>
-            <Button profile="revamp_buttonExtra1" text="$l10n_revamp_changeMixMode"           onClick="onClickChangeMixMode"   id="mixModeButton"/>
-            <Button profile="revamp_buttonExtra2" text="$l10n_revamp_changeBoostMode"         onClick="onClickChangeBoostMode" id="boostModeButton"/>
+            <Button profile="revamp_buttonExtra2" text="$l10n_revamp_changeMixMode"           onClick="onClickChangeMixMode"   id="mixModeButton"/>
+            <Button profile="revamp_buttonExtra3" text="$l10n_revamp_changeBoostMode"         onClick="onClickChangeBoostMode" id="boostModeButton"/>
             <Button profile="buttonActivate"      text="$l10n_revamp_changeDistributionLevel" onClick="onClickChangeLevel"     id="levelButton"/>
-            <Button profile="revamp_buttonExtra1" text="$l10n_revamp_changeDistributionLimit" onClick="onClickChangeLimit"     id="limitButton"/>
-            <Button profile="buttonOK"            text="$l10n_revamp_manageViewProductions"   onClick="onClickToggleView"      id="viewButton"/>
+            <Button profile="revamp_buttonExtra2" text="$l10n_revamp_changeDistributionLimit" onClick="onClickChangeLimit"     id="limitButton"/>
+        </BoxLayout>
+
+        <!-- Untere Reihe: was für den ganzen Dialog gilt und in jeder Ansicht an derselben Stelle steht -->
+        <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
+            <Button profile="revamp_buttonExtra1" text="$l10n_revamp_storageButtonSpawn"    onClick="onClickSpawn"      id="spawnButton"/>
+            <Button profile="buttonOK"            text="$l10n_revamp_manageViewProductions" onClick="onClickToggleView" id="viewButton"/>
             <Bitmap profile="fs25_dialogButtonBoxSeparator"/>
             <Button profile="buttonBack" text="$l10n_button_back" onClick="onClickBack" id="noButton"/>
         </BoxLayout>
@@ -71,15 +81,42 @@
     <GUIProfiles>
         <!-- Die beiden Aktionen der jeweiligen Ansicht liegen auf den Menü-Zusatztasten (Standard X und C), der Ausgangsmodus auf der Aktivieren-Taste (Leertaste)
              und der Ansichtswechsel auf der Bestätigen-Taste (Enter) - das ist dieselbe Aufteilung, die Vanilla in seinen mehrknöpfigen Dialogen nutzt
-             (z.B. FieldStateDialog mit buttonActivate neben buttonOK). Ohne eigene Tasten lägen alle Knöpfe auf Enter und nur der Mausklick könnte sie noch auseinanderhalten -->
+             (z.B. FieldStateDialog mit buttonActivate neben buttonOK). Ohne eigene Tasten lägen alle Knöpfe auf Enter und nur der Mausklick könnte sie noch auseinanderhalten.
+             Auslagern liegt auf derselben Taste wie der gleichnamige Knopf in der Menü-Button-Leiste, sonst wechselt die Taste je nachdem, von wo aus man auslagert.
+             Sie ist als einzige keiner Ansicht zugeteilt, weil Auslagern in jeder Ansicht sichtbar ist - die Aktionen der Ansichten teilen sich die übrigen drei Tasten -->
         <Profile name="revamp_buttonExtra1" extends="buttonOK">
             <inputAction value="MENU_EXTRA_1"/>
         </Profile>
         <Profile name="revamp_buttonExtra2" extends="buttonOK">
             <inputAction value="MENU_EXTRA_2"/>
         </Profile>
+        <Profile name="revamp_buttonExtra3" extends="buttonOK">
+            <inputAction value="MENU_CANCEL"/>
+        </Profile>
+        <!-- Zweite Knopfreihe direkt über der ersten: 36px Reihenhöhe wie fs25_dialogButtonBox, dazu 8px Abstand, also 76px statt 32px über der Unterkante.
+             Alle Knöpfe einer Reihe passen nur bis etwa 1100px Breite, darüber läuft die Reihe links aus dem Dialog heraus -->
+        <Profile name="revamp_manageDialogButtonBoxTop" extends="fs25_dialogButtonBox">
+            <position value="0px 76px"/>
+            <alignmentX value="right"/>
+        </Profile>
+        <!-- Schließt oben an den Fuß der Dialoggrafik an und reicht bis knapp über die obere Knopfreihe.
+             Erbt von baseReference und nicht von emptyPanel: emptyPanel setzt imageSliceId auf noSlice und zeichnet dann die UI-Textur selbst statt einer Fläche.
+             gui.colorPreset ist die Slice, die nur die eingestellte Farbe darstellt - dasselbe Mittel benutzt Vanilla für lineSeparator.
+             Geometrie von derselben Grundlage wie die Knopfreihen, nur etwas höher als eine Reihe - eigene Positionswerte trafen die Fläche nicht und liefen in den Fuß hinein.
+             Aufgebaut wie fs25_dialogBgBottom, der Fuß der Dialoggrafik: derselbe Anker und dieselbe Breitenangabe.
+             Das Element des Dialogs ist breiter als die Dialoggrafik darin, weil deren Kantenbilder durchsichtige Ränder haben - links etwa 4, rechts etwa 18 Einheiten.
+             Die volle Breite läuft deshalb rechts sichtbar aus dem Dialog heraus. absoluteSizeOffset nimmt die Fläche auf beiden Seiten gleich weit zurück,
+             die Verschiebung gleicht danach aus, dass die durchsichtigen Ränder eben nicht gleich breit sind.
+             Beide Angaben sind GUI-Einheiten und hängen an der Breite des Dialogs, nicht an Bildschirmpixeln, und stimmen damit in jedem Seitenverhältnis -->
+        <Profile name="revamp_manageDialogButtonBoxTopBg" extends="baseReference" with="anchorBottomStretchingX">
+            <size value="100% 44px"/>
+            <position value="-8px 72px"/>
+            <absoluteSizeOffset value="27px 0px"/>
+            <imageSliceId value="gui.colorPreset"/>
+            <imageColor value="$preset_fs25_colorMainDark"/>
+        </Profile>
         <Profile name="revamp_manageDialogBg" extends="fs25_dialogBg">
-            <size value="1100px 700px"/>
+            <size value="1100px 744px"/>
         </Profile>
         <Profile name="revamp_manageListContainer" extends="emptyPanel" with="anchorTopLeft">
             <size value="1020px 480px"/>
@@ -168,7 +205,7 @@
             <textAlignment value="right"/>
         </Profile>
         <!-- Fußnote unter der Liste: grau und kleiner als die Zeilen selbst, damit sie als Erläuterung und nicht als weitere Zeile gelesen wird.
-             Die Liste endet 580px unter der oberen Kante des Inhaltsbereichs, die Knopfleiste beginnt 68px über der unteren Kante des Dialogs - dazwischen liegt genau diese eine Zeile -->
+             Die Liste endet 580px unter der oberen Kante des Inhaltsbereichs, die obere der beiden Knopfreihen beginnt 112px über der unteren Kante des Dialogs - dazwischen liegt genau diese eine Zeile -->
         <Profile name="revamp_manageDialogFootnote" extends="fs25_textGrey" with="anchorTopLeft">
             <position value="20px -588px"/>
             <width value="1020px"/>

@@ -884,27 +884,40 @@ end
 
 PalletSpawner.getSupportedFillTypes = Utils.overwrittenFunction(PalletSpawner.getSupportedFillTypes, Revamp.spawnerGetSupportedFillTypes)
 
+---Sagt, ob sich an dieser Produktionsstätte überhaupt etwas auslagern lässt - dieselbe Bedingung für den Knopf in der Menü-Button-Leiste und den im Verwalten-Dialog.
+---@param productionPoint table ProductionPoint-Instanz
+---@return boolean canSpawn true, wenn Auslagern angeboten werden soll
+function Revamp.getCanSpawnGoods(productionPoint)
+	return Revamp.settings.storageActive
+		and productionPoint ~= nil
+		and productionPoint.palletSpawner ~= nil
+		and g_currentMission:getHasPlayerPermission("manageProductions")
+end
+
 ---Fügt den "Auslagern"-Button in die Menü-Button-Leiste ein, unabhängig vom "Verwalten"-Button (revamp_manageDialog.lua) -
----eigene InputAction (MENU_EXTRA_2), löst dieselbe run(true)-Logik wie der physische Trigger aus.
+---eigene InputAction (MENU_EXTRA_1), löst dieselbe run(true)-Logik wie der physische Trigger aus.
+---Der eingetragene Knopf wird gemerkt, damit Revamp.enforceMenuButtonLimit ihn wieder herausnehmen kann, wenn die Leiste zu voll wird (revamp_menuButtons.lua).
 ---@param self table InGameMenuProductionFrame-Instanz
 function Revamp.addSpawnButton(self)
-	if not Revamp.settings.storageActive then
+	self.revampSpawnButtonInfo = nil
+	if self.pointsSelector:getState() ~= InGameMenuProductionFrame.POINTS_OWNED then
 		return
 	end
 
-	if self.pointsSelector:getState() == InGameMenuProductionFrame.POINTS_OWNED and g_currentMission:getHasPlayerPermission("manageProductions") then
-		local _, productionPoint = self:getSelectedProduction()
-		if productionPoint ~= nil and productionPoint.palletSpawner ~= nil then
-			table.insert(self.menuButtonInfo, {
-				profile = "buttonOK",
-				inputAction = InputAction.MENU_EXTRA_2,
-				text = g_i18n:getText("revamp_storageButtonSpawn"),
-				callback = function()
-					productionPoint.activatable:run(true)
-				end
-			})
-		end
+	local _, productionPoint = self:getSelectedProduction()
+	if not Revamp.getCanSpawnGoods(productionPoint) then
+		return
 	end
+
+	self.revampSpawnButtonInfo = {
+		profile = "buttonOK",
+		inputAction = InputAction.MENU_EXTRA_1,
+		text = g_i18n:getText("revamp_storageButtonSpawn"),
+		callback = function()
+			productionPoint.activatable:run(true)
+		end
+	}
+	table.insert(self.menuButtonInfo, self.revampSpawnButtonInfo)
 end
 
 InGameMenuProductionFrame.updateMenuButtons = Utils.appendedFunction(InGameMenuProductionFrame.updateMenuButtons, Revamp.addSpawnButton)

@@ -82,6 +82,9 @@ end
 ---z.B. VehicleShopDialog/PalletShopDialog, die beide FocusManager:setFocus() auf ihr Listenelement in onOpen() aufrufen).
 function RevampManageDialog:onOpen()
 	RevampManageDialog:superClass().onOpen(self)
+	-- Auslagern gilt für die ganze Stätte und nicht für die gewählte Zeile, deshalb steht die Sichtbarkeit hier und nicht in onListSelectionChanged.
+	self.spawnButton:setVisible(Revamp.getCanSpawnGoods(self.productionPoint))
+	self:updateButtonRows()
 	FocusManager:setFocus(self.manageList)
 end
 
@@ -299,6 +302,8 @@ function RevampManageDialog:onListSelectionChanged(list, section, index)
 	local nextView = self:getNextView(self.viewMode)
 	self.viewButton:setVisible(nextView ~= self.viewMode)
 	self.viewButton:setText(g_i18n:getText(RevampManageDialog.VIEW_TEXTS[nextView]))
+
+	self:updateButtonRows()
 
 	-- Ohne das behält die Button-Leiste die Breiten der vorherigen Ansicht und lässt Lücken, wo gerade ein Knopf ausgeblendet wurde.
 	self.buttonsPC:invalidateLayout()
@@ -668,6 +673,19 @@ function RevampManageDialog:onClickSell()
 	RevampBuyGoodsDialog.show(self.productionPoint, self.productionPoint:getName(), {fillTypeIndex = fillType}, 2)
 end
 
+---Ordnet beide Knopfreihen neu an, nachdem sich die Sichtbarkeit einzelner Knöpfe geändert hat.
+---Ohne diesen Aufruf behält jeder Knopf die Stelle, an der er beim Aufbau des Dialogs gelandet ist - die Reihe rückt dann nicht nach und steht nicht mehr rechtsbündig.
+function RevampManageDialog:updateButtonRows()
+	self.buttonsRow:invalidateLayout()
+	self.buttonsPC:invalidateLayout()
+end
+
+---Lagert Waren aus, genau wie der gleichnamige Knopf in der Menü-Button-Leiste (revamp_spawner.lua).
+---Hier steht er zusätzlich, weil er aus der Leiste weichen muss, sobald ein anderer Mod dort ebenfalls einen Knopf einträgt (revamp_menuButtons.lua).
+function RevampManageDialog:onClickSpawn()
+	self.productionPoint.activatable:run(true)
+end
+
 ---Schließt den Dialog ohne weitere Aktion.
 function RevampManageDialog:onClickBack()
 	self:close()
@@ -694,7 +712,8 @@ function Revamp.removeActivateButtonForAutoStart(self)
 end
 
 ---Fügt den "Verwalten"-Button in die Menü-Button-Leiste ein, sobald eine eigene Produktionsstätte gewählt ist - gleiches Muster wie PSCs eigener "Spawn"-Button (updateMenuButtonsAppend),
----eigene InputAction (MENU_EXTRA_1) damit es nicht mit Vanillas bestehendem Ausgangsmodus-Button (MENU_ACTIVATE) kollidiert.
+---Feste eigene InputAction (MENU_EXTRA_2), damit es nicht mit Vanillas bestehendem Ausgangsmodus-Button (MENU_ACTIVATE) kollidiert.
+---Bewusst fest und nicht je nach Lage gewählt: ein Knopf, der mal auf der einen und mal auf der anderen Taste liegt, lässt sich nicht einprägen.
 ---@param self table InGameMenuProductionFrame-Instanz
 function Revamp.addManageButton(self)
 	Revamp.removeVanillaOutputModeButton(self)
@@ -704,7 +723,7 @@ function Revamp.addManageButton(self)
 		if productionPoint ~= nil then
 			table.insert(self.menuButtonInfo, {
 				profile = "buttonOK",
-				inputAction = InputAction.MENU_EXTRA_1,
+				inputAction = InputAction.MENU_EXTRA_2,
 				text = g_i18n:getText("revamp_manageButton"),
 				callback = function()
 					RevampManageDialog.show(productionPoint)

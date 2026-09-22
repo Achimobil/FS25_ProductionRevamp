@@ -50,6 +50,7 @@
         <text name="revamp_storageOpenProduction"                text="Produktion verwalten."/>
         <text name="revamp_storageEmpty"                         text="Lager ist leer."/>
         <text name="revamp_storageButtonSpawn"                   text="Waren auslagern"/>
+        <text name="revamp_menuButtonOverflow"                   text="Production Revamp: Im Produktionsmenü sind mehr Knöpfe angemeldet, als das Menü anzeigen kann. Der Spielstand wird verlassen, weil sonst Knöpfe unbemerkt fehlen würden."/>
         <text name="revamp_storageMax"                           text="Max"/>
         <text name="revamp_storageNone"                          text="Nix"/>
         <text name="revamp_storageAll"                           text="Alles"/>
