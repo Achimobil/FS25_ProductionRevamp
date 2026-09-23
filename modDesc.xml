@@ -2,7 +2,7 @@
 <modDesc descVersion="113">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.38</version>
+    <version>0.0.0.39</version>
     <title>
         <en>Production Revamp</en>
     </title>
@@ -16,6 +16,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.39 - Bei zu vielen Knöpfen im Produktionsmenü kommt nur noch ein Hinweis, statt den Spielstand zu verlassen
 0.0.0.38 - Knöpfe anderer Mods verschwinden nicht mehr aus dem Produktionsmenü: Revamp macht ihnen Platz und weicht aus, wenn sie dieselbe Taste benutzen
 0.0.0.37 - Beim Umschalten der Ansicht im Verwalten-Dialog konnte es zu einem Fehler kommen, wenn die Liste vorher weiter unten stand
 0.0.0.36 - Mod-Symbol in höherer Auflösung, damit es in der Mod-Übersicht schärfer aussieht
