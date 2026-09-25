@@ -84,6 +84,7 @@ function RevampManageDialog:onOpen()
 	RevampManageDialog:superClass().onOpen(self)
 	-- Auslagern gilt für die ganze Stätte und nicht für die gewählte Zeile, deshalb steht die Sichtbarkeit hier und nicht in onListSelectionChanged.
 	self.spawnButton:setVisible(Revamp.getCanSpawnGoods(self.productionPoint))
+	self:updateModButtonBottom()
 	self:updateButtonRows()
 	FocusManager:setFocus(self.manageList)
 end
@@ -303,6 +304,7 @@ function RevampManageDialog:onListSelectionChanged(list, section, index)
 	self.viewButton:setVisible(nextView ~= self.viewMode)
 	self.viewButton:setText(g_i18n:getText(RevampManageDialog.VIEW_TEXTS[nextView]))
 
+	self:updateModButtonTop(section, index)
 	self:updateButtonRows()
 
 	-- Ohne das behält die Button-Leiste die Breiten der vorherigen Ansicht und lässt Lücken, wo gerade ein Knopf ausgeblendet wurde.
@@ -678,6 +680,66 @@ end
 function RevampManageDialog:updateButtonRows()
 	self.buttonsRow:invalidateLayout()
 	self.buttonsPC:invalidateLayout()
+end
+
+---Zeigt den Knopf, den ein fremder Mod für die markierte Ware angemeldet hat (siehe revamp_modButtons.lua).
+---Nur in der Waren-Ansicht: sonst gibt es keine markierte Ware, und die obere Reihe ist dort mit den Knöpfen der jeweiligen Ansicht belegt.
+---@param section number Gewählte Sektion
+---@param index number Gewählter Zeilenindex innerhalb der Sektion
+function RevampManageDialog:updateModButtonTop(section, index)
+	local config = Revamp.getManageButton(Revamp.MOD_BUTTON_SCOPE.FILLTYPE)
+	self.modButtonFillType = nil
+
+	if config == nil or self.viewMode ~= RevampManageDialog.VIEW.FILLTYPES then
+		self.modButtonTop:setVisible(false)
+		return
+	end
+
+	local fillTypes = self:getSectionFillTypes(section)
+	local fillType = fillTypes[index]
+	local isVisible = fillType ~= nil
+	if isVisible and config.isVisible ~= nil then
+		isVisible = config.isVisible(self.productionPoint, fillType)
+	end
+
+	-- Die Ware wird gemerkt, weil der Klick-Handler der GUI keine Zeilenangabe mitbekommt.
+	self.modButtonFillType = fillType
+	self.modButtonTop:setText(config.text)
+	self.modButtonTop:setVisible(isVisible)
+end
+
+---Zeigt den Knopf, den ein fremder Mod für die ganze Produktionsstätte angemeldet hat.
+---Er steht wie Auslagern in jeder Ansicht an derselben Stelle, deshalb reicht ein Aufruf beim Öffnen.
+function RevampManageDialog:updateModButtonBottom()
+	local config = Revamp.getManageButton(Revamp.MOD_BUTTON_SCOPE.PRODUCTION_POINT)
+	if config == nil then
+		self.modButtonBottom:setVisible(false)
+		return
+	end
+
+	local isVisible = true
+	if config.isVisible ~= nil then
+		isVisible = config.isVisible(self.productionPoint)
+	end
+
+	self.modButtonBottom:setText(config.text)
+	self.modButtonBottom:setVisible(isVisible)
+end
+
+---Ruft den Mod auf, der den Knopf für die markierte Ware angemeldet hat.
+function RevampManageDialog:onClickModButtonTop()
+	local config = Revamp.getManageButton(Revamp.MOD_BUTTON_SCOPE.FILLTYPE)
+	if config ~= nil then
+		config.callback(self.productionPoint, self.modButtonFillType)
+	end
+end
+
+---Ruft den Mod auf, der den Knopf für die ganze Produktionsstätte angemeldet hat.
+function RevampManageDialog:onClickModButtonBottom()
+	local config = Revamp.getManageButton(Revamp.MOD_BUTTON_SCOPE.PRODUCTION_POINT)
+	if config ~= nil then
+		config.callback(self.productionPoint)
+	end
 end
 
 ---Lagert Waren aus, genau wie der gleichnamige Knopf in der Menü-Button-Leiste (revamp_spawner.lua).

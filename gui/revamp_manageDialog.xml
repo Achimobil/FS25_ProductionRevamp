@@ -68,12 +68,20 @@
             <Button profile="revamp_buttonExtra3" text="$l10n_revamp_changeBoostMode"         onClick="onClickChangeBoostMode" id="boostModeButton"/>
             <Button profile="buttonActivate"      text="$l10n_revamp_changeDistributionLevel" onClick="onClickChangeLevel"     id="levelButton"/>
             <Button profile="revamp_buttonExtra2" text="$l10n_revamp_changeDistributionLimit" onClick="onClickChangeLimit"     id="limitButton"/>
+
+            <!-- Platz für den Knopf eines fremden Mods, der sich auf die markierte Ware bezieht (siehe revamp_modButtons.lua).
+                 Beschriftung und Sichtbarkeit kommen aus dessen Anmeldung, deshalb steht hier kein text-Attribut -->
+            <Button profile="buttonMenuPrev" onClick="onClickModButtonTop" id="modButtonTop" visible="false"/>
         </BoxLayout>
 
         <!-- Untere Reihe: was für den ganzen Dialog gilt und in jeder Ansicht an derselben Stelle steht -->
         <BoxLayout profile="fs25_dialogButtonBox" id="buttonsPC">
             <Button profile="revamp_buttonExtra1" text="$l10n_revamp_storageButtonSpawn"    onClick="onClickSpawn"      id="spawnButton"/>
             <Button profile="buttonOK"            text="$l10n_revamp_manageViewProductions" onClick="onClickToggleView" id="viewButton"/>
+
+            <!-- Platz für den Knopf eines fremden Mods, der für die ganze Stätte gilt - wie in der oberen Reihe -->
+            <Button profile="buttonMenuNext" onClick="onClickModButtonBottom" id="modButtonBottom" visible="false"/>
+
             <Bitmap profile="fs25_dialogButtonBoxSeparator"/>
             <Button profile="buttonBack" text="$l10n_button_back" onClick="onClickBack" id="noButton"/>
         </BoxLayout>
@@ -83,7 +91,8 @@
              und der Ansichtswechsel auf der Bestätigen-Taste (Enter) - das ist dieselbe Aufteilung, die Vanilla in seinen mehrknöpfigen Dialogen nutzt
              (z.B. FieldStateDialog mit buttonActivate neben buttonOK). Ohne eigene Tasten lägen alle Knöpfe auf Enter und nur der Mausklick könnte sie noch auseinanderhalten.
              Auslagern liegt auf derselben Taste wie der gleichnamige Knopf in der Menü-Button-Leiste, sonst wechselt die Taste je nachdem, von wo aus man auslagert.
-             Sie ist als einzige keiner Ansicht zugeteilt, weil Auslagern in jeder Ansicht sichtbar ist - die Aktionen der Ansichten teilen sich die übrigen drei Tasten -->
+             Sie ist als einzige keiner Ansicht zugeteilt, weil Auslagern in jeder Ansicht sichtbar ist - die Aktionen der Ansichten teilen sich die übrigen drei Tasten.
+             Für die beiden Knöpfe fremder Mods bleiben die Blättertasten: sie wirken in diesem Dialog nicht, weil ScreenElement:inputEvent sie nur bei einem pageSelector auswertet -->
         <Profile name="revamp_buttonExtra1" extends="buttonOK">
             <inputAction value="MENU_EXTRA_1"/>
         </Profile>
