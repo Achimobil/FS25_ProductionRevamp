@@ -2,87 +2,94 @@
 <modDesc descVersion="114">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.42</version>
+    <version>0.0.0.43</version>
     <title>
         <en>Production Revamp</en>
     </title>
 
     <description>
-        <de><![CDATA[Production Revamp für den Landwirtschafts-Simulator 25.
+        <de><![CDATA[Production Revamp erweitert das Produktionssystem des Spiels um zahlreiche Funktionen. Es ist die Weiterentwicklung des Production Revamp, das Braeven für den Landwirtschafts-Simulator 22 gebaut hat, und wird mit seiner ausdrücklichen Erlaubnis von Achimobil für den LS25 fortgeführt.
 
-Ursprünglich von Braeven für den Landwirtschafts-Simulator 22 entwickelt, mit seiner ausdrücklichen
-Erlaubnis von Achimobil für den LS25 weitergeführt.
+Production Revamp ist ein reiner Skript-Mod. Es bringt keine eigenen Gebäude mit und ändert keine Rezepte. Ein Teil der Funktionen wirkt sofort an jeder Produktion, der andere Teil steht nur in Produktionen zur Verfügung, die ein Modder dafür angepasst hat.
 
-Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
+An allen Produktionen:
+- Verwalten-Dialog mit allen Zutaten und Erzeugnissen und genauen Mengen
+- Ausgangsmodus "Einlagern": Erzeugnisse sammeln sich im Lager und werden bei Bedarf in der gewünschten Menge als Palette oder Ballen ausgelagert, über das Menü oder direkt am Gebäude
+- Zutaten direkt beim Händler kaufen und Erzeugnisse direkt an ihn verkaufen
+- Verteilen nach eigenen Vorgaben: pro Ware festlegen, welche Produktionen bevorzugt, nachrangig oder gar nicht beliefert werden, wahlweise mit Obergrenze und Aufteilung gleichmäßig oder nach Bedarf
+- Beliefert werden nur Produktionen, die die Ware gerade tatsächlich verarbeiten
+- Lieferkosten mit Vorschau im Verwalten-Dialog und als eigener Posten in der Finanzübersicht
+- Rezeptanzeige markiert fehlende Zutaten, eine Ware, die Zutat und Erzeugnis zugleich ist, steht nur einmal in der Liste
+- Produktionsmenü zeigt, ob eine Produktionsstätte parallel oder aufgeteilt arbeitet, und ihre Gebäudekosten
+- Angehobene technische Grenzen, damit auch sehr große Produktions-Modpacks mit deutlich über 255 Fülltypen korrekt laden
+- Eigener Einstellungsbereich: der Admin kann einzelne Bereiche abschalten und Preise, Lieferkosten und Handelsrechte festlegen, jeder Spieler kann einzelne Anzeigen für sich ausblenden
+- Eigene Seiten im Hilfe-Menü des Spiels
+- Voll mehrspielerfähig
 
-Changelog:
-0.0.0.42 - Die beiden Test-Gebäude sind nicht mehr im Mod enthalten
-0.0.0.41 - Die Lieferkosten im Verteilen-Dialog zeigen bei Aufteilung nach Bedarf jetzt die laufenden Kosten, unabhängig davon, was bei den Abnehmern schon im Lager liegt
-0.0.0.40 - Andere Mods können ihre Knöpfe jetzt im Verwalten-Dialog unterbringen
-0.0.0.39 - Bei zu vielen Knöpfen im Produktionsmenü kommt nur noch ein Hinweis, statt den Spielstand zu verlassen
-0.0.0.38 - Knöpfe anderer Mods verschwinden nicht mehr aus dem Produktionsmenü: Revamp macht ihnen Platz und weicht aus, wenn sie dieselbe Taste benutzen
-0.0.0.37 - Beim Umschalten der Ansicht im Verwalten-Dialog konnte es zu einem Fehler kommen, wenn die Liste vorher weiter unten stand
-0.0.0.36 - Mod-Symbol in höherer Auflösung, damit es in der Mod-Übersicht schärfer aussieht
-0.0.0.35
-- Neue Einstellung "Aufteilung beim Verteilen": auf Wunsch bekommen die Abnehmer zuerst, deren Vorrat am schnellsten zur Neige geht, statt alle gleich viel
-- Eine eingeschaltete Produktion wird jetzt auch dann beliefert, wenn sie gerade wegen ihrer Öffnungszeiten, der Jahreszeit oder des Wetters stillsteht
-0.0.0.34 - Der Hinweis im Log auf einen Mod, der Funktionen von Production Revamp ersetzt, nennt diesen Mod nicht mehr beim Namen, weil sich der Verursacher nicht zuverlässig bestimmen ließ
-0.0.0.33 - Andere Mods können jetzt auslesen, welche Bereiche von Production Revamp der Admin abgeschaltet hat
-0.0.0.32
-- Ersetzt ein anderer Mod Funktionen von Production Revamp, steht das jetzt im Log, statt dass Teile unbemerkt ausfallen
-- Überflüssige Warnungen im Log zu den Zutaten einer Produktionsstätte mit Tierannahme entfernt
-0.0.0.31
-- Die farbigen Blöcke in der Rezeptansicht bleiben jetzt sichtbar, wenn die Zeile ausgewählt ist oder die Maus darüber steht
-- Der Verwalten-Dialog nennt im Titel jetzt die Ansicht, die gerade zu sehen ist
-- Die Ansicht der Produktionslinien wird nur noch angeboten, wenn es an der Produktionsstätte auch etwas einzustellen gibt
-- Beim Scrollen in der Rezeptansicht einer großen Produktionsstätte konnte die Liste kurz stocken
-0.0.0.30 - Drei neue Seiten im Hilfe-Menü: wie ein Rezept zu lesen ist, warum eine Produktion wegen Wetter oder Uhrzeit stillsteht und wie das Verteilen funktioniert
-0.0.0.29 - Andere Mods können ihre eigenen Waren jetzt an den Verkaufsstellen und Silos der Karte anmelden, ohne dass die Karte dafür angepasst werden muss
-0.0.0.28
-- Produktionsstätten können jetzt lebende Tiere als Zutat annehmen, abgegeben werden sie mit dem Tiertransporter an einem eigenen Auslöser am Gebäude
-- Produktionslinien, die von selbst laufen sollen, starten jetzt auch direkt nach dem Bauen und lassen sich nicht mehr abschalten
-0.0.0.27 - Eigener Abschnitt im Hilfe-Menü des Spiels, der die neuen Bedienelemente an Produktionsstätten erklärt
-0.0.0.26 - Eine Ware, die an derselben Produktionsstätte Zutat und Erzeugnis zugleich ist, steht im Produktionsmenü nur noch einmal in der Liste
-0.0.0.25 - Andere Mods können jetzt eigene Gebäude für Production Revamp mitliefern, die nur auftauchen wenn Production Revamp installiert ist
-0.0.0.24 - Silos können ihre Waren jetzt genauso als Palette, Ballen oder Stammholz auslagern wie Produktionsstätten
-0.0.0.23 - Beim Auslagern von Stammholz wird jetzt die Menge abgezogen, die im Stamm tatsächlich steckt
-0.0.0.22 - Erzeugnisse lassen sich jetzt auch als Stammholz auslagern, die Länge ist dabei wählbar
-0.0.0.21 - Produktionsstätten, Silos und Gewächshäuser können ihren Bestand jetzt am Gebäude zeigen: als mitwachsenden Stapel und als Ziffernanzeige
-0.0.0.20 - Waren, die sich einen Lagerplatz teilen, blockieren sich nicht mehr gegenseitig und sind mit einem * gekennzeichnet
-0.0.0.19
-- Neuer Einstellungsbereich "Production Revamp" im Spielmenü: wer an einer Produktion kaufen und verkaufen darf, wie teuer das Verteilen ist und was der Direktverkauf einbringt
-- Verteilen, Lager-Erweiterung, Kaufen, Verkaufen, Wetterabhängigkeit und Zutatenwahl lassen sich einzeln abschalten, jeder Spieler kann sich zusätzlich einzelne Anzeigen ausblenden
-0.0.0.18 - Die Kosten fürs Verteilen stehen in der Finanzübersicht jetzt als eigener Posten
-0.0.0.17 - Verteil-Ziele werden im Mehrspieler jetzt zwischen allen Spielern abgeglichen
-0.0.0.16 - Die eingestellten Verteil-Ziele bleiben jetzt im Spielstand erhalten
-0.0.0.15
-- Verteilen liefert jetzt gleichmäßig an alle Abnehmer und nur noch an Produktionen, die die Ware gerade auch tatsächlich verarbeiten
-- Im Verwalten-Dialog lässt sich pro Ware festlegen, welche Produktionen bevorzugt, nachrangig oder gar nicht beliefert werden, wahlweise mit Obergrenze und mit Anzeige der laufenden Lieferkosten
-- Absturz beim Aufschlagen der Produktionen im Baumenü behoben, wenn eine Produktion ihre Zutaten über eine Warengruppe angibt
-0.0.0.14 - Im Verwalten-Dialog lässt sich jetzt zwischen Waren und Produktionslinien umschalten, dort kann pro Rezept eingestellt werden, welche Zutat und welcher Booster verwendet wird
-0.0.0.13 - Kaufen und Verkaufen kann jetzt für einzelne Waren einer Produktionsstätte gesperrt sein
-0.0.0.12 - Rezepte über Fülltyp-Kategorien, benannte Zutatengruppen und mitgelieferter Kategorie-Katalog
-0.0.0.11 - Wetter- und zeitabhängige Produktion mit Statusanzeige, wetterabhängige Lager und Einzel-Booster-Modus
-0.0.0.10 - Technische Grenzen für Fülltypen und Produktionslinien angehoben, damit auch sehr umfangreiche Produktions-Modpacks (deutlich über 255 Fülltypen) korrekt laden
-0.0.0.9 - Rezept zeigt jetzt an, wenn eine Zutat auch durch einen anderen Rohstoff ersetzt werden kann (z.B. Roggen statt Weizen)
-0.0.0.8 - Neue "Kaufen"/"Verkaufen"-Buttons im Verwalten-Dialog: Zutaten können jetzt direkt vom Händler gekauft, Erzeugnisse direkt an ihn verkauft werden
-0.0.0.7
-- Neuer Ausgangsmodus "Einlagern": Erzeugnisse sammeln sich im Lager, statt automatisch als Paletten/Ballen zu erscheinen
-- Neuer "Verwalten"-Dialog zeigt alle Zutaten und Erzeugnisse einer Produktion mit genauen Mengenangaben und erlaubt das Umschalten des Ausgangsmodus
-- Neuer "Auslagern"-Button (im Menü und direkt am Gebäude): eingelagerte Erzeugnisse können jetzt gezielt in der gewünschten Menge als Paletten oder Ballen ausgelagert werden
-0.0.0.6 - Booster und Master-Booster (optionale Zusatz-Zutaten, die die Ausbeute erhöhen) funktionieren jetzt und werden übersichtlich im Rezept angezeigt, inklusive Gesamt-Boost-Anzeige
-0.0.0.5 - Mix-Gruppen werden jetzt auch im Rezept angezeigt
-0.0.0.4 - Mit Mix-Gruppen begonnen
-0.0.0.3 - Rezept-Grundgerüst (Mix-Gruppen, Booster, primärer Output) und eine Test-Produktion zum Ausprobieren hinzugefügt
-0.0.0.2 - Produktionsmenü zeigt jetzt an, ob eine Produktion sich die Kapazität mit anderen teilt, plus laufende Gebäudekosten
-0.0.0.1 - Projekt von Braeven übernommen, Grundstruktur für den LS25 angelegt
-]]></de>
-        <en><![CDATA[Production Revamp for Farming Simulator 25.
+Nur in dafür angepassten Produktionen:
+- Mix-Gruppen: mehrere gleichwertige Zutaten, zum Beispiel Roggen statt Weizen
+- Rezepte über Warengruppen, in die auch Waren anderer Mods automatisch hineinpassen
+- Booster und Master-Booster: optionale Zutaten, die die Ausbeute erhöhen
+- Zutaten- und Boosterwahl pro Produktionslinie im Verwalten-Dialog
+- Produktion abhängig von Wetter, Jahreszeit und Uhrzeit, dazu wetterabhängige Lager
+- Lebende Tiere als Zutat, abgegeben mit dem Tiertransporter an einem eigenen Auslöser
+- Erzeugnisse als Stammholz auslagern, mit wählbarer Länge
+- Auslagern als Palette, Ballen oder Stammholz auch an Silos
+- Bestandsanzeigen am Gebäude als mitwachsender Stapel und als Ziffernanzeige, auch an Silos und Gewächshäusern
+- Kaufen und Verkaufen für einzelne Waren sperrbar
+- Produktionslinien, die von selbst laufen
 
-Originally created by Braeven for Farming Simulator 22, continued for FS25 with his explicit
-permission by Achimobil.
+Für Modder:
+- Andere Mods können eigene Gebäude für Production Revamp mitliefern und eigene Waren an den Verkaufsstellen und Silos der Karte anmelden, ganz ohne Skript
+- Andere Mods können ihre Knöpfe im Verwalten-Dialog unterbringen
 
-This is currently a private work-in-progress build and not yet ready for use.]]></en>
+Production Storage Control und Production Supply Trader werden neben Production Revamp nicht gebraucht: ihre Funktionen sind in Production Revamp enthalten, und beide schalten sich automatisch ab, sobald Production Revamp installiert ist.
+
+Ersetzt ein anderer Mod Funktionen des Spiels, auf die auch Production Revamp aufbaut, steht eine Warnung im Log. Die Warnung ist ein Hinweis, keine Feststellung: sie bedeutet nicht, dass die beiden Mods nicht zusammen funktionieren, sondern nur, dass sie es möglicherweise nicht tun. In diesem Fall bitte prüfen, ob die betroffene Funktion im Spiel noch wie erwartet arbeitet.
+
+Fehler und Anregungen gerne auf GitHub: https://github.com/Achimobil/FS25_ProductionRevamp
+Die Beschreibung für Modder steht im Wiki: https://github.com/Achimobil/FS25_ProductionRevamp/wiki]]></de>
+        <en><![CDATA[Production Revamp extends the game's production system with a wide range of features. It is the continuation of the Production Revamp that Braeven built for Farming Simulator 22, carried on for FS25 by Achimobil with his explicit permission.
+
+Production Revamp is a pure script mod. It does not bring any buildings of its own and does not change any recipes. Some features work right away at every production, others are only available in productions a modder has adapted for them.
+
+At all productions:
+- Manage dialog listing all inputs and outputs with exact amounts
+- Output mode "Store": products collect in the storage and can be taken out as pallets or bales in the amount you want, via the menu or directly at the building
+- Buy inputs directly from the dealer and sell outputs directly to him
+- Distribution your way: per product, choose which productions are supplied first, later or not at all, optionally with an upper limit and split evenly or by demand
+- Only productions that are actually processing the product right now get supplied
+- Delivery costs with a preview in the manage dialog and as a separate entry in the finances
+- Recipe view highlights missing inputs, a product that is both input and output is listed only once
+- Production menu shows whether a production point works in parallel or splits its capacity, and its building costs
+- Raised technical limits so that even very large production mod packs with well over 255 fill types load correctly
+- Own settings section: the admin can switch off individual areas and set prices, delivery costs and trading rights, every player can hide individual displays for themselves
+- Own pages in the in-game help menu
+- Fully multiplayer capable
+
+Only in productions adapted for it:
+- Mix groups: several equivalent inputs, for example rye instead of wheat
+- Recipes using product groups that products from other mods fit into automatically
+- Boosters and master boosters: optional inputs that increase the yield
+- Input and booster selection per production line in the manage dialog
+- Production depending on weather, season and time of day, plus weather-dependent storage
+- Live animals as input, delivered with the livestock trailer at a dedicated trigger
+- Take products out as logs with selectable length
+- Take goods out as pallets, bales or logs at silos too
+- Stock displays on the building as a growing stack and as a digital display, also on silos and greenhouses
+- Buying and selling can be locked for individual products
+- Production lines that run on their own
+
+For modders:
+- Other mods can bring their own buildings for Production Revamp and register their own products at the map's selling points and silos, without any script
+- Other mods can place their buttons in the manage dialog
+
+Production Storage Control and Production Supply Trader are not needed alongside Production Revamp: their features are part of Production Revamp, and both switch themselves off as soon as Production Revamp is installed.
+
+If another mod replaces game functions that Production Revamp also builds on, a warning appears in the log. The warning is a hint, not a verdict: it does not mean the two mods do not work together, only that they might not. In that case, please check whether the affected feature still works as expected in the game.
+
+Bugs and suggestions are welcome on GitHub: https://github.com/Achimobil/FS25_ProductionRevamp
+The documentation for modders is in the wiki: https://github.com/Achimobil/FS25_ProductionRevamp/wiki]]></en>
     </description>
 
     <iconFilename>icon_ProductionRevamp.png</iconFilename>

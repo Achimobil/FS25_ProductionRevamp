@@ -1,6 +1,6 @@
 # FS25_ProductionRevamp
 
-![Status](https://img.shields.io/badge/status-private%20alpha-orange)
+![Status](https://img.shields.io/badge/status-released-4CAF50)
 ![Platform](https://img.shields.io/badge/Farming%20Simulator-25-4CAF50)
 ![License](https://img.shields.io/badge/license-custom-lightgrey)
 
@@ -12,9 +12,6 @@ Namensnennung im Code.
 
 Dieses Repository führt Michas bereits begonnenen FS25-Port fort und wird von **Achimobil**
 weiterentwickelt.
-
-> Dieses Repository ist während der Entwicklung privat und wird erst zur Veröffentlichung auf dem
-> ModHub für alle einsehbar gemacht.
 
 ## Entwicklungs-Setup
 
@@ -31,6 +28,8 @@ Implementierung.
 # ModHub
 
 Offizielle Veröffentlichung auf dem ModHub geplant.
+
+Die Beschreibung für Modder steht im [Wiki](https://github.com/Achimobil/FS25_ProductionRevamp/wiki).
 
 ---
 
