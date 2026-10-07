@@ -2,7 +2,7 @@
 <modDesc descVersion="114">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.44</version>
+    <version>0.0.0.45</version>
     <title>
         <en>Production Revamp</en>
     </title>
@@ -48,14 +48,17 @@ Production Storage Control und Production Supply Trader werden neben Production 
 Ersetzt ein anderer Mod Funktionen des Spiels, auf die auch Production Revamp aufbaut, steht eine Warnung im Log. Die Warnung ist ein Hinweis, keine Feststellung: sie bedeutet nicht, dass die beiden Mods nicht zusammen funktionieren, sondern nur, dass sie es möglicherweise nicht tun. In diesem Fall bitte prüfen, ob die betroffene Funktion im Spiel noch wie erwartet arbeitet.
 
 Fehler und Anregungen gerne auf GitHub: https://github.com/Achimobil/FS25_ProductionRevamp
-Die Beschreibung für Modder steht im Wiki: https://github.com/Achimobil/FS25_ProductionRevamp/wiki]]></de>
+Die Beschreibung für Modder steht im Wiki: https://github.com/Achimobil/FS25_ProductionRevamp/wiki
+
+Changelog
+0.0.0.45 - Englische Beschreibung an die Bezeichnungen im Spiel angeglichen]]></de>
         <en><![CDATA[Production Revamp extends the game's production system with a wide range of features. It is the continuation of the Production Revamp that Braeven built for Farming Simulator 22, carried on for FS25 by Achimobil with his explicit permission.
 
 Production Revamp is a pure script mod. It does not bring any buildings of its own and does not change any recipes. Some features work right away at every production, others are only available in productions a modder has adapted for them.
 
 At all productions:
 - Manage dialog listing all inputs and outputs with exact amounts
-- Output mode "Store": products collect in the storage and can be taken out as pallets or bales in the amount you want, via the menu or directly at the building
+- Output mode "Keep": products collect in the storage and can be spawned as pallets or bales in the amount you want, via the menu or directly at the building
 - Buy inputs directly from the dealer and sell outputs directly to him
 - Distribution your way: per product, choose which productions are supplied first, later or not at all, optionally with an upper limit and split evenly or by demand
 - Only productions that are actually processing the product right now get supplied
@@ -74,8 +77,8 @@ Only in productions adapted for it:
 - Input and booster selection per production line in the manage dialog
 - Production depending on weather, season and time of day, plus weather-dependent storage
 - Live animals as input, delivered with the livestock trailer at a dedicated trigger
-- Take products out as logs with selectable length
-- Take goods out as pallets, bales or logs at silos too
+- Spawn products as logs with selectable length
+- Spawn goods as pallets, bales or logs at silos too
 - Stock displays on the building as a growing stack and as a digital display, also on silos and greenhouses
 - Buying and selling can be locked for individual products
 - Production lines that run on their own
