@@ -2,7 +2,7 @@
 <modDesc descVersion="114">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>0.0.0.41</version>
+    <version>0.0.0.42</version>
     <title>
         <en>Production Revamp</en>
     </title>
@@ -16,6 +16,7 @@ Erlaubnis von Achimobil für den LS25 weitergeführt.
 Dies ist aktuell ein privater Entwicklungsstand und noch nicht einsatzbereit.
 
 Changelog:
+0.0.0.42 - Die beiden Test-Gebäude sind nicht mehr im Mod enthalten
 0.0.0.41 - Die Lieferkosten im Verteilen-Dialog zeigen bei Aufteilung nach Bedarf jetzt die laufenden Kosten, unabhängig davon, was bei den Abnehmern schon im Lager liegt
 0.0.0.40 - Andere Mods können ihre Knöpfe jetzt im Verwalten-Dialog unterbringen
 0.0.0.39 - Bei zu vielen Knöpfen im Produktionsmenü kommt nur noch ein Hinweis, statt den Spielstand zu verlassen
@@ -235,11 +236,6 @@ This is currently a private work-in-progress build and not yet ready for use.]]>
             </page>
         </category>
     </helpLines>
-
-    <storeItems>
-        <storeItem xmlFilename="placeables/revampTestMill/revampTestMill.xml"/>
-        <storeItem xmlFilename="placeables/revampTestLivestock/revampTestLivestock.xml"/>
-    </storeItems>
 
     <fillTypes filename="revamp_fillTypes.xml"/>
 

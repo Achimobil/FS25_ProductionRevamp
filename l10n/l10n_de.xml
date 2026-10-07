@@ -2,8 +2,6 @@
 <l10n>
     <texts>
         <text name="revamp_ui_production_buildingCostsPerMonth"  text="Gebäudekosten"/>
-        <text name="revamp_station_testMill"                     text="Revamp Test-Mühle"/>
-        <text name="revamp_station_testLivestock"                text="Revamp Test-Tierannahme"/>
         <text name="revamp_ui_production_mixGroup"               text="Mix-Gruppe %d"/>
         <text name="revamp_ui_production_converterGroup"         text="Alternative Zutaten"/>
         <text name="revamp_ui_production_booster"                text="Booster"/>
