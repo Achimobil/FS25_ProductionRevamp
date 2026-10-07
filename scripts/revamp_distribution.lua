@@ -330,7 +330,7 @@ function Revamp.getDistributionSections(productionPoint)
 			end
 
 			-- Kosten bekommt nur die Stufe, die gerade tatsächlich an der Reihe ist: solange es Primär-Ziele gibt, geht die ganze Stundenmenge dorthin und alle übrigen zahlen nichts.
-			-- Die Füllstände der Ziele bleiben dabei bewusst außen vor - sonst zeigte die Vorschau nicht die laufenden Kosten, sondern das einmalige Leerräumen eines vollen Lagers.
+			-- Die Füllstände bleiben dabei bewusst außen vor, beim Absender wie bei den Zielen - sonst zeigte die Vorschau nicht die laufenden Kosten, sondern das einmalige Leerräumen eines vollen Lagers.
 			local activeLevel = nil
 			for _, level in ipairs(Revamp.DISTRIBUTION_ORDER) do
 				if levelCounts[level] ~= nil then
@@ -345,7 +345,9 @@ function Revamp.getDistributionSections(productionPoint)
 			for _, target in ipairs(targets) do
 				if target.level == activeLevel then
 					if Revamp.settings.distributionMode == "demand" then
-						target.rate, target.fillLevel = Revamp.getFillTypeDemand(target.productionPoint, fillTypeIndex)
+						target.rate = Revamp.getFillTypeDemand(target.productionPoint, fillTypeIndex)
+						-- Mit leeren Lagern teilt der Bedarfs-Modus die Stundenmenge genau im Verhältnis der Verbräuche auf, so wie er es auf Dauer auch tut.
+						target.fillLevel = 0
 					end
 					table.insert(activeTargets, target)
 				end
