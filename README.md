@@ -27,7 +27,9 @@ Implementierung.
 
 # ModHub
 
-Offizielle Veröffentlichung auf dem ModHub geplant.
+Offizielle Veröffentlichung auf dem ModHub:
+
+https://www.farming-simulator.com/mod.php?mod_id=378044&title=fs2025
 
 Die Beschreibung für Modder steht im [Wiki](https://github.com/Achimobil/FS25_ProductionRevamp/wiki).
 
