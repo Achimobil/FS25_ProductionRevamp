@@ -207,12 +207,41 @@ end
 
 InGameMenuProductionFrame.getNumberOfSections = Utils.overwrittenFunction(InGameMenuProductionFrame.getNumberOfSections, Revamp.getNumberOfSections)
 
+---Nimmt Rezeptlinien mit hideFromMenu aus der Linienliste jeder Produktionsstätte und die Stätte selbst aus der Liste, wenn ihr keine sichtbare Linie bleibt.
+---Ohne den zweiten Schritt bliebe die Stätte mit leerer Linienliste stehen, und Vanillas getNumberOfSections greift dann ungeprüft auf selectedProduction zu.
+---Fabriken haben keine productions und bleiben deshalb unangetastet.
+---@param productionPoints table Liste der Produktionsstätten aus dem Produktionsmenü
+function Revamp.removeHiddenProductions(productionPoints)
+	for i = #productionPoints, 1, -1 do
+		local productionPoint = productionPoints[i]
+		local sortedProductions = productionPoint.sortedProductions
+		if sortedProductions ~= nil and productionPoint.productions ~= nil then
+			for j = #sortedProductions, 1, -1 do
+				if sortedProductions[j].hideFromMenu then
+					table.remove(sortedProductions, j)
+				end
+			end
+
+			if #sortedProductions == 0 then
+				table.remove(productionPoints, i)
+			end
+		end
+	end
+end
+
 ---@param self table InGameMenuProductionFrame-Instanz
 ---@param superFunc function Ursprüngliches InGameMenuProductionFrame.getNumberOfItemsInSection
 ---@param list table Liste, die gerade aufgebaut wird
 ---@param section number Sektionsnummer unserer Aufteilung
 ---@return number numItems Anzahl der Zeilen in dieser Sektion
 function Revamp.getNumberOfItemsInSection(self, superFunc, list, section)
+	-- Vanilla baut die Linienlisten in updateProductionLists neu auf und lädt die Stättenliste gleich danach, ein angehängter Hook käme zu spät.
+	-- Diese Abfrage ist das Erste, was das Laden der Stättenliste tut, deshalb wird hier gefiltert. Ein zweites Filtern ändert nichts mehr.
+	if list == self.pointsList then
+		Revamp.removeHiddenProductions(self.productionPoints)
+		Revamp.removeHiddenProductions(self.unownedProductionPoints)
+	end
+
 	local numDualFillTypes = list == self.detailsList and Revamp.getNumDualFillTypes(self) or 0
 	if numDualFillTypes == 0 then
 		return superFunc(self, list, section)
