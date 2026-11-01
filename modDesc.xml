@@ -2,7 +2,7 @@
 <modDesc descVersion="115">
     <author>Achimobil</author>
     <contributors>Braeven</contributors>
-    <version>1.0.0.1</version>
+    <version>1.0.0.2</version>
     <title>
         <en>Production Revamp</en>
     </title>
@@ -51,7 +51,8 @@ Fehler und Anregungen gerne auf GitHub: https://github.com/Achimobil/FS25_Produc
 Die Beschreibung für Modder steht im Wiki: https://github.com/Achimobil/FS25_ProductionRevamp/wiki
 
 Changelog
-1.0.0.1 - Versteckte Produktionslinien werden im Produktionsmenü jetzt wirklich ausgeblendet
+1.0.0.2 - Biogasanlagen aus Pumps and Hoses bleiben nicht mehr stehen, wenn eine optionale Zutat wie Gülle zur Neige geht
+1.0.0.1 -Versteckte Produktionslinien werden im Produktionsmenü jetzt wirklich ausgeblendet
 0.0.0.45 - Englische Beschreibung an die Bezeichnungen im Spiel angeglichen]]></de>
         <en><![CDATA[Production Revamp extends the game's production system with a wide range of features. It is the continuation of the Production Revamp that Braeven built for Farming Simulator 22, carried on for FS25 by Achimobil with his explicit permission.
 

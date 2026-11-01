@@ -477,7 +477,9 @@ function Revamp.updateSingleProduction(self, production, minuteFactorDt, numShar
 		local input = production.inputs[x]
 		if input.mix == 0 then
 			local fillLevel = self:getFillLevel(input.type)
-			if self.isOwned and fillLevel < input.amount * factor then
+			-- input.isRequired kommt aus dem Pumps-and-Hoses-DLC (SandboxProductionPoint) und kennzeichnet optionale Zutaten der Fermenter.
+			-- Eine solche Zutat blockiert die Produktion nicht, ihr Rest wird abgebucht und das DLC nimmt sie danach selbst aus dem Rezept.
+			if self.isOwned and fillLevel < input.amount * factor and input.isRequired ~= false then
 				enoughInputResources = false
 			end
 		elseif input.mix == Revamp.MIX_BOOST then
