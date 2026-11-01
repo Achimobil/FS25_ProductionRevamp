@@ -12,7 +12,7 @@ allowed. See the repository README for the full terms.
 
 -- Die Button-Leiste des Produktionsmenüs hat sechs feste Plätze (menuButton[1] bis menuButton[6] in InGameMenu.xml).
 -- TabbedMenu:assignMenuButtonInfo läuft mit ipairs über diese Elemente, alles ab dem siebten Eintrag wird nie gelesen und verschwindet kommentarlos.
--- Vanilla belegt bis zu fünf davon, Revamp trägt Verwalten und Auslagern ein - ein Mod, der danach noch etwas einträgt, fällt damit hinten heraus.
+-- Vanilla belegt bis zu fünf davon, Revamp trägt Verwalten und Auslagern ein - ein Mod, der danach noch etwas einträgt, fiele ohne Revamp.enforceMenuButtonLimit hinten heraus.
 Revamp.MENU_BUTTON_SLOTS = 6
 
 -- Mindestabstand zwischen zwei Meldungen über einen Überlauf. Wer die Lage kennt und trotzdem weiterspielt,
@@ -22,16 +22,35 @@ Revamp.MENU_BUTTON_OVERFLOW_INTERVAL = 15 * 60 * 1000
 Revamp.menuButtonOverflowLastShown = nil
 
 ---Hält die Zahl der Einträge in der Button-Leiste innerhalb der darstellbaren Plätze.
----Es weicht Revamps eigener Auslagern-Knopf, denn der ist über den Verwalten-Dialog weiterhin erreichbar - ein fremder Mod hat keinen solchen Ersatzweg.
+---Zuerst weicht Revamps eigener Auslagern-Knopf, denn der ist über den Verwalten-Dialog weiterhin erreichbar - ein fremder Mod hat keinen solchen Ersatzweg.
+---Er weicht auch, wenn ein anderer Knopf dieselbe Taste belegt, sonst lösen zwei Knöpfe auf einen Druck aus.
+---Reicht das nicht, weicht Vanillas Besuchen-Knopf: dieselbe Aktion bietet die Karte für den Hotspot der Produktion ebenfalls an.
 ---@param self table InGameMenuProductionFrame-Instanz
 function Revamp.enforceMenuButtonLimit(self)
-	if #self.menuButtonInfo > Revamp.MENU_BUTTON_SLOTS and self.revampSpawnButtonInfo ~= nil then
+	if self.revampSpawnButtonInfo ~= nil and (#self.menuButtonInfo > Revamp.MENU_BUTTON_SLOTS or Revamp.getIsSpawnInputActionTaken(self)) then
 		table.removeElement(self.menuButtonInfo, self.revampSpawnButtonInfo)
+	end
+
+	if #self.menuButtonInfo > Revamp.MENU_BUTTON_SLOTS then
+		table.removeElement(self.menuButtonInfo, self.visitButtonInfo)
 	end
 
 	if #self.menuButtonInfo > Revamp.MENU_BUTTON_SLOTS then
 		Revamp.reportMenuButtonOverflow(#self.menuButtonInfo)
 	end
+end
+
+---Prüft, ob ein anderer Knopf in der Leiste dieselbe Taste wie Revamps Auslagern-Knopf benutzt.
+---@param self table InGameMenuProductionFrame-Instanz
+---@return boolean isTaken true, wenn die Taste schon von einem anderen Knopf belegt ist
+function Revamp.getIsSpawnInputActionTaken(self)
+	for _, buttonInfo in ipairs(self.menuButtonInfo) do
+		if buttonInfo ~= self.revampSpawnButtonInfo and buttonInfo.inputAction == self.revampSpawnButtonInfo.inputAction then
+			return true
+		end
+	end
+
+	return false
 end
 
 ---Meldet einen Überlauf, der sich nicht mehr auflösen lässt.
