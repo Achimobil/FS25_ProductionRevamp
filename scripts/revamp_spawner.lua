@@ -406,7 +406,7 @@ function Revamp.buildSpawnOptions(self, source, outputFillTypes)
 	local selectable = {}
 	for _, entry in ipairs(outputFillTypes) do
 		local fillType = g_fillTypeManager:getFillTypeByIndex(entry.fillTypeIndex)
-		if entry.fillLevel > 1 and (fillType.palletFilename ~= nil or self.baleTypes[entry.fillTypeIndex] ~= nil or fillType.name == "TREESAPLINGS" or Revamp.getHasWoodLogPackages(source, fillType)) then
+		if entry.fillLevel > 1 and (fillType.pallets ~= nil or self.baleTypes[entry.fillTypeIndex] ~= nil or fillType.name == "TREESAPLINGS" or Revamp.getHasWoodLogPackages(source, fillType)) then
 			entry.title = fillType.title
 			table.insert(selectable, entry)
 			-- Baumsetzlinge 2x eintragen, damit beide Paletten-Varianten (Typ 4+5) verfügbar sind
@@ -475,8 +475,9 @@ function Revamp.buildSpawnOptions(self, source, outputFillTypes)
 			end
 		end
 
-		-- Paletten eintragen wenn vorhanden (nicht für Baumsetzlinge, die haben ihre eigenen oben)
-		if currentFillType.palletFilename ~= nil and currentFillType.name ~= "TREESAPLINGS" then
+		-- Paletten eintragen wenn vorhanden (nicht für Baumsetzlinge, die haben ihre eigenen oben).
+		-- Geprüft wird die eigene Sammlung statt palletFilename: fehlt sie, hat ein anderer Mod sie verhindert (siehe Revamp.checkFillTypePallets).
+		if currentFillType.pallets ~= nil and currentFillType.name ~= "TREESAPLINGS" then
 			for environment, palletFilename in pairs(currentFillType.pallets) do
 				local thisPallet = XMLFile.load("palletXmlFilename", palletFilename, Vehicle.xmlSchema)
 				if thisPallet ~= nil then
@@ -595,6 +596,19 @@ function Revamp.showSiloSpawnDialog(placeable)
 	local options = Revamp.buildSpawnOptions(placeable.spec_revampSpawner, placeable, outputFillTypes)
 
 	RevampStorageDialog.show(Revamp.getSpawnFarmList(), placeable:getName(), options, placeable)
+	Revamp.reportMissingFillTypePallets()
+end
+
+---Weist beim Öffnen des Auslagern-Dialogs darauf hin, dass ein anderer Mod die Paletten verhindert (siehe Revamp.checkFillTypePallets).
+---Ohne Hinweis fehlen die Paletten im Dialog einfach, und der Spieler sucht den Fehler bei Revamp.
+---Nur einmal je Spielsitzung: der Spieler soll es erfahren, aber nicht bei jedem Öffnen wegklicken müssen.
+function Revamp.reportMissingFillTypePallets()
+	if not Revamp.fillTypePalletsMissing or Revamp.fillTypePalletsMissingShown then
+		return
+	end
+
+	Revamp.fillTypePalletsMissingShown = true
+	InfoDialog.show(g_i18n:getText("revamp_fillTypePalletsMissing"), nil, nil, DialogElement.TYPE_WARNING)
 end
 
 ---Ersetzt Vanillas ProductionPointActivatable.run: Kauf-Trigger unverändert wie Vanilla,
@@ -638,6 +652,7 @@ function Revamp.spawnerRun(self, superFunc, menue)
 		end
 
 		RevampStorageDialog.show(Revamp.getSpawnFarmList(self.playerFarm), self.productionPoint:getName(), options, self.productionPoint)
+		Revamp.reportMissingFillTypePallets()
 	end
 end
 
@@ -677,6 +692,10 @@ function Revamp.receiveSpawnEvent(self, ownerFarmId, fillTypeIndex, pendingLiter
 
 	if item.type == 1 then
 		local currentFillType = g_fillTypeManager:getFillTypeByIndex(fillTypeIndex)
+		-- Ohne die eigene Sammlung bietet der Dialog keine Palette an, eine solche Anfrage ist also nicht auszuführen.
+		if currentFillType.pallets == nil then
+			return
+		end
 		item.filename = currentFillType.pallets[customEnvironment]
 	elseif item.type == 4 then
 		item.filename = Utils.getFilename("$data/objects/pallets/treeSaplingPallet01/treeSaplingPallet01.xml", self.baseDirectory)

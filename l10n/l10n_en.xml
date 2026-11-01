@@ -38,6 +38,7 @@
         <text name="revamp_storageEmpty"                         text="Storage is empty."/>
         <text name="revamp_storageButtonSpawn"                   text="Spawn goods"/>
         <text name="revamp_menuButtonOverflow"                   text="Production Revamp: More buttons are registered for the production menu than it can display. The last button is therefore not shown."/>
+        <text name="revamp_fillTypePalletsMissing"               text="Production Revamp: Another mod prevents pallets from being spawned. Which mod causes this is written in the log.txt."/>
         <text name="revamp_storageMax"                           text="Max"/>
         <text name="revamp_storageNone"                          text="None"/>
         <text name="revamp_storageAll"                           text="All"/>
