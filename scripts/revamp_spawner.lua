@@ -804,10 +804,12 @@ function Revamp.spawnerUpdate(self, superFunc)
 		self.currentObjectToSpawn = self.spawnQueue[1]
 		local spawnPlaces = self.fillTypeToSpawnPlaces[self.currentObjectToSpawn.fillType] or self.spawnPlaces
 		local palletType = self.currentObjectToSpawn.pallet.type
+		-- Der Höhenversatz wird wie in Vanillas PalletSpawner.update mitgegeben.
+		-- Ohne ihn steckt die Prüfbox bei Spawnern, die knapp unter dem Gebäudeboden liegen, im Boden, und es wird nie ein freier Platz gefunden.
 		if palletType == 1 or palletType == 4 or palletType == 5 or palletType == 6 or palletType == nil then
-			g_currentMission.placementManager:getPlaceAsync(spawnPlaces, self.currentObjectToSpawn.pallet.size, self.onSpawnSearchFinished, self)
+			g_currentMission.placementManager:getPlaceAsync(spawnPlaces, self.currentObjectToSpawn.pallet.size, self.onSpawnSearchFinished, self, nil, self.spawnOffsetY, nil, nil)
 		else
-			g_currentMission.placementManager:getPlaceAsync(spawnPlaces, self.currentObjectToSpawn.pallet.size, self.onSpawnSearchFinishedOther, self)
+			g_currentMission.placementManager:getPlaceAsync(spawnPlaces, self.currentObjectToSpawn.pallet.size, self.onSpawnSearchFinishedOther, self, nil, self.spawnOffsetY, nil, nil)
 		end
 	end
 end
